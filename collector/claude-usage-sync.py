@@ -8,10 +8,11 @@ Config: ~/.config/claude-usage-sync/env (HUB_URL, HUB_KEY, HUB_DEVICE, HUB_PERSO
 optional HUB_CLAUDE_DIRS).
 
   claude-usage-sync            sync once
-  claude-usage-sync --daemon   stay running: sync every 5 min, within ~30 s of a
-                               dashboard Refresh, and read the official % about once
-                               a minute while this laptop is using Claude (these
-                               readings are what the hub calibrates its estimates on)
+  claude-usage-sync --daemon   stay running: sync every 5 min (every 2 min while this
+                               laptop is using Claude), within ~60 s of a dashboard
+                               Refresh, and read the official % about once a minute
+                               while busy (these readings are what the hub calibrates
+                               its estimates on)
 """
 import glob, hashlib, json, os, re, signal, socket, sys, time, urllib.error, urllib.request
 from collections import defaultdict
@@ -21,6 +22,7 @@ from pathlib import Path
 HOME = Path.home()
 CONF = HOME / ".config/claude-usage-sync/env"
 SYNC_EVERY, POLL_EVERY, SAMPLE_EVERY = 300, 30, 60
+BUSY_SYNC_EVERY = 120    # while Claude is in use here, the dashboard hears about it this often
 UPDATE_EVERY = 6 * 3600
 REFRESH_POLL = 60        # how often to check for a dashboard Refresh (each check is a Redis read)
 EPOCH = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -672,7 +674,8 @@ def main():
             sys.exit(f"missing {k} in {CONF}")
     idx = LogIndex(claude_dirs(conf))
     idx.update()
-    state = {"pending": [], "last_sync": None, "last_read": None, "seen": idx.last_new, "checked": time.time() - UPDATE_EVERY + 600}
+    state = {"pending": [], "last_sync": None, "last_read": None, "seen": idx.last_new, "synced_new": idx.last_new,
+             "checked": time.time() - UPDATE_EVERY + 600}
 
     def read(now):
         """Official limits, or the hub's current windows (no %) when this laptop can't read them."""
@@ -691,7 +694,7 @@ def main():
             done = post(conf, "/api/reprice", {"device": conf["HUB_DEVICE"], "pv": PRICE_VERSION, "rows": reprice(idx, todo)})
             res["repriced"] = done.get("updated") if isinstance(done, dict) else done
         print(now.isoformat(timespec="seconds"), res, flush=True)
-        state.update(pending=[], last_sync=now, last_read=now, seen=idx.last_new)
+        state.update(pending=[], last_sync=now, last_read=now, seen=idx.last_new, synced_new=idx.last_new)
 
     if "--daemon" not in sys.argv:
         sync(datetime.now(timezone.utc))
@@ -704,7 +707,9 @@ def main():
         try:
             now = datetime.now(timezone.utc)
             idx.update()
-            due = state["last_sync"] is None or (now - state["last_sync"]).total_seconds() >= SYNC_EVERY
+            since = None if state["last_sync"] is None else (now - state["last_sync"]).total_seconds()
+            busy = idx.last_new > state["synced_new"]      # new Claude calls logged since the last sync
+            due = since is None or since >= SYNC_EVERY or (busy and since >= BUSY_SYNC_EVERY)
             if not due and time.time() - state.get("polled", 0) >= REFRESH_POLL:
                 state["polled"] = time.time()
                 asked = post(conf, "/api/refresh").get("requested_at")
