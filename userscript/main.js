@@ -149,8 +149,10 @@ function claudePage() {
 
   // ------------------------------------------------------------ numbers
   const fmtTok = (n) => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(n);
-  const approx = (v) => v == null ? "–" : v < 0.1 ? "<0.1%" : "≈" + pctStr(v);
-  const pctStr = (v) => v == null ? "–" : v < 0.1 ? "<0.1%" : v < 10 ? v.toFixed(1) + "%" : Math.round(v) + "%";
+  // Hub numbers go into innerHTML, so anything that isn't a finite number becomes "–".
+  const num = (v) => v == null || v === "" || !Number.isFinite(+v) ? null : +v;
+  const approx = (v) => num(v) == null ? "–" : num(v) < 0.1 ? "<0.1%" : "≈" + pctStr(v);
+  const pctStr = (v) => (v = num(v)) == null ? "–" : v < 0.1 ? "<0.1%" : v < 10 ? v.toFixed(1) + "%" : Math.round(v) + "%";
   const limitsNow = () => {
     const off = st.summary && st.summary.official;
     const fromHub = off && { five: off.five, week: off.week, t: Date.parse(off.read_at) || 0 };
@@ -176,16 +178,17 @@ function claudePage() {
   const CSS = `
     :host { all: initial; display: block; font: inherit; color: inherit; }
     .line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; font-size: 12px; line-height: 18px;
-            padding: 2px calc(var(--cmp-pad-x, .5rem) + 8px) 8px; opacity: .72; font-variant-numeric: tabular-nums; }
-    .line:hover { opacity: 1; }
+            padding: 2px calc(var(--cmp-pad-x, .5rem) + 8px) 8px; font-variant-numeric: tabular-nums; }
     .it { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-    .k { opacity: .75; }
+    /* A colour, not an opacity: opacities multiply when nested, and that took labels below 4:1. */
+    .k { color: color-mix(in srgb, currentColor 70%, transparent); }
     .bar { width: 44px; height: 4px; border-radius: 2px; background: color-mix(in srgb, currentColor 18%, transparent); overflow: hidden; }
     .bar > i { display: block; height: 100%; background: #2a78d6; border-radius: 2px; }
-    .warn .bar > i, .hot .bar > i { background: currentColor; }
-    /* Mixed toward the text colour so they stay readable on both claude.ai themes. */
-    .warn { color: color-mix(in srgb, #e8a92a 72%, currentColor); } .hot { color: color-mix(in srgb, #e5484d 80%, currentColor); }
-    .warm { color: color-mix(in srgb, #36a88f 78%, currentColor); }
+    .warn .bar > i { background: #e8a92a; } .hot .bar > i { background: #e5484d; }
+    /* Text is mixed about half-way toward the text colour: pure amber on white is ~2:1, and this
+       keeps every one ≥5:1 on both claude.ai themes. The bar fills above stay the pure colour. */
+    .warn { color: color-mix(in srgb, #e8a92a 55%, currentColor); } .hot { color: color-mix(in srgb, #e5484d 60%, currentColor); }
+    .warm { color: color-mix(in srgb, #36a88f 60%, currentColor); }
     .sp { flex: 1; }
     a { color: inherit; text-decoration: none; opacity: .8; } a:hover { opacity: 1; text-decoration: underline; }
     .float { position: fixed; right: 16px; bottom: 12px; z-index: 50; border-radius: 10px; padding: 8px 12px;
@@ -295,7 +298,7 @@ function claudePage() {
       parts.push(`<span class="it ${cls}" title="Estimated from the visible text (Claude's tokenizer isn't public). Thinking and tool results aren't visible to the page, so the real context is somewhat larger."><span class="k">Context</span> ≈${fmtTok(c.tokens)}</span>`);
       const nc = nextCost(c);
       if (nc) {
-        parts.push(`<span class="it" title="What sending one more message here should use, from the rate the hub has learned (±${st.summary.rate.err ?? "?"}%). ${nc.warm ? "The cache is warm, so the history is re-read cheaply." : "The cache has expired, so the whole history is written again."}"><span class="k">Next message</span> ${approx(nc.pct)}</span>`);
+        parts.push(`<span class="it" title="What sending one more message here should use, from the rate the hub has learned (±${num(st.summary.rate.err) ?? "?"}%). ${nc.warm ? "The cache is warm, so the history is re-read cheaply." : "The cache has expired, so the whole history is written again."}"><span class="k">Next message</span> ${approx(nc.pct)}</span>`);
         parts.push(nc.warm
           ? `<span class="it warm" title="Send before this runs out and the history is re-read at the cache price.">cached ${Math.floor(nc.left / 60e3)}:${String(Math.floor(nc.left / 1e3) % 60).padStart(2, "0")}</span>`
           : `<span class="it muted" title="No message in the last five minutes: the next one pays full price for the history.">cache cold</span>`);
@@ -307,9 +310,10 @@ function claudePage() {
     }
     parts.push(`<span class="sp"></span>`);
     const barItem = (label, v) => {
-      if (!v || v.pct == null) return "";
-      const cls = v.pct >= 90 ? "hot" : v.pct >= 75 ? "warn" : "";
-      return `<span class="it ${cls}"><span class="k">${label}</span><span class="bar"><i data-w="${Math.min(100, v.pct)}"></i></span>${v.pct}%</span>`;
+      const pct = v && num(v.pct) != null ? Math.round(num(v.pct)) : null;   // from the hub: never raw
+      if (pct == null) return "";
+      const cls = pct >= 90 ? "hot" : pct >= 75 ? "warn" : "";
+      return `<span class="it ${cls}"><span class="k">${label}</span><span class="bar"><i data-w="${Math.max(0, Math.min(100, pct))}"></i></span>${pct}%</span>`;
     };
     if (lim) parts.push(barItem("Session", lim.five), barItem("Week", lim.week));
     paint(root, `<div class="line">${parts.join("")}</div>`);
@@ -343,12 +347,14 @@ function claudePage() {
     const w = f.week, days = w.elapsed_h / 24, g = f.pattern;
     if (g && !g.early && g.expected != null) {
       // The hub's pattern forecast (recent pace + the last 7 days replayed), as on the dashboard.
-      const r = Math.round;
+      const r = (v) => Math.round(num(v) ?? 0);
+      // Never "a 0% chance": a range of futures can't rule it out, so small ones read "<5%".
+      const chance = (p) => p < 0.05 ? "less than a 5%" : `about a ${r(p * 100)}%`;
       const lead2 = g.runs_out_at ? `At the recent pace you'll hit the limit ${dayClock(g.runs_out_at)}, before the reset.`
-        : g.p_limit >= 0.15 ? `Probably fine, but a busy day could do it: about a ${r(g.p_limit * 100)}% chance of hitting the limit before the reset.`
+        : num(g.p_limit) >= 0.15 ? `Probably fine, but a busy day could do it: ${chance(num(g.p_limit))} chance of hitting the limit before the reset.`
         : `You'll likely end the week around ${r(g.expected)}% when it resets ${dayClock(g.resets_at)}.`;
-      const more2 = `Likely ${r(g.lo)}–${r(g.hi)}%. Recent pace: ${g.per_day_recent.toFixed(1)}% a day; ` +
-        (g.left_h < 24 ? `${r(100 - g.pct)}% is left for the last ${Math.max(1, r(g.left_h))} h.` : `you can use up to ${r(g.budget_per_day)}% a day and still reach the reset.`);
+      const more2 = `Likely ${r(g.lo)}–${r(g.hi)}%. Recent pace: ${(num(g.per_day_recent) ?? 0).toFixed(1)}% a day; ` +
+        (g.left_h < 24 ? `${r(100 - num(g.pct))}% is left for the last ${Math.max(1, r(g.left_h))} h.` : `you can use up to ${r(g.budget_per_day)}% a day and still reach the reset.`);
       paint(el.shadowRoot.querySelector(".root"), `<div class="fc"><div>${esc(lead2)}</div><div class="muted">${esc(more2)}</div></div>`);
       return;
     }
@@ -358,9 +364,9 @@ function claudePage() {
       ? `At this pace you'll run out ${dayClock(w.runs_out_at)}, before the reset.`
       : `At this pace you'll have used about ${Math.min(99, Math.round(w.projected))}% of the week when it resets ${dayClock(w.resets_at)}.`;
     let more = `Average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? Math.round(w.elapsed_h) + " h" : days.toFixed(1) + " days"}.`;
-    if (f.recent) more += ` Over the last ${Math.round(f.recent.span_h)} h: about ${f.recent.per_day.toFixed(1)}% per day.`;
-    for (const x of f.scoped || []) more += ` ${esc(x.name)}'s separate limit runs out sooner, ${dayClock(x.runs_out_at)}.`;
-    paint(el.shadowRoot.querySelector(".root"), `<div class="fc"><div>${esc(lead)}</div><div class="muted">${more}</div></div>`);
+    if (f.recent) more += ` Over the last ${Math.round(num(f.recent.span_h) ?? 0)} h: about ${(num(f.recent.per_day) ?? 0).toFixed(1)}% per day.`;
+    for (const x of f.scoped || []) more += ` ${x.name}'s separate limit runs out sooner, ${dayClock(x.runs_out_at)}.`;
+    paint(el.shadowRoot.querySelector(".root"), `<div class="fc"><div>${esc(lead)}</div><div class="muted">${esc(more)}</div></div>`);
   }
 
   // "· in 9 h 24 min" after each native reset time — shortened if the full form would wrap the
@@ -398,9 +404,9 @@ function claudePage() {
     if (!s || !s.official) return `<span class="muted">who used what: loading…</span>`;
     const ok = (p) => key === "fable" ? p.fable_calibrated : p.calibrated;
     const out = [...(s.people || [])].sort((a, b) => a.person.localeCompare(b.person))
-      .map((p) => `<span><span class="dot" data-c="${colorOf(p.person)}"></span>${esc(p.person)} <b>${ok(p) ? approx(p[key]) : "…"}</b></span>`);
+      .map((p) => `<span><span class="dot" data-c="${colorOf(p.person)}"></span>${esc(p.person)} <b>${ok(p) ? pctStr(p[key]) : "…"}</b></span>`);
     const e = s.elsewhere && s.elsewhere[key];
-    if (e != null) out.push(`<span class="muted" title="Usage no synced laptop logged: the phone, other devices, and claude.ai chats until those are calibrated.">elsewhere ${approx(e)}</span>`);
+    if (e != null) out.push(`<span class="muted" title="Usage no synced laptop logged: the phone, other devices, and claude.ai chats until those are calibrated.">not synced ${pctStr(e)}</span>`);
     return out.join("");
   }
 
@@ -422,7 +428,9 @@ function claudePage() {
     const rr = row.getBoundingClientRect(), track = trackOf(row);
     const box = place === "below-row" || !track
       ? { left: 0, top: rr.height + 12, width: rr.width }
-      : (() => { const t = track.getBoundingClientRect(); return { left: t.left - rr.left, top: t.bottom - rr.top + 9, width: t.width }; })();
+      : (() => { const t = track.getBoundingClientRect(); // Out to the row's right edge, not just the bar's width: the bar is narrow at ~900 px
+      // and the split wrapped onto three lines, into the next heading.
+      return { left: t.left - rr.left, top: t.bottom - rr.top + 9, width: rr.right - t.left }; })();
     Object.assign(el.style, { position: "absolute", left: box.left + "px", top: box.top + "px", width: box.width + "px", margin: "0" });
   }
 
@@ -449,7 +457,7 @@ function claudePage() {
       for (const el of [...Object.values(lines), link]) el.remove();
       return;
     }
-    const updated = st.summary && st.summary.official ? Math.max(0, Math.round((Date.now() - Date.parse(st.summary.official.read_at)) / 6e4)) : null;
+    const updated = st.summary && st.summary.official ? num(Math.max(0, Math.round((Date.now() - Date.parse(st.summary.official.read_at)) / 6e4))) : null;
     const tip = `Estimated from each person's own logs${updated == null ? "" : `, updated ${updated} min ago`}.`;
     const native = rows.five && rows.week;
 
