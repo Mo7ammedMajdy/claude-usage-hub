@@ -700,7 +700,11 @@ function drawLimits(src) {
   // Live: the running session's usage no synced laptop logged, over the last hour (api/_unlogged.js).
   const u = state.unlogged, cur = o.five_hour && u && Math.abs(Date.parse(u.window) - Date.parse(o.five_hour.resets_at)) < 10 * 60e3;
   const unl = !cur ? "" : `<div class="lrow child"><div class="lbl">Not synced, last hour<span class="est">est.</span><div class="sub">${
-    u.synced ? "claude.ai, or Claude Code on another computer" : `unsure: ${esc(u.stale.map((dv) => name(state.devices.find((x) => x.device === dv) || { label: dv })).join(", "))} hasn't synced in 10 min`}</div></div>
+    u.synced ? "claude.ai, or Claude Code on another computer" : `unsure: ${u.stale.map((dv) => {
+      // when it really last synced (the device's own snapshot, else the last reading the fit saw)
+      const d = state.devices.find((x) => x.device === dv), at = d?.received_at || d?.sent_at || u.last_seen?.[dv];
+      return `${esc(name(d || { label: dv }))} last synced ${at ? fmt.ago(at) : "a while ago"}`;
+    }).join(", ")}, so part of this may be its usage`}</div></div>
     ${bar(Math.max(0, num(u.last60)))}<div class="pct num">${u.last60 >= 0.5 ? `+${Math.max(0, num(u.last60)).toFixed(1)} pts` : "none"}</div></div>`;
   $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour) + unl +
     limitRow("This week", resetLine(o.seven_day), o.seven_day) +
