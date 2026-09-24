@@ -1,4 +1,6 @@
 import { redact, redis, viewer } from "./_lib.js";
+import { forecastWeek } from "./_forecast.js";
+import { freshestOfficial } from "./_split.js";
 
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
 
@@ -17,10 +19,15 @@ export default async function handler(req, res) {
   const [all, fit, line, refresh, weeks, current] = await redis.pipeline()
     .hgetall("devices").get("fit").lrange("line", 0, -1).get("refresh").lrange("weeks", 0, -1).get("week:current").exec();
   const empty = { a: null, n: 0, span: 0, need: 3 };
+  const devices = Object.values(all || {}).map((d) => redact(parse(d), who));
+  const off = freshestOfficial(devices)?.official;
   res.setHeader("Cache-Control", "no-store");
   res.status(200).json({
     now: new Date().toISOString(),
-    devices: Object.values(all || {}).map((d) => redact(parse(d), who)),
+    devices,
+    forecast: off ? forecastWeek(off.seven_day, fit?.week_hours) : null,
+    // Fable's own weekly limit, same method on its own readings.
+    forecast_fable: off ? forecastWeek((off.scoped || []).find((x) => /fable/i.test(x.name)), fit?.fable_hours) : null,
     line: thinLine((line || []).map(parse)),
     refresh_requested_at: refresh || null,
     viewer: who,

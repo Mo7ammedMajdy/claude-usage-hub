@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage
 // @namespace    https://claude-usage-hub.vercel.app
-// @version      1.0.10
+// @version      1.0.12
 // @description  Context size, what the next message costs, and the shared plan's limits — inside claude.ai.
 // @match        https://claude.ai/*
 // @match        https://claude-usage-hub.vercel.app/*
@@ -515,7 +515,18 @@ function claudePage() {
     const headline = holding(pane, /^(on track|heads up|you['’](re|ve|ll)|at this pace)/i);
     if (!f || !f.week || !headline) { el.remove(); return; }
     if (el.previousElementSibling !== headline) headline.after(el);
-    const w = f.week, days = w.elapsed_h / 24;
+    const w = f.week, days = w.elapsed_h / 24, g = f.pattern;
+    if (g && !g.early && g.expected != null) {
+      // The hub's pattern forecast (recent pace + the last 7 days replayed), as on the dashboard.
+      const r = Math.round;
+      const lead2 = g.runs_out_at ? `At the recent pace you'll hit the limit ${dayClock(g.runs_out_at)}, before the reset.`
+        : g.p_limit >= 0.15 ? `Probably fine, but a busy day could do it: about a ${r(g.p_limit * 100)}% chance of hitting the limit before the reset.`
+        : `You'll likely end the week around ${r(g.expected)}% when it resets ${dayClock(g.resets_at)}.`;
+      const more2 = `Likely ${r(g.lo)}–${r(g.hi)}%. Recent pace: ${g.per_day_recent.toFixed(1)}% a day; ` +
+        (g.left_h < 24 ? `${r(100 - g.pct)}% is left for the last ${Math.max(1, r(g.left_h))} h.` : `you can use up to ${r(g.budget_per_day)}% a day and still reach the reset.`);
+      paint(el.shadowRoot.querySelector(".root"), `<div class="fc"><div>${esc(lead2)}</div><div class="muted">${esc(more2)}</div></div>`);
+      return;
+    }
     const lead = w.projected == null
       ? `A new week started ${w.elapsed_h < 1 ? "less than an hour" : Math.round(w.elapsed_h) + " h"} ago: ${Math.round(w.pct)}% used so far.`
       : w.runs_out_at

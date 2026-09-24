@@ -1,5 +1,6 @@
 import { redact, redis, slug, viewer } from "./_lib.js";
 import { freshestOfficial, split } from "./_split.js";
+import { forecastWeek } from "./_forecast.js";
 
 // The small view the claude.ai userscript needs: the official limits, each person's estimated
 // share, the learned rates for pricing the next message, and the claude.ai chats seen so far.
@@ -59,8 +60,11 @@ export default async function handler(req, res) {
       const a = pts[0], b = pts[pts.length - 1], span = (Date.parse(b.t) - Date.parse(a.t)) / 36e5;
       if (span >= 3 && b.week >= a.week) recent = { span_h: span, per_day: (b.week - a.week) / span * 24 };
     }
-    forecast = { week: wk, recent,
-      scoped: (off.scoped || []).map((x) => ({ name: x.name, ...pace(x, 168, now) })).filter((x) => x.runs_out_at) };
+    forecast = { week: wk, recent, pattern: forecastWeek(off.seven_day, fit?.week_hours, now),
+      scoped: (off.scoped || []).map((x) => {
+        const g = /fable/i.test(x.name) ? forecastWeek(x, fit?.fable_hours, now) : null;
+        return g && !g.early ? { name: x.name, runs_out_at: g.runs_out_at } : { name: x.name, ...pace(x, 168, now) };
+      }).filter((x) => x.runs_out_at) };
   }
   res.setHeader("Cache-Control", "no-store");
   res.status(200).json({

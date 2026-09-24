@@ -1,6 +1,7 @@
 import { viewer, redis, slug, family } from "./_lib.js";
 import { fitDevices } from "./_fit.js";
 import { freshestOfficial, split } from "./_split.js";
+import { weekHours } from "./_forecast.js";
 export { combine } from "./_combine.js";
 
 // Calibration readings are stored per device as compact arrays in this field order.
@@ -41,11 +42,13 @@ export function compact(list, now = Date.now()) {
 export async function refit(names, own = null) {
   const q = redis.pipeline();
   for (const n of names) q.lrange(`ds:${n}`, 0, -1);
-  q.hgetall("devices").get("week:current");
+  q.hgetall("devices").get("week:current").get("forecast:ignore");
   const got = await q.exec();
-  const lists = got.slice(0, names.length), [all, current] = got.slice(names.length);
+  const lists = got.slice(0, names.length), [all, current, ignore] = got.slice(names.length);
   const perDevice = Object.fromEntries(names.map((n, i) => [n, (lists[i] || []).map(parse).map(unpack).sort((a, b) => a.t.localeCompare(b.t))]));
   const fit = fitDevices(perDevice);
+  fit.week_hours = weekHours(perDevice, Date.now(), parse(ignore) || []);   // recent official pace, for the forecast
+  fit.fable_hours = weekHours(perDevice, Date.now(), parse(ignore) || [], "pf", "wf");
   const w = redis.pipeline().set("fit", fit);
   if (own && perDevice[own]?.length > COMPACT_AT) {
     const kept = compact(perDevice[own]);

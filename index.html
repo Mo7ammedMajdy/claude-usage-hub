@@ -556,24 +556,37 @@ function pace(lim, hours, prior = null) {
 }
 const lastWeekPace = () => { const w = (state.weeks || []).filter((x) => !x.running).pop(); return w?.week != null ? w.week / 168 : null; };
 function drawHeadline(src) {
-  const o = src?.official, w = o?.seven_day, p = pace(w, 168, lastWeekPace());
+  const o = src?.official, w = o?.seven_day, p = pace(w, 168, lastWeekPace()), f = state.forecast;
   const H = $("headline"), S = $("headlineSub");
-  if (!p) { H.textContent = "Waiting for the first sync."; S.textContent = "The laptops report every 5 minutes, and within 30 seconds after Refresh."; return; }
+  if (!p) { H.textContent = "Waiting for the first sync."; S.textContent = "The laptops report every 5 minutes, and within a minute after Refresh."; return; }
   const resetDay = dayWord(p.reset), resetAt = `${resetDay} ${fmt.clock(p.reset)}`;
+  const reset_s = resetDay === "today" ? "today's" : resetDay === "tomorrow" ? "tomorrow's" : resetDay + "'s";
+  let sub = "";
   if (w.pct >= 100) H.textContent = `You've hit the weekly limit. It resets ${resetAt}.`;
-  else if (p.early) H.textContent = `A new week started ${p.elapsedH < 1 ? "less than an hour" : `${Math.round(p.elapsedH)} h`} ago: ${Math.round(w.pct)}% used so far. It resets ${resetAt}.`;
-  else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${resetDay === "today" ? "today's" : resetDay === "tomorrow" ? "tomorrow's" : resetDay + "'s"} reset.`;
+  else if (f && !f.early) {
+    // From the recent pace and the last 7 days replayed (api/_forecast.js), not the week's average.
+    const r = (v) => Math.round(v);
+    if (f.runs_out_at) H.textContent = `Heads up. At the recent pace you'll hit the limit ${whenWord(Date.parse(f.runs_out_at))}, before ${reset_s} reset.`;
+    else if (f.p_limit >= 0.15) H.textContent = `Probably fine, but a busy day could do it: about a ${r(f.p_limit * 100)}% chance of hitting the limit before ${reset_s} reset.`;
+    else H.textContent = `You're on track. You'll likely end the week around ${r(f.expected)}% when it resets ${resetAt}.`;
+    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset. Recent pace: ${f.per_day_recent.toFixed(1)}% a day (last 3 days, the newest counting most); ` +
+      (f.left_h < 24 ? `${Math.round(100 - w.pct)}% is left for the last ${Math.max(1, Math.round(f.left_h))} h.`
+        : `you can use up to ${f.budget_per_day.toFixed(0)}% a day and still reach the reset.`) +
+      (f.skipped?.length ? ` Left out as one-offs: ${f.skipped.map(esc).join(", ")}.` : "");
+  } else if (p.early) H.textContent = `A new week started ${p.elapsedH < 1 ? "less than an hour" : `${Math.round(p.elapsedH)} h`} ago: ${Math.round(w.pct)}% used so far. It resets ${resetAt}.`;
+  else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${reset_s} reset.`;
   else H.textContent = `You're on track. At this pace you'll have used about ${Math.min(99, Math.round(p.projected))}% of the week when it resets ${resetAt}.`;
-  const days = p.elapsedH / 24;
-  let sub = p.early ? `A forecast needs a few more hours of this week.`
-    : `Estimate from the average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? `${Math.round(p.elapsedH)} h` : `${days.toFixed(1)} days`}${p.blended ? `, steadied with last week's pace until the week is a day old` : ""}.`;
-  // Recent burn from the 5-min line, when it spans at least 3 h without a weekly reset.
-  const pts = (state.line || []).filter((h) => h.week != null && Date.now() - new Date(h.t) < 24 * 36e5).sort((a, b) => new Date(a.t) - new Date(b.t));
-  if (pts.length >= 2) {
-    const a = pts[0], b = pts[pts.length - 1], span = (new Date(b.t) - new Date(a.t)) / 36e5;
-    if (span >= 3 && b.week >= a.week) sub += ` Over the last ${Math.round(span)} h: about ${((b.week - a.week) / span * 24).toFixed(1)}% per day.`;
+  if (!sub) {
+    const days = p.elapsedH / 24;
+    sub = p.early ? `A forecast needs a few more hours of this week.`
+      : `Estimate from the average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? `${Math.round(p.elapsedH)} h` : `${days.toFixed(1)} days`}${p.blended ? `, steadied with last week's pace until the week is a day old` : ""}.`;
   }
   for (const s of o?.scoped || []) {
+    const g = /fable/i.test(s.name) ? state.forecast_fable : null;
+    if (g && !g.early) {       // the pattern forecast for Fable's own limit
+      if (g.runs_out_at && (!f?.runs_out_at || g.runs_out_at < f.runs_out_at)) sub += ` ${esc(s.name)}'s separate limit runs out sooner, ${whenWord(Date.parse(g.runs_out_at))}.`;
+      continue;
+    }
     const q = pace(s, 168);
     if (q && s.pct < 100 && q.runOut < q.reset && (p.runOut >= p.reset || q.runOut < p.runOut)) sub += ` ${esc(s.name)}'s separate limit runs out sooner, ${whenWord(q.runOut)}.`;
   }
