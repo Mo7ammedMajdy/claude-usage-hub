@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Claude Usage</title>
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAeGVYSWZNTQAqAAAACAAEARoABQAAAAEAAAA+ARsABQAAAAEAAABGASgAAwAAAAEAAgAAh2kABAAAAAEAAABOAAAAAAAAAEgAAAABAAAASAAAAAEAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACfCVbEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAHB0lEQVRYCe1WWYwUVRQ9tfQ2ezeziQxRQQi4gLihAsaIgCiJIESNJpoYBU2MiUS//DFGf4x+iDEmihpjXNDIIotLgkYgETGAAoOMOG5DZmBmmGm6m+nqrsVzb3XPTLeY+OePN11Vr+u9e+955y71gP/lP2bA+Cf/2x+7NTa9oelq3w+mBz6SvmHEODZ1fXgHfP6TsTzHiWkGvmlYDo0P+WZw7Jczw/uWrtvhjFsyOjwngINrV82ri1gvcdXVEduCYXBZEIwq/eNArZXWUkdUCp4LGvgu57hrZ7/40e5q3b8BOPzkihviVnSbbRmNjhtuLYA451Z9L9Q3Ra1Kld4EqKyUmUC8C3BKnJsoen7a8fzbLn1hwx59WbqVydS/nz68rMYMzHW2SedFLzQihmWWzu2GJKzaeo7Hce4RlFxcp07lqdZEjyPGL190EeGGzCBYJz50unSrANASN66NWuYVjhsalDViNKADu6EJE+97Au0r18CwI6FTt4jE5KloX/UIzHhCnQkQuKRd9HwBoEbgFFyI7fYa65qSb31UALANY0bUkthxh7wMeYqIEcOEGYsj3jEVNRdfDt8t8CqiduZVqJ0+C2YkFjJDHTvZrOtFUdkTUBSxbQTBTP1TulUAYMiSgjyMHNVF0SvSsIviQC/S+7+howga59wIw7I1xnZ9E4rpQbi5NKPkIrngdkx+9FnUzZiDoFigm7FQhJuij3FSCSBAdBQxnZu2jebF96Dp+iW6o+E9O+CcPIGaqZeiZsolDI0LSwAMnoKXTSM5dxEm3LQcZpRsSPaLlHYvQ0lS/qIyLksFAGidC11+GAaOEhdMR/PSezX2ARNx8KuN6iA1/3aGJAFhIN/zC0FdhuYldysz6e92Itv5PUxhKUyC8CkhLfcSvhGpBCAdpZQ4gtZ38ujd8CqyR/ej4coF6Fj9DNxMGrljBxj32ai//Dp1KFS337kaVk09Rn4/hv7PPwjDR+djiUhvYruqa1UBEEwUrpP4G6YJl7Hve/9l9G99B9FUKzoeeCpMMAJMzbuNbMSRvHEZYu0dcNOn0ffxa/CYEwETVNnnOom9XmK7lNcyFBGOxkQnJWkYAqL1JQEFDI0NfLlBmWi748EwwRjj+KQp1JVdUegofYBJmqjDhIUrCWgyom2TUDjZg5MbX4ehvaO0NtTQeyUAeUXYPus4Pnka6ufMh3c2y1CMIGA4vFwGp3dtg1/Ik/7rx8zQuPSKpmsWInndYupkWDV9GPntJ5w99kPYM5QJAVBJQRUAoSpE6WWG4DOzrZo6NqEULCacEYmGmZ+oFaS8ygXLf2Qk/8fPyP60H07vb3CHBgj4DPyRHBtXyY3YrvRfHYIQgMZ+qB8Dn72v1NITQ8LWzLDUTpuFlmX3s8YdAio1H86LM/fMaTTMWYBI0wrVE1CZg7sxsP1dOhbPTLmqrKtiIJw1CDQgZeJAuqF0vNjECzW29ZfNRebQt9qO7cYU7NpGTVi7roEAhnBq4xuItJynHTPRcTG8zDB5KiciMfwbBrQChF3JXtayxDXFxJLY9qx/XlmItp6PzIHdYbK1TNSSrWX3k8Z06sNXkO8+ijSpFzP67VAQErZKBFWEcJIa+hWTxGJ9N8y+Aamb78SZfTvxx0trWXZRNM69BX3sD2a8RmM++NUm2CzR9LdfwmJ+nHf/k9qgTItnCflwMfZSWbohDQVxlKQKgEG+pQsK0hB5jk2o59Wn0b/5TUQmtKN1xcMYZKNxmHCxtg5twcO7tjIBu7Rl9295C+7gSbSuXB1+L2hPDzSyM72E1jGpAOBL4YsCASgEPiWGUsuRxma0rXoUObbY4a83M9GaeTZogM+4ByzT/i1vw2IepBYsQz/zIL17Bx2LeVqSXculvg02lzGpAOD5/nB5Sj/FwoQkI5/SVJwT3RjYtJ7GPEgOCL3yEZIvZP7Xoxjc8R59cAOM/Uj3Efj6NRSLsh1etFMMxnzITEUVZF10FTxhSBaHhOlADP7aiZHjhxSQgDLZEyQppTlJlovTNL+WUsIiox8i2YQIdQos46xT6ApfhPcKBr44kd6bddwjcT3zyYIQiCaR7EzYUGcRnO36Ab3rn4M3PEBvIdWmzpeABzxVCe0lidFmNu8c+eJEbm/5nTyt8X/2dPc6iy5q604mIssTthllSDhd2oEu1NpUIBIGj4cQ+iSkklNZM8qcKuiMHErzrpvrHMg+9PjWfYfLM/KsACAvPuzsOT5v0oQf62PWrLhltcZsE1Gij5Qvyxwd84zHw6Y1+l/X0GK41gSPeMQTIOMUjhw6lVlz1yd7t4uP8SLgzynzp7a3rJnZMT9Va0+LGFaTYQZR+LyTbRar8qK1LfQr0yxfHTNUXOEFBs/V3tDpnNv1Wuefu3Yd7+s/p6P/X/7XDPwFSUFFgXgeFAYAAAAASUVORK5CYII=">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAeGVYSWZNTQAqAAAACAAEARoABQAAAAEAAAA+ARsABQAAAAEAAABGASgAAwAAAAEAAgAAh2kABAAAAAEAAABOAAAAAAAAAEgAAAABAAAASAAAAAEAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAgKADAAQAAAABAAAAgAAAAAB7ATBAAAAACXBIWXMAAAsTAAALEwEAmpwYAABAAElEQVR4Ae29B5RtWXnfee6t/Orl1P1eNx2gBbQaMBlEEBkaCRDBLWBQQELWSDOWZCxb1mg0WmAbh5HlGVleSB7JMkiykGliI4TIOTUiQwMdgI4v51f1Kt47v99/73OrXtM0dR8PrVmzalfde87Z4dtf3t/eZ59zm2Y9rXNgnQPrHFjnwDoH1jmwzoF1DqxzYJ0D6xxY58A6B9Y5sM6BdQ6sc2CdA+scWOfAOgfWOfD/Zw50/r9C3H/6lWdPXDm/cXLD5qWJpdneRHdidGyy1x1b7jUjo6PNSKfX63RGRjvLzVJXnMf4LNZPOR8jj5zx6aZZmLHKILV12wyvZ6md+m3mPR5XIJfe2u97rEzmWDPS9Hv97lK/14z2lvu93shSs9x0e4vLS/2F5Yn+wuzJ0fnFidNzP/YH75r/blD+PvP/3hXg3f/sp6cv7Cw8YKTTf/Bo01zZdDr3Xe7394x2Otv6/WZj0/SnQGoccY9yhJ/9btPpdjsj3U6/By/7TXDuyaX+KlZ1Cikdjh0ApXBkDO43tKFRb6mxjbX89EfHm2ZpgTOvO3RDKfXpBymX/HQlrNExxNoDLnVKN+nDXgKLo9U6aCqHfrO8CFmdXr8zwvlSr+l2lyFhqVlaWuh3O2eoe5rP0U53ZD/UfXNpcfHr/ab7pW/M9G78yddee1qc/r5SJecH3l3nS7/+k08cH+28BEY8DRbdb3J0ZKTThfHLyxFMD871YHAnHCz4cEryGzS7IxjYRNPMz1KfduSOUB9F4Uqh95Jnfp+6ugmVob+8xHUXI4zKkFsTeY1CHZ9sekt4DpTLPhBK0yxXBQBYCy+MQmr2rILZh0rT5veDh5jaoiZPqSAeTRd1t7+qhiP0PzJCXxyX4cHiwsIS1W/h84HZpf5fPfz33vhRWq8C1gI9v8fgf35Bng3ti7/1s0+b6s//CwT7tInRbncRn47Fx2JkRxhKkwGlCgFh9KjTxaI4oSy2SCXbcS5Da1KsCts6/itA8waCStlKP1wmpxxbOMLl3H/g00EpNgMh6XlUsB5C9JhSlLG/WL24ytcdQ5aUxKu07QuYKAfeRZo6eocRPEXOVU7obWGiDBhGc2ZZTem+Z+bM3H94+H980/srMj+Qw9mYnscu3vOPn7f30u3b/+Xo8uLLR5veyNySzpiknOy1g2eHcLlerKevrGFil2sswzIZT41YeazHttSHefI6iTamHu0EoOzwt44dFT6F1iGfnHzSVkFzBaTkRiDC4arUqn0pdIaPWD3lbSpWrbdYqrCBYx9VgUGyKiIt7EtlVlWpH88kIOgTVygGPte076go1JmamECX5gkdeq8/PDP3fzzhP193l03Od6LL858+8+vXPGPraPe1E+NjV8wtLEZgYTccKi5etpekUBQEoR6Hal0yAUvqwpy45tUoOh4vwXTbCK+tA5hlNEvBF0HXPmQqQpSpUTTqK+AIRSHV6whYWFo8dY0b7p76lKmSI/EI9KPEV6doAL0LRwUO/CAQZWxxFXKfOt0YAOdcr4ZUDMK8fjOB4swvL9984szC//Ko33/re1d3dz7OWzmcD1iB8YVXvugXt42NvH2027lidn4hVmCBBMa9Si6MkpHFvosKxJKw8oyTKkIEIJMLimEaMByvI0DO9RZhNOf20Aq/XBXGR9bCTQ1q1T4UToSAMLu6ZPopbhlPVYXf9qlVKyZ9g7FEwa1Us2rXcoUfDyS+ZLYwBEJZGba4aM9VZM5V+UJjVQHxIE9vKIi55X7DyHnF9snxt3/h11/0i0A7r+l8KUCw/8IrX/DKzZNjfwjqUwuM9Qpq4CpB20p+EpVzjJvmaNI6+uNTnmHheg1O/dIik8uXR6xZxrXFjqtFkQoDU2I5l9YxGayJTc7JTT7KkyHIyF3vAJwKlckAwabKVZMxSfCKZyjKZFFENYa38iJI0gd9F+RLVrCnne1Tlrp4p+RRp1Xwgh4ZTBr0DOQXDqIETBX6I6NTm8fH/lAeC+J8pbbb7weeMPqf/bUX/s/bNoy/lviFOY8WAYMZO1tmDDqINXFF5BuZxIqLUCTYyN6k7BO9c91nSHAoiMBUFHmZCqWdvB/EBLYVcATqeemmZnFVUnd8gmB/PsNMgRIyAtdrrf3uSVjpa1VBj+lkB2GKW1y39IlblGZVxVWngRNApZeoHm2KygX7xBLpDT4lpkGxVCa8Xu/o7DzDwVv+CyAL0qtgD3v6nVQOByEIfPxXnv/MC6cn3oYApwxgTRnvLK3XMif4wqg0slJ1nVqYFmiyzLQyC5CxsEbFaOtUpfE6wgJOLLiWFwh86wnIC0zPrafl0b4bBWx7Ky1SE49jXxENeHmmpX9nMu/s9oM6wpDuik+i/9C/qoX4CKGtk8ZFIUqJGUUVrRfloI1TR7zqmf0nZ57/+D9423soEol7QpDs751W/Nz3rntPNfpv+Lln3mf75NgfYYFTSxLDvFrLhdPVCsSNTwSoK+UUlB0aOtTRelKm2w0/S/3wC3hZsImCrFDag7lZuBGG7Ug9Bs2M1aVh3PKy5fStSgpVhbDYISjDiBcKi1LLWaOoOHPwXDw9Wk5dPwpTIHolF35a2AXr8q31x6oD17y2h1pub8IWVs4L7AyX5Kev5Je+pcEkTq4ZyOsd8PzNv/DsiwuAFJ/Tlz2cawLVpvuA7ZteMz0+evmCUiV1mBufDVRiKXM6ZXmI4RtiYnF6gbSbK9e5ql8wsslcG9fH/Fg4tvITJqFUsWjznF4w5ChKy9JlLBiGajVjrPxR1jH4UhmtpwD0BGKld7A/81Aw5+tZGHIYI7l2ofC1wB51o4QKAzqkKcxgOHBWwShelDstxUW8S4o3s87IePp32he6qoFkKPFcrwfsnsNpkrEBuPFZWFho5Pl9t21+DUWCLswvFYf6bvEaqlGt3H/vL/34M7aMjbzUOb4sCIIwz3k7qIYwV9oS0lZGWuCyapgsQRFagdhOi9LUegolYGCiitLCNc8C6VbICkyJO5UkqSLdWHap53C0zNSx4/IvbexWjhUsBQT2Mh2GpyDX5NdAjQqMv4XTKo94joiLbfhELrTps4QcSQhHwZICXdzaPtOGC5ebhRGlqzDItr60ZbYCNBeX/GtYaLKvNs0yO9jUbV72AWRQu2mLhjqeqwJ0nn3FFRMXTE/8Bmv4o8vOWVpC6L4js6VEt1zn7MW9ldFUJkUJ5FySoigfL7XghujaNrpgbq80/QU8hNZKm8wS8AwyvL/IjIEZh/kZTmQXQ4v9drF2QXVcnUOYvTmWkauQ2q5FvXCddlFMM8SwpBbDxCtaJA10wwo/SmmbWj0zD/GwjObpw+t0AN6cadHxPNJlF7bnREGER9Qpx0In9w+sFTraYU6ce+DAfYuR3dOTv/nkyy7DytJl6g7z1fqXYdqk7u+/8JFP3TM99du57VEoDZZhOBRFiDJfAk2pw7WuuHoDmaTL7Cpo2YPAojS6P9tKJO1bIQjJutP3f2iz8cGPbUZ3XtiMTm9mbs49wplTJQYIH1QCuVT7Th9cc8yYDgy9S4JP6svwNoiMJ5DD4sRHRGKRCrXSoCBznmvOqWUqNDv7QVERcOACY/V9iAJRCCTxiVUXfkVthIn3Ul1UkawxyIH05bEoV6bD8If1lkseuGfrR//yczfdIshhU/GZw7UK7hdNb3jx+Ph498x8WQ8vTJCxCA9r0+2GAa0b1YXDmIGb1EVS5rDhTSBq4xYXM3yEuVq1ggE3rz3Ts2x5/LOb7U99oUUpkzHLJ481h97135vZm76cdXZLHGsjENtWJusZ0sjhQQVgnI8LDHzQY/1hZMPGZsPlD2zO3HZTszxzGs+LwkqDBKZemY6plopeQYV24AWWwjfRJkrlsBRkSzBa5vgir3BtvZKEFr8AHuLXo1pmUyhyWTKirnTZxKGT80lWiS7cOP4Sct5nNmk1yJJzL9/n4gG6P/ewK3Y+4X57X8PwtM3AqPQIto5XMovIXEtNoGTnVRl0f1q0/CjWVNtaPoACQ+UPeVpwLFUYuPGpy69sdj77ZRSSrxvm43l3crqZvOSHmlM3/F3Tnz8TwQdeBEYfIKgyAJajX/TRxiRcmqVyTl32wGb3C36h2fojz2w2PvBhzeLRg838wTvimVTm0CNuaVPEHy8RhMEpjBhwQ6hRvr4BMIURnbhwbeUCJ9WsWRTIS4Sv8qhQoSO4ayhkoLxlYcpq8ij1tpzsjL3hS7cfOEONggAna0lR2rVUXFWnd/WVl1w51u1cmrGQAm/ehAdwNwJDWO3983gBG+uO/UiMkXhdfpX5WkWJjmkvF2VOhAtxThUV8uZtzc5nvjjjuuVKzT5NzgRGt+5oNjzgocjRMbMWqERepa42RHL6BoNN1XbT1/iui5o9L/7HzeTey+Klxrbtbnb/+E814wwz8VwKRNw5jhjYatkJOsW39FhtM+ilA+qnzwS6VKpJj9ezrXSSF6cOrvFY1gHfNuKPy5dvVgTvxFbpT14BnzwC3kuvvuzCBwaU7YdIwypAOLt74+SDcT0jkYPIeMK/Y7Hn0ckIUBq50pJBSgal3MDN4aBFlBMBt8OG2elIBlJmoDd58RXN+O6L0m4g+SLZUpk+tjz08c3IxFQUqoyUFslNyAQP+7aJ5yUVFRCXTQ95bNy/AabJ49i2Xc12hpzM/RGaKQpNAJpponkKzgKVqgiDYajeko4ChpIiZOuRRiBqpCq4bQv/NALaaUQOfyTLRDVXxhT2wbCV/izg3NnNJMHgnk1jD0ojSR4iDaUAsU7I3DA+9oDVDbVQy1rrVWuDPIiU8bcQGatXGKR2KmgQGJRpH0INBDmHDeQbR3ApQ2dORihpnK/VdFIbIU7suaTZcN8fLosl1NFVKrxeO0sQGMokfD2O1uQMY3Tz9mb6ykcW70Edq/mxnsqT4abyVYUUrxDo0XwE4/BgsolNy5TY2YINEDoN4h0LYK9Co/XSFe3j7ahri9KKI/0zsgZwFs6q57BGhhKuXYuYHu3qASpCnK0x2WDNqfPqV4vK2FinudSFkSCR1hABEu3KmPnhBEcb5No8hoYyfulO5ZuLQxAirIxtMFHvkDZUaIM2YDseL586TqOWxlIrVW3Bvx5k08OeGIaohG2ZfWQ6WaqV/qKk/WYJJeni7ke37ChDFI0K1vSPsBYP749nKy5ZnLHCquBxTww50pRyzuPZtG4oi7IIT9xQEnmh4KUhwR3wsyDG+oRClA8OGtGRYFEwCRzpcXjjGD7jLcJDvIDD3tjo6KWAH7vmmmvsZs1pKAVoXvUqgU+wS/OCjNlcxC0hyMyLuTYfEpNWMOFMolfl6vYyXqP5CaRwuVEEqC9/MqpE0NZdOnWsmdt/e4nyBRQu5STtvTQW2HDfK5uJS+8PbNfxFUP5MDiVk4igKF3KYKiRv0xdnUID/S6geOIO9PrhLNbOdQ9volsWUKU67twxn0+UXcGBXA8lUTlad7/MeTSDlgU8wqauvaQOQGPhKpd58s/YqXoaFcX28pu5lAtTF1Bt4tprr+Ww9jScAoDHgy7fPTXabba2AYuE9tFCkTZvRKtVGvFbLSKQRbmpbee5ewKtu8wq1zLBWaaQEGqApO7LwHyszPUMUX4Lx+v8h/l+5SR7/DY/5HGFkWmnzdm/goBc+muFrYIYgI5v3FykIN5+TBzdlLJ07FCFXLKNDSIMcKQSSqBg7YH6IbPXjO3c04wRVI7vubQZ3bglM6Pwp7AgvHJIMKU3T1slU6ECu+JNUXhmfmpTuSpPeJ9z1gM6/a0P2r273E+n5lrT2Wq/hlYP2To9yXi3cTnBkgyjETh5kGHs3Y6VllvBsjgkIrfizoqW246PETltumzCLGMygGCEblZ5ZQgY5WYPCuaU59Q3Pt9Mf+MLzaYHPjxKRw1Sgd8eFND0Ax/ajH/swmbxyP4qWA5aDLgpLNcTBpjZpR4ASJyWFEVg+fjMaRaYiD0UiMoT5YZOhS6etqFuiSWWIWes2fbUFzebH/6EwNE7zt35rWb/f/+/wht3OCU4FT4Exvo49uFBmxIzOVelTjezB+HTX91SV7ho7RZjFAXeEkttvP9F05NfwWENk4LDMA12bd3BvsXORDRaciLYqq3RUvLcVatmJllWGFXOODcHwl146SHgWBT1Y5kyR0WKx+Ac4Wv1Eq77O/qh61igOVkEUnuo3XCgPnVHN2xuNv+Dx5Uxs+Tmu3XdQtMCZaFpZHpTOVn1rXdaPnUiK4zCLENIGd6cfsW9S0f6LMPI7hf9UrPtcc8qBhCl4bYdi0pbmUkYrScBq/CsdhbmFH6Yo2IKMjELClM8ZsFUIxEDlaST+WCqRgEIQycum95cbo0KY41paAXYPNUfx8rHE7SJfJhQenMaqDZmLLdEYZIShIm0eXzs1HOj3u7iHGdcm6FXMdBZBTNd5JrAEQVbOHh7c/RT7y2xQKDUxrUvATnWbn7IjxDYbddcY3X2nt249B7e6Q2ApyWPbFABKKdt+ROfkWbp+BGCUqZ8lGq7WfRSVtbWcikx7nDat/s5P9tsvPLhhAWujNZK8oJ7D1se+0xWF6+kLvSm87SknknPRA8uFqE0DkkqV+BynpXD9Gg1+gN0z+FSj2SyK+ggqBzHN//gFWBsqT8OcqPemFBbRcgkk5JEDOZZIBNbREVXslWGxuXVMNsW5CKEAsZvPoFRyswxDHJ81WsYPZ/4uw8SEN624jGsKgItEjBwbPuuZuNVj4pCZaolU70RJML0rRtXOYQ3qgKsJiQC6TYLh+6kTvFkunPxlw7PTK5qerdu13Nfnr4Gy9wptA4IAbc7uaHZ+pin0QqlUdCchRxqZLeT9cUPeNa3LPyq/GvJsn9HB28QxQMVNCqO/ZENE7nnLbS2ief3muxnrSlAJxjo0ER3JsQiPRVj+edHK01UD9SM+ymwCs05jxY75kmsUT7a3Dszi6CK90i+zLAdbdJpFXz6UnjUP/axvykdWqP8p3bq8+WsZMsjntR0YH5mKOCZ8RpMhC3hcaVYb9chwIYKvpwE9vzhfWlDZsZpFUkY8WzAh9gsTW9++BPLOJ721g4WHKTB1G8WD90VmnM/IkFeyc+CkjC5zFqCcVHlqQofoVPovoEoL+eaS2FPaWc39Dgy2h8fOqYbRgHEuBkfUy3xZNIoE/hUcotH0KoQoHerRE/CwliYlXo01NXJvAR37M3bhKA2PfQJzYYfekgzwpJvIu3SQeBkshBI9Ee+D4w4IzhNQJhbvjGLFguPfMBjYs9lWeETXkMQ2QpQlJLE3fsWUzxPWBWu4IqS4coXD95ZhJHK1Xt5rmBw/due8OPN1kc/PZ4lVQq1odPaLb32f+aWG6AF1mk7cWeUS6PsdBih/9QXdnCBcxwdVpMwEL2EN6cyVGho8DCCsD4Xo5NTQyvA0A0mOj3k0e/03dGiMGAUYkEri3sE64Iw1GhnjvPmeGvXFFyp6wpgh10+u5790sEqnJq8dPpEc+QDb2lOfeX6MKjT4C0C0l4ULUqlAs3PNUc+8tfN9P2uAo6rhxbK0FTjEgbT2dYfeVZzGljL7CfIWr5tE2cACZBG7m4QTRe1Lcxslk8fDS7tlKyIE6jA7LFYtfXRT+Wu5AsivKI8BTsqBMuSRys8zOLRA838gdu10TJspDO+9IAtLqVVGBTPicWXncPUo13yrO8eCOHYnXBkqLOm5V5nYnlhaIMeuoHzMVSAENn5Px+VILiITU1w1oUYLVz3K/LB1W/PsQjvGu54+j9sNtz/YU2PO3iOawZJzpsveN7PNbue/qIwL9Zru4zBBb6W476C+TtuIR74UNljIEfyKSfqQlkevpTVwScw9cMLmHKkvR4J3LoTk1jVpOpCod/QU4XWO80UMI0wPgAmaAT/aTzVzmf/T4UWa9gZqdQt57UZRd3m5PUfYNiaSX/xmChJ4h75Y0XbpxlXCpf+df5CzDfeTIPJvN+6mTZSAg80C2MH6oN4b2h5rrlBcUvgyRyIuXSnWH14IAlBxPvXAzbAqLhnXZVkpMziaslY3eTey+Oq20JpkxjJ3vq4q3N3bmzHnoyNWvRgsInVqPjd5tgn/rZZcLEGxg1SBFI6FN5WovAuG0eyowY47lxeAoZRvTOA7jhBKanELrTr8DTO/juw9DnpDUmJxlHSse0XNLuf93LasOYCLRq8Vc5KXgsGGk9+/qPN8U+9J0KNN1mFW8GQugBIP1FKGmMIKqfJOlHUSrO8DJ4MBz22tfu8ongQdndYnh+ATOM1fK1ZAQawUF07y141iGnjd/IyxmYHD/mhU6smX+EVUgoULcntWYvHD9GookCV8E3rgCEujmzAve/9qVfGzfcXzhQmWQuCtW4f2146caQ5/tF3xg0CrPYDMBHwwxA0ccHFzeZH/GhZqMK6wsCAgXGu1LkMrCSpng99zDP+Z/uWIPyzP9rues7PsMq3t1xbufxzLD4kFJrH+r6bSg6/6y8DNLMhFC8e0EoqugIHdqt4Kusygra/1ckr84oylrJ8O43mU/ru8zx9y8zVre/9fM0KUJAs7Mm3GgnR2T6tCWiBMlxEwaNM/yBYxpmqRntq5CtDF48fpm5pY77taZ1TLjJUjHGf3/v02370uVE2b5XaXeIoa6IEJz/34Wbu1ptKLCAOFYSHiAWL2vaYZzZjW3eyt5B5fYsLgEY3bQUHvUepHRyW5rPe4MaWrMdTqnB2PuslzcYHPGwl6Au9tb9IpHaMgi+xS+ng2/5rVhPDG0VIv9nl2/JJgacdHdSkQRULh3fhBwUcc89F01vl6dJbaPHsboBagN/juGYFaIeAATyRQYi5C2ZmBF0ZAGFF4PVa4mtD4SQApP2pL30ygVa7W7eFnWlWZW42hlB359P+YXPBT/6vzQh37Yw9DEO8zaui9QgIj374OpEICJuW5vaPIoGPewm2Pvppg+EkjAarMe8CAsN6+dDXMvsL548ejsK5HGvQt/nRz2i2Pf7qeKYCPF3RpLbzYBIWQjn013/WzO+7NbMMPYdJXHPLV/7UZBBaeAWPggcF4CAP2utKBV1xBp/lYYY8vZnWoBK0DC6EtOC/53HNClA9QOmGTmWqVqwlFmtESxPxA9Iyus6HrxXX5YX1QBjkF2DQwetehxIcL4Fciy7VVoYziLY/hO7CjkPC5H2uiHfQ+hPZEwyd/Prnmpkbv1j28EWY4CHDwj2VZbnZ8sinsHNoZ5gY5GD4qNPOckHvDGkwf/EoQ9PsSc5REzyGQ9EFP/aySpC1hCvgmnJarp2RHP3IO5nFfDo3phzuDDzlhf7NY5bQFJzXbXDqtR4cuPK2XbzKcEiRI5Q7mi2zpwTgMl5+Cidb3ikYMq1ZASrcs6gWKYOjeHE9ANdgmKqJFDyTUSHMrjhvFzS8glkK7Y7X/Z/NzNc+h1ZjDa0VSJTt63fOYMDEhfdpLvqZf05g94y8LWQJH+qU1F1HRz74tjApMCIg0eXjAbzc3rXlUU9BGUpsohK6GUQmD6ojsAXHfxRG4btP4MIX/iNW8wj66CMVK8jSSMxKhkHfzNc+2xz70FubDjuT7FbllYQiUNsrZCxcV05+BExNh76uyqCAwVXaWw8gDLmqEWbKS1vbDXZgCcch+RzSsAow6KKsUZdLkTOg8ahStjdORNiZgMTF6mWG1iB15vE9QvkyweD+N/1Rc/g9fxUXW27XSlWpV5guk2GUy6AwdzdTxQsZEsY2TLMRdDaLObMEXSe/8PHqBdJFaWpfNNdqtrEkO76leIEuVmMQWCRR6tinc3b70Q1f8PxXoHSXpG3BZwWngl6+45IXWTk8dN1/K3WpnEfTMtUryhyyMRQ3wui5VhIlept2fJdBKEksG4XJ9LMaRnYntQpSAQjX4Ptc0jkpgAINMfSoQ8pfRUBv4PiauSqE6OIyXFA3Y5fq4NilMB3rbM083Ln38Y+/q7mLW6cKoMvGS+H6X6VY6KNdrIaxeQtLsPf5R78dF92bZQs3/R3/yDtyC9dAtLC4wrA1ODqNy7q8dxyJ/mPZltV+VBJ3ArvHYceTf6LZ9OAfKfcQIoBVsGxTe4jwiBMOvuN1zTw3kLJnH/xileKrsJUpH606rrx1/UIB79wAAr84eHD39rfT1BiRSgM+SZQJyyTK8s+zxE1mDpnOSQFa1hrMmSTA5JXRalnLRvjk+9HkoyhYe5J1OBH5eA/dl0Qi9DO33dzc+frfZYHnA0VRWquohIbs0hjBsFmU4O7in/2NrMop9DP7bmXezd1C4oKzhwKwUxD05d05d/2qiPZZ0KdM4bBgMw+MTQ96TLPzGdegvNW1QobN+c5/e1RJ9XJHPvz2LE27tKy9JzYRd7xM8YjQq1LamYDoS/qdBZT+ycKyYxzmM9yp0BQTNFeD4zrL7F5bIChOhBQ+i96QaWgFkB2D+Ws6E8lKRQ4I23jAevVbrxDekW+ec3z3AqjV5q9MX5mX4977COHQ2/9bc+DN/6VZZJ7v2FohFDheFWmUIQEB7GIL996f+WfNxI4LGIPfzs2XfWFmYXaLAIxjjBrbvpuni/5BXHF5aBSAQFZ5nZqO7dzb7Lnml4sSIZSCZK0TQlK9tGER6fSXP90c+/A76A8Fh8Z4N40Di/ZFUr5SRoHTeWApznb6m7pateUmFLRVuvAKGFEMlUGPWSLuxF3hPPhQg7/C7QJk7d+117U3cMZcNmmAM4SppTI5lqxrt1zhaOUwJGhZx3ELYpJvrnX4H7gu6pstUQpFYZxiPL/jT16DN/hwaZcFGztoU4GRViiUVnvJL//LZowVxkPvfxPwV5NX63KwvjeefKAkT/6Yx0f8xll5vM/P/2+5nZwpaBSttk3T6tLJdwhx3D/4zj+L0rtJw+otza3gbKZiZD+BPODjMxUKzVjKKV3Lh8wawgfaAMzVTuEEporEmdYe70u5W8kDwz7OIa3m0L02v0cXA+J5QwZuTw4WATN+CUnCMm6RTz15bB2VRmriCjn6NsjkVeJi2SiSXqbB8nsnjzQHeRnG/jf+52aJmyq62AwxgVdgtt96Fsf4+7z8N5rN3F10PC+p9D44h/k+BeTawAqsiiFv5+pOcQuZOoP6bfP2WO8+at373/anbD07EJcfPY8GoAi1bxU6bh5gxelXqApZj4H3yiqnlk+RTx0r+BgWALMCKd8oK92jNBoayq1i6F3dT6kBttSWHtb2HYNeS9Xqclk6Q5gIR8TCYK3Ml2FKCJFzuVEBViBpygOekJ5XvXntuEjbPCbG1rG4LzlnGR+ZCjSnB0WB8AQq1OkvfqKZv/UbzY5n/CR77p40wKFwxpblI07e4NnIU0IDBaCosJBqJi2dhz52O7cnGZyZItd6rhAGg7OwBS+eOSJMxvbDH/3r5vTXPx/abS+PSjxU60WkCNM2nIdM10oQXKZL0Cqf4gEY8/V6GloMRuOpS/stSqhVlCirmcAMOtIb6OnEjoZKa1aACrXjXTuFpnhFTDfoTpjs4xt0TYkWjWYSzuQ800YIdK1b16z25lijW4lzeLDdCLeJdZG6zART9NRBqIvcKj7w1j9pTjPX3vVsHttiTUCrXyE9GAWxInxK8l9rKNRVycfBioWZSR+1ea5kvtXNK18czSMDoS0wUzj68b8F5da7WU9vhxCd+YB7hgCUTS+ga+/ivUa4KTXG4pP3E0bZPTzpE84bt7Ie8oXmODeO+iePRpHyVlTaLqlUBLtuJQv6dC+8JPmlFiRhm/VsmMO5tIlQ2k7L8+sVCb2BgpURfNpbsGVHDsyDIN1g6oQa8myqV4EQ22AOBIhqNQW1WEUyOErARBB0iqBr7tYbmx08K7j1MU8v3iAumwamHMr5wPLvJvzABp9SWSSobxMZ6imfrEYqcIuT6TkQYfxh9iwsMyR1CVrFTWUFcRYRGNtRilF2Go9t29mMIOjJHRc249yQcubhyqNbxFzQKd0VbzBx8eVZpDrwlj9uZvF0ZYiUX1i9LqSiIY+MW+SWRiKfkqdnPYc0bCvQgMjWamGEiEpIUrTf65JH5aAnb7SabMmO5cNOMoO6jRVE4UbOA4+vFkprpcpCJejBgGX2EOxnljDLSqJ36CYYz51fF0AcPGuFHoBmJLt+cTG4riciWiS/qszqlksEZyjrDMvOJz/7ocD3Bb8uZk0ws5jAoif2XpZPLBzL7uZFF4gJurMeomeUdnAtEPn2hEDBTazSMcv2d2c+GRLCG518aSd+eWycbeJ61YE3ViYOwUOmNStAXFoYOsqDHLy/3YUOkFPYg4SrCgNVjJb5EoDw3f+v1vfFnjxjgqK9NAkhXJFX4HEErCC0QpknC9qUOvaNME4RG5y5/WamgT/NwtCPpoqMbrsfCDkyzlcLZuVotmSUDgfHtv9SaPVS8RRD0MRlVzYbeCTdp4knLsS6t+6KZTusRWHhjwqfFUWBR+GFYVrFs8E1gyXT3zPf/nrWDqzRZ4GsyZ4EeAhPhSXP2NAwMJRBfIHnPJcxYM0KMBAovRihxrVKVLxAmaZEMORBOTLmWKVg22j/XHl2X82Nn5CflslYJe6lriwKAc2UKeTs4hFuKlDX27fGEvZNbLDMuLn/L//vxAa78QbjuNzBi5xLo9L2O85rdgt7UF77qoci9yJ8H9DYzTsK4sIZmvRiun5nDd5j4CXxJc/8tr1w5UX6MVNYCFEuSq90Qsvpr17PDbJvYzBMg+WLr8WhTZbRDLRtpikkQAQcw08Miz6zL2B4B3AOOrPELhncWN+VNl2u5+JFCmnSGeF7DWGW8wzdNHN03eMy26x6PHGjtrsVrM+tXN25sFwcylRSb+G4qvfghkwYV5UmfFTbZSaexWmUj5Z52/bEZz6IBX0jQ8JWtoHJvNQLduFeziKMclawrtG2GBdhk10FZqsoaKizETTlFi5iMYpPavtBWKVBzT/7kAUv4SJs+bY8O9MssI7g1rb5O7/ZzIF7eOYsS2UCf8H5SUqMpeqAAwaj8CVRXENrrTbMAfUbMo3iluwwY5huXE1elSozRTJLmbitrU98TrONdXXXzEG9UNRaigqC9Uhwome03vvvKoeK4Rs/PPeefw8P0vP3AlAKl2zzXqDZU2xMhRHsMHLquHDgjubOP/23zSw3fS7g1bou9qyk2rcZLVfF1/Nwsq2ZjPbCwlrHrFbYnLbVFMLqpJD5lDUGA2PoQ1mWTp1sFlgz0MrnGLa857F47DCBIwYA7s4oHEL0eIJuUwve29N52xl1cutdJdEIrC3+w0tz7U1WYoCClu4ojl/s1FiPWqyaaRUyksXpGMuzujj32AVZGWStMApixlyTZzGpZZpEtWUqTXtOm6JfQNbLwADXzONFeFxMhVie4XEuHiPX0/gIWXfKhz7upqRBEBRMnotoezQvGTlZ+bLOPSYKBngrGII0hX3yeLPEs4nzPMAyv++2ZoHj4rGDUeLsARAnBO4Q0PG5BOgIzfQRa3aWgIWbRE2D8t5HZgRkyO8YmfEA/ReuD68Ba27RxgCjDUJE0BEESMgXichbLbJVFM036EM4JtsdZ8Fk8pIr2Iyxi7Y1ml3N5CgL7QDKltNCnVRLtNoeBdCiyGw/lNmvEXiHjZ0qWTyMFpTBkraOlfZnm2GS1SUsaXDSZgSeCq2FG6D25ua4h3Cwmdt3a+PWtPk7bsa172+W8FhZHwHPxDG0kZ4smqnYTl2VJF4ysQA0BV97wgu0qQTHBamyO9hnG9EfsmxehgrxHD4IWLMCVGR8sDZOP08A6bYpcGXKcQ3W5zpPz0JMIlaUwfVyN0duf9qLsgfPBRGFldlBBAYz/ENQWRM3rxUaR0n3OmdehBfWt559goXepypmmopYTtJaCCspXKv51jO1x5WTkr/qO0Ki7fLc6Sz/zt7+zWb+thubuTu+ibXvy7CUGYjK4Rp+InNiJftTUTl618SZTVkIa3HQilGOgRcwf4BQsXRaBm3dfnYClypRDqoTBtIHw/OQac0KsHoICCFGvnRWSSi8xi17nYC+FqQOy6azN3+lmWPDhvv+fRLHTR1ZRWOnjQqR+//cmnWLtsNB1vzrccSbQ94DkIkuGjkzIAJPe61LZofplrm+Xlxr4QUYBInVCFEiN9uU07tfl8JBLsrkAyZu9TrDIpTBmzuby7J4idCzgwelNHhVwN1+seJlcQNcLBY4con3a+Z+R+7z0yZuH5qcJWdnULwqc30MCNVIjCTPskhW12HEsCiVaoUS4YmGTWtWgLhfoct8mKx7lTnetPG5dwnIZk8Il9hov+cyWu/guM4YtsQbN3SbbQqDqWO9JYjWLRpYppnP9TmUaNn2I1OEbQ+6UOBmiZVLBeG1L6tWCXze76KX/ZP6hHB6oWU9On6JpKkgUM7P+m7rtpX67EW8X4aaEpDOEsWfTkC6zP5B45B2WAzywgf3Jeo44+kz8+nzTKNL4bbvzzELypIxKDDW61FztzBAaCsDVBb4oSMTnOsA7dCaGRBVojgqW0ub6A6R1qwAFWZ/VOtqLzgrd63KWKZgBmUQ1CFAybUUQFBoQ1kcHJIUWB2j9Rq5E6YgK3yDt2zMTHuqUr/r1Kd6GtQiNbNe7in1XQ30IZBtP/TgvPolwaL1LBdOUr2uV9+Z15bbaCWNsIV8dNM2MsgHVvwddAWs9FlVweWkYmew2s506nqBwVyP5xwcOlWOk595f252lVkAOMKjs3AtADP/bylAk1odqQgOSur12g5rVoA6BHSWcDNGscZZ6TKCVWiMQrhspzvRyixWuIRBPbS+uD1qRTFqsAJjVIVyZ5z2CN9g0lfEpI3julbPNEome28hvB3QWoTgdzwFdbc88snNDvbvT150efDMDKBIqCqBjBkA8KIIrZzku3TSZqfHcqHy4slyJ7QK1boRfRQgF2RUDxdlWN0eA6nDk1vRsi5Aj+5ynuL1t8fe+8a89dT9ELF2mKz+DDyexmJSQYDtWoDQ/bg2cS5PBq1ZAeoQEGrCTzula228ZWeZ3lCF/5Qp7BqYBWkJiDJYXlIAQkx8QgWcu2gFCNaDsiTooSdX3gyUSKVfWgsPhk+xdXvH06/hDZ8PD3DXCtLHAFmuIhBz02vglK9V1/W02nMpRjGXmK+7139sx+5m6r5XZaNoHipRIbRGaVNho/IcBiA5ac/t3+SB8yx6ceGl+xdGGfIOvOE/RfgJhnX//mVWY8OawCdeZRU4dzHzjEHNaSt+7+OaFeC7gXLsKXsDETlImLx16f3+8oJINDUEwyTKwn6E4l82faDNunVTe/cwxKUGfErdFAPfBRKgCESmcz1+wSXZD7iF18O5LBwlDDBryjwFhJKw2NKd2kjJd+FRsleVtdcKjb68s+dzCft838973pi1f1c2Jy++bzPJW8m8teydvo7vNFIJgt8KzaJ0z12rmHg98PNNp5uf8GNsL7sOZUc04G6j8Iw6HpP0rhiDbjG7gaPY/FitU7Qh0zkogL+SUaZ4JejDjWdGADJgWJCknIvc8JH5noOYZbq0KA3ECWdEYmoasL8yP3NmPUhat5WwGMbQER4Z86FP37+ThzvwDK13SE/06ezC1TanoNtgrA94ZKhoO7yHYzHSiskAIcSAQDczvDjM3fmGP+CZxMP5zNzwmQxTHeKOKe7tT1x8v2bq0h9ir8JlCUDz4Clw4iGAobBLaoEPxAra3XiWdqk96wzSL3+p3r4XKO3xOLYsj64VhRte/MTzFZshDkSi1Ba5/LLnctCIxocUtcBxm/E6UySHAYguuuy4RXm4zGKGPNBt1rz2xpLIZMqHcrRs0hpyzx33t/VRPJv/5Oc3Y7v3RKBG1WWIArb/umX68C0ih9ivt+NpL8wQEe9AuZW0sLOUgfrV1sDPOoOevQjO3pzZ+ODHNBcxy9jHzaclVhu7bCFLvMIq5BlWIGe++TXAo9hMd30QZZJNK47x43suy7OJZRu6LhyhOmzQb5Zz4ecC70H0aWJRLPv8q9WLCpnFeESGVBWp02Ooo61TzczQSumav9esADUIDOC85kRXZ1BWopQgrZDisskfpAhbOmGwypACiF4dC7R1sBB1IbyPtXCqqzOyh74ND3h4s52HRDfgchNbuABligJxZKzU6uf2fTvj9ckvX9/s5CUO25/6opWhQWYSVM5+84a8fZyrVYlCy/1qj1U5Sx6+iD59QHTvy/5pc+df/UHT89F0FEIFdCtXYhlBMO1buJ2bPGxzzzb1iQ3NxLYdUYRJvMQEQaq7kx2WXFM4eX2ZCQg/wbT01xTY8g/u+W3ysfD8wlqrCGb+/QwBdOR8TuErFX7QXflFbmiizFUgmdci5CJwsaPIegY0aL7DR7aJkZ+2VrAsdUrl3EJenGmmsKBtWPw0b+EyinbenFY2bAXkHToYcPSDb20OfeCtzRJLsb7Fw80iWRKuSuZP2BzjVXMLvLNnA1vDs4opBi0cEah1gV7PSx7fuVZI7iq+zyt+i9vQv98s8C5A1x+0SlEyKSxBZtlXLwm/Fg7c2czxOfX5j8V7+obzsa27uV9wa7OI97BuvKZ8dANIixPX8k2jaeH7HsZsmTNWINMp95qtORiWr2HblP79lkloaQnSGKdY7StBHPkgVVz4yqhkk/LDTmUMVPjmtSMiGsOCHh5E7+Eq2eKZxnn3jif9RJ7t965eXHa8S0LBwgwVCeGfwdoO/c1fsJvmixHE1GUPyN3AMFFXS/Ip5Dks8iD1LnoZv7+YqD1FWcbV8lK/ZPEdkUMq4gS/jMl1FuJ0d2LPJc3en/3nzX5iAreoRbkRWoRPa9ctfKW6i1zGQy6glXUTqebFUUcO5uMQkHf/2C91jTf0ZAleHevt21gAWrU9z8lh/sh2NIYl0RTHFW4LaG1p4LG+V/UyxtZahS+gIHFVhFhl5u8IP6+Q80aIRIsoBHjuKl+8hp6DlCBSKGq8RChcCV2YbTbwgw17f/63ePHi1WW8huFaGHSS/OIDQ2XS4fe9ubnt//lXzQzCdw49wmLNhdf8Unnuj/LUpQ8j7QM8g+iQMu5LHnSzANSrHHnP/2Cv4aeiJOnEjvy3HAG5/OtzCi5JmzKkAUc3vocHUjZcyXsDwL1SXAUFgPQPC4ADpLQ1QPY8Yz99y6NSEm4hYPDi47qIK6gGvV4nLgBkScDD4wWmuJ5jWrMCSHCbPMsVX5niWWAGAhSpBDgS6fydlOANEvtagITEbSGQCBRChK3gaW+QtPPHfqq58CW/ws6eC7JipuDTgfWCBwzD6ue+9fU8OHLo3f+DvokTgO9xF+/v8ddFyh7B0lRmH/nbN/CzMl9MdJ63g7bKS9+L3Mw58u6/ymaVorgKrPSrYH2K+DD9HH3/m/FwDn1FZO5dGJne2Fz40l9rNjFLyAuwKddbdPpFQLLG+o5w0iFUT2MMoYcaFZ41YmwojvxQSVUX3AD31aGP+qpZWKHB1NQqUHu91uOah4DqAUKLrHHpJrtSgkkhKJbONT+FA5Loptqv9StcNSV1Xa41coUhXps4yhR/q2fHs17ajLereLGesIpSjsBQebTk4zz5c5wof5HfLHK4EYZR+lZe1bqFzSCO02SmS127zxX4Egnb+8h3l6AsiiVa9LOMx3Jv4fFPvKvZxl3LbCkLenyhtO7o3fWcn27u+q+vyfRvJ3sQE5nieLNqhyXv5kniERTYV9a0y7rSVerpAeGHyk+yz/Zna1oKQwN8Oes6tSEdHERHZYj3sJ4GpDd1T0BKa+UhDmtWgApT3Gqkq4jVSt5UZeRKflwUxyCKQIIsFyp3KVMRRJxrkG8XaXRzW3jn3haElwhY4aWRQGmsotCBgp695cvNUSzRMdexf7RahQs9k4z7eo8yvSp2pntfOHhXXteSoBJYLuqY78utgRrP1ePmjB7kKE8XT/OaWQWeVUhqRDAo7fQPP6LZCp5H33dtdvLsZseRniRDl8MJuO7kYZMO8cox6jh250aZHEGASVFqq8oHhMmR0jDNc2GIZ/EWhZcqUG6gaUgUZPy3HvsEXfvwDqIsOpek3IZOuvS4fvFFkI5VPRgqDhnPOVKUpOATJ5hh/UJuvn2/kJZQtow9H9od77AoqZE5OdCXSsadtMPv/Ivmrtf9brZTDQI2l4epN7qJ18u9kC1g3GrO2B7Tk0k8tv3WP85WLBVNpvtARgjIEID3wXMs48rz8MmJo80xZhG68EKQFucpf8DazuvrJnms7NQXPw4u/z5b0PKKG5HQSlGEHUw9VYSBcMmX7sARboQOM6Df7d/hWY0twi85pzKQFFBiAi/Cw9o+Ckd5eDqobq2hkvCHTLiuilyiW8hyXYBfL0M7IUiMIhHccupBttehnq44FmZQT6aj3a6eJVhSIHqGilGsBJfpPnxdr8/+25cLUDLXKDtRMA12Pv8XmFtfFotIX+KFchxFmCe+wmqd0zSSMH2CWCsTL/vytm7fXyNhTcOZiJtLZ27mJ+jsR9wF6BGmd3kTuV7GH5mYZ8i4i/2HZ275an2C2apYJYqip9j9vJ8vnoZ24iqk8AeacqR3d9hkOkwb+VmSHCqiUY/FIR5T/rhymtXTlASmbWxxLukcFKB009qF7klU/P2A/ECiYxtcLVZsCXwNerGhoCnbreOScNyk069BooBCrWqJ3+079I7XNweca/vSBjZEnOVhYEysEmb7Q5Jl3LdPPrjzma9/tjlC0OYwESbLSO4XuG7PiwJTTYTcYFp+/4AL+nb8P8zvEC4zLIAqFRCqfVFsmWv2m3gDqddLPE7uquDpL3wsngoEJZ54ZIGl46c0u37iFRnW3LhqSuyksLXgeAwCPQXLvN6uSgLPDBkc9VoOc98lKfhzFb4gh1aApX4XbmAqWp+RLoQ5zuWtGHKzpoHb4joIylhdvJK3Ht7CnTyqhXsGfTOX8FzkcUPnad4gdtef/15z8tPvDUSDN6dPbeCoBXdYAp6+6pEEbbyyVQbLeOUPbgrG17RptVq9wtIKffrGF0XpqiNUqmd3sRUiAo4MOa4UHuNVtMYdRZnJD3D6QMl3POl5rNvfJ/T02Zl84I2vbY77jgC8RushXWTaxO8WXPhi3m7m6+gUKoIO/eGVfZYU/JLHtTrEQdGW4RNeyW8qZS1CHvJZ8ZWpDEt8Dnm4NGwQWKAT/uu6M+UhJ+7JJ33lEYJdWewows43ZSsoc0H7Tl/9W8oTtou8V2+E8bvnjl6fG1AhSHn2TncddnCQeBjhc3Hjuy/Oq9oTTMZiCmMU7qHrXlde9uwY2zZDcGM8NGI/CRTJl9nLvKXMrdmrLc0tag45/kztBHf89DRJAqMvYfi62P1/8R+rMjXNYe7n+4KpHc96MUPE5iizSjDNEvbISzY2+1g6Xua3jzKNBEyMQaFyHrIEjRG4IypGo9ApUHH0Ekb8DhNRaOpiPwLxCyfF56y7RWSvIQliTSlWQE2QybTe7Uy6xoxbMkWZWg4BrnpJViUtZUEc5HV0ceO40haGU6Y59vM7lmavHRalN9BLBLTnOYFImCAzxnDlF7zg52PREQ6wTVrgCV4fO4MH6fgKWPKDC/GAT89MXHhJBLBi1SgAMYApEPhyp7E/E+/M4vDf/HncfqlAof0oDDyOS8mbuTHleoMCtOzkZz7Q3PGn/45A9SYUypVFsgkyJ1jO3vPSX+WxdLxPFDoQC53tKcf85lL6kL28SEJ1sL4fu5YXfkgJVDkPn2EwP0SlpQyVCqQ1NGnd2nKvm6f7oqG2gxlqbeEA17pckC0CR3OrFqcq3ECHaQPKRu+42vZ9gHFFML5xfs5QIT+jXDY0URaYWDF8aLZjZb7koXX9UUaEphIdfd+bMnYCIXAy/tNOuL5Cvg0AMwSAi789LGyZkeDSxSzHaZeO2cx64tPvz1DQCl90qImFM4PxruTeyxBQifS9O7jA2v6df/YfGL7eQ58ISEVGSSYvuX+ziRdO5hV04OKCrsQUe8c/toKVQM71bCMMiZlCt2UouAGzea0iZZggh7wfnAJIsmlhcSH+KAovcbBYBoeZqRF9hIAapct4yjPl4bl/6ZDZuaFTN1IKyxSBOze3nOsETMmnPQLR8lW8Lbzx0wArQR91k2CWgjzMu4XylJAMxLMIxTbuWfB26dgupoAtTrYFZoaAioQU2SZQHVZoc4wYZZ4bPlm6tUT8PADHdYBdV790oKDGOSNG+ewYPswwdJg4xM2gmVFQ38fE3czholCefQReGTIBGDcOBroTPnnDigZU8YmXoV3L63gxcTTBnIXF9qJkreVbpR8qzbPXGeKLpskIWld25SyKIUTKJEzPkekaBZmfQ0CbQmeF4ICWiBcPIsQClaP1gSNDXBP3R6Jze9d6tf/Ao9yNH3P7vp0gTpwc51srE4TLua4CBg+uo5jAMegsviKQqrsFdzwKHedXS4/6DkOZH3WyngD4dijgzuDmRzy5rCUwRVPhnObZ3iHhrr/4PZ4duCVxxIz3G1RGZQw8jTZjO9fl94TkICnBojpBPyqzRgQ9sXoZZ7IsRmGVzrKyKQVr/x42COwcPYMCjI4uZT6uHmjSuDJ/SZRRU6xiyY5/PiDiOBXkIzBKg3yp471+yxRWpkXODCptsRIVWvrJs90or3XZ+ZyX585ZhGhdC7GSYx96Gy+J/ES5qyazRMWhiEMuyBvH+ktQWeBaqCfyZ2mFYxCb+pzHyuJR0XZom+WR8OO8EWTrk56bMb0FG+gI0mcf5771tWaRHUj5TSQFK10Eof503D6GhHFmH/6UnVNRPVrwosN2SVhY3j8oOHtVyxiKghx4FHdfyvINzhliuiPLp5CNTVaVfs/TYT1A/+TswgJB16K9JOqXSQiqBC/2V/qX/5hACfRAnP+kHETaGMC2lkWJVsqjJDZQkJZl/Odt3ayujbHLRkukMDB18yc++e7c448HUSHSWWnfWpD9ju66GHBaNSlLmVRlHF8mIFUBiuWisM5khK8C2zfV3exxlLeCKOT23oM45INyO81zSpoAmPZ5i7rd8BkxBiAQNDYQt4zplU+Wt0k+5FqeiD5XEW41ntIdZdaqXdtWXAlEF0/NnnaxwZI1p2EUQMCdY9x9IXCbk1l2XAho+wQ5BWAuTO3w2vUwVkamrsNCGccTLJJXpo0ImpTdRTmhmdavUHCFfaL0TYz5G5iSycjKndwLOMkviHkrN0GcLps2CTwDsX6pSKTJvZfaSTxDtJc87wH4mHZRQvCmXxVTAUQlYH6CSBTHJ5MPv/PPmabOUgjrIqVKO+3Kr4SCN8G4HrDljhwZcUZgTFL7j2DJtyzJ/kLzKpEAP/dNrMS5f6VuPU9j63Dd780dON2H4QFZK5bq9/a9qrd7q7ZS9uW7ZuYRyYzMMdnTaoaHiBZRylQSk8xoGVKWRVEGhKV1FEZaqRIcgiSKPCywy0+7bmTXb7nJU+sxg/D+/RHuDyR4FB09QzxSETg5JOEwPLGa5u1lh44SRBW8vLPYIFixS13pQtjZm49ClVqFq64NzPMcYHujJ+DTRe3DxR7HfqabHdcVVEbe8pH+DG5RmpyTXyBS3irSWYob1Ss4yYQwYkWyhZPUYWiQp15D4cyXj8yoAEOlIRXgqubGI0fmmcacCA10FS8QIcq+SpjE8PGqRV5GimibbBdmQBy/QAMg3C7CFsrgQ5nuvstwkbtuXlOqdc2yzOtiT6ZE5lUmVV9CTkm5LcupvzPg08nlLZxAqfXz2Jb3JCq+4pgfa9JTaf1cD+igjTeUTn3uI82MP2pVrTw4oTQK0z0QTuecsehN8viXQtY7tcNPOCHcEk3LKz1CmdqhoEFdnrBTyCvKpCt4FLL4hhd6WY7ejGMCcBzZzDVXXTWosZaToRTgEY+YFLf5hX5z0E6j4fbCONrHwgijQmiWbbGWjvvwK6Nb5MMsXR0pAaAWSWEJ1xSwUIryRCgwIY9Pffp9ed7fcX7mxs9nmddl6HLDRmC04dO+aLEoAoAVBEo0yvzf9we2rl++apEGgCWm0jjBYwAAESxJREFUEKOSLMo6gEKrSUFkKMDzuKPIzSVzvM0r+wagZ56Fn5MsQDl10wtKr3RkVw84ZKOMc3rxZFhr9wZkpqRihU/pmVYe+agYgcRpyUEhVqUoHErCVJXfQTpEycIjJiOjVZXu/XSoWcCmTZvEbGlxqXdbtjWBYBEw2QgyaMLsBIccW2GIggwsZBVSVr7RGUsc620IqZZFCSI8BAhz3GQx89XPZB3fp4wTRbsokgCxRNSwkY5ksJM/YHHuvNxhYZJlYxkaxlZ2yl5vOMVa+zCSYq1XxVRQGVJQQHcuRXCWi6pROW8w3cdLrbvcW3D/3jK/MurLKqL89GIKXbp+UttzlIKLjNvgVYQtikVpHE6NQWzrzKrdU9BpeJ4QWvSaoYFDTAXrcSV0bmHpdgqWqozsck1pKAXYtWtXej9xZvGm/mYQBtGKDjhpczBfphMEqdGr56zuW3c7WJ4l0GOkpU3gBkDU9DDZdqIuI2Q8H5ni0qxPFvvWjUTyeKAEa+wIomnqJ/4oziUw3F+QlyjhnXybV+IDGRgmptum530AAOQWM4wszpasJCVV8MqlCzys7Y+KMziphIvgNIKyR1DgKCoZ120Hva0n8vXv5UaOCmmsIv9AVlgkVUGhlxlCwc2XTIe/1iNlmIPulEoD+MSzkHPkzAJW0fSqjDhdWzrLo6ytSdN87ejxr8+xfqK2q8Htx3EMToAYxPKXt10C1BoSY71E/4S2ki2zs3rpekAIIxeGxEp0kwpfeCYIjoLollOnZqevUl5mICW/eCFWDyuD4+aBEQuSeX5QYB/uCF7SAmxyB6NEGI2yikcUnPMMfdaRAv5H9Ti2o5+AFRWhRHgoFtfCj3eLl4SO0LrSj+Xu8VdZbJv6nKd/rkM7Cicrsrglkg5F9CnG80u95VuOn76B3M5VV11l6ZpT5e7a6r/xjW+Mmb/5hv038TucdxTG0JYuM13BEjJ2BgUIUehwJQQpNClQ+90syrkMG4XwvAsHpihg6+i+VRA/grKf/Py6ws9GU529JRxjHdQ38lZQyS1l6QAorr2f+tInUmabBJ9e2R/vFDIt4b4VWpKyDcNV5AKrBJm0FW8quZKfstomykmJecEfGArTJJPLT+go6MzZ6au4eY96OIcRqCs88FiVpC5XmEOPQKKeNLvfwDeojXDDa77fuePar+672UqvetWrSqdcrCUNpQASecUVV/Q+ecehw6eWeh+fYG0/vUHUMozxrdW5BkEXYBSa1xEM5YWJsEjJU0cBJzrG+jLeesknARF1rJ937cMMx2fZ61hZOlFhQN8O6qdVC5VEAeZZBZWCjSQ+L5A3cGI5Bo5uKZu96Uss7NxQxm1oK3CAQr9aWoYwwJf+OCKs4El5YgHwcZ6QJH2BAZZOz8QBfgCk0osn4c+Vx/CB8laZBOaGlPCK85RzpBuYAR3UlZ8xKBetTMLlMA5jTp5Z+LgyUTYpG+JrqBjAbrds2WInS5/95l3X7X7Q5S/pME3PWKb117uRCsp/LcHfuk+5rrRkB/kBjs4Cou0wRwbThmqrEjCAO4LQfPBkhULIlwOrkm5Yp2uELQyvXZnz5owLPgff9IfN1qe8oPGpXgPK03waX/OCVYljC86jQlBAgWMJcNr8Imj0gYxBzCD9znpYU4gXhJYMDXoS6bKx2Eeq1SjMbIdR+GNAW+Ie6KBjp8dZjbSpGSqB56SCF+jPz/c+d9eRt5O1VGWTnlJpDV9DeQDhPfe5z8UEdzW/89EbP3ni5InrWfHHMDIiDoQjq0TQT54cRltlRqydsqL54lk+fZ/6QQkoIatotucZv9H+KBIu2ryWATKjRMQ0qQpkma1bDuSOm/UUirMBCo6+99rmADuNTvEsXt7PRxutOotM1aOs7sNGxdmXXHHXKpWH/q+ta75by4JXteLcrxA+yZdcSFvhjXSqcPzRd24PJ3hGCeSlQDlGuaAtfUiHgPSWobff6IFZlfnU73zkxk8S/FXZWGntSY87VPrQhz7EMLC3c9fBg72rdm05ecXW6edBXRTJL5GNa+Zo5O87hfMzs7pD3bdkQIzJelp0u61MIUXjARKiPcINhxBbCJ8bUbjotCp1yBNexkw9EMxxi1rcdThZ+krEbP/Cozz1KxxB2IcuWwE5nNnUc1sXXPAt1g8+5Ntn/qDTGq5YUh6lFAeDNANZlKG9LyCwYBPYAi7CLf0IraR2ZTVDgTgEiVouDmSEF6D6/tsP//Zbb7j9K3v37p1/y1veIoOHSsIZNvUf9rCHoarbe7/27i9+4PbT89dNjSpI0JdAkVVrOepWe77wWEJ14fEUkMt1LBJm5p64jXTbLKKIUBQoQwfEMkToCuN26UCGeqewJAWkIOzMOp6bOGIdQca+sBpjCAWU8giyFrv6SP9AQF7cGURpE8RpZda3gXiCf/CmbhEMxQVYPEGXsdkhzLJMj1ldDFCaZ8+kWMoHXT6dZX2CMoCjPMQltJVP+YiPG2Vr3RgBNUNd7X8K+vadOnPdP3nn5z64ffv2XpFJ22MAr+lraA8g1K9+9avN61//R53jx493Z+YXv/HYi7Y/a3p0ZPMSyIVjETRaqlXAOMfEPLosNx0KEGrGWAmtaMrLwblwZBjCKG4znEaoxhPFCgd1YVqgyJjA4Ns+vRp4HNrYTtdde2lRLXVSO1/xBAM44M95BCENJPsQRoQYAXnORwUclFsTrMSNTINCNTDPRqJUZWjDS4CfsBL7RNMKPzQKP5kxtbwQpLA4jDP1PTW/dMe//8RNr7zh8KkDF1100ZmPfexjGOXwKfQN2wxi+4961KMWGXfmr/36nbe855sHf2ex158f0cwqIwLTsdWbLRBRVtsQgsEOdQYCDIEVAy0kVAJHC0RRTKlNVtYM2rGUdiJfple2KzVVGPsoK2ulF8vynGIUKhULTIrTjqNoKNTCEDPqaqJCUvgVT32Ipyqn+OiQovRaL4neueY8ymFt6rtm7yqhimOxPFrFg3icqkxCieLLO4a0gOfbOs5OXISS1++G5/JeGZyr9YvqOXkAG95www3NlVde2Z+dnR297mu33fqYSy+YvWjjxJOwhiILK61OGRYkBwbU/HLkW0uBOIk0GblrmZbLsgSQ1ClzfvKs30JxXcEk04ERmApPJiMkF2DMywolxwwDZKSedSzzup4knzxrxGI5U6jJd8EHeCpTGbqKkoi1vRTKhVksWZiZvlFuShd+i6sC5jxwa5lQhFGmwfbKNcOdQa6eKcNYd6R//b4T//oX3/m5a4n65y+//PIz73vf+4Ye+8XHpMKda+o7I0ADZ5tNmxZe9qZPvO6z+479LixieOMGDkgXNsCecLgIOecSVLnuK1XzqxrUbpMuVc7IgoSJ1VWGIRQsKVQYstKiXLfMtHGBAezUApMaY6hoxTWX4SXmbMfmlwOnBZ79rV6YKq4Zq1ES4iSe1LFfdxxnjPeCj/gJE35wWWBbN3+WWS8UAgN+uHoqb/Qo4mqrFq4zKd8ySo3+3+0//rsvfcunXgfP5+V9mZVR/RzTOXsA+2NG0P/VX/3V/s033NA72et13/TFb33xMXu3ndy7afKx4yOd0fxoBPWUdZhqo0wHGctlgoTDSBllJRmVpIJwqgKEU7QvgaDXpU70Z5wXJHCdubNnyZRTxWIy7tf8CIdzI3Jq0J1CrrASCIoGeeJhnepRxMs+/FY4sU4EkhzrVnwoDryggDtvY4tiveBY4cVLWAlYRcQ2LOuKrZULu8yPKCJ+8Kf18CTzn77z6L95yVs/88fNxo1nLt669fTLX/7yhVe96lWFTSJwDun7UgD7Uwme9axn9Y8zLTyF8b/5y7d+5ZItUzdevmXDQzeNj27hKYJCPAwIKxF8FoYc83TfMF05KLwIUNZWwbjuLpu8lGe6TstKLtdRHsdZa9VEmxho6S1RtwwFRPDIFBBrbfuwlWOtqazz23+59tvx2IUilcl+hZMEQqthmDfAgXOVZTVeUEkMahBqRXCEDrHKtQRaJm88J0mVHmcDinpqYfn2t9184Dd/+V1feBNFc3t37jz9uMc9buG1r33t9yV8+/m+FUAgxAP9q6++uqcSYEWdd379zm/fdnr2o1ft2Lx108TY/SegJLdUqRsibRS3XhgaqzPCN+hjfLVO7hvAncKQEh/EYsL4cuOkZXCOjvdOD2V8lAshWzfTSTeVMG6jcFG+qoyiEXarMQgg07iSY9FAOGmjcGqZ/WXzijML8sTOvJUkpkWQ5bt6DvBRkxPcDRqgBOaTWsVT0SYZElCi3q0nZ6571Ye/8Zt/+NlvXr8Ry9+J8B//+MfPX3vttec87qez+nVeFEBYAyU4fnyJx7Y6X77r6Mk//dJtH96zceorF0xP7JwaG714w9QU92yMnLWyyhqF4aIJNzbym3uwLgxHoJp+FEam0UdcM0zP27gQWDwAgk2g5xq/QtKrMIamAd7A8dRw0v5aBg+EI1wVxCPc7ozhuituitZ6+VRco1AS67WwOVVRB3A5d6rZun+rKtqIl7JQrIJDg3AzBHIIbnou6k6ypkKM0z86t3j9O2468K9/6u2f/ZObjp3ev3nz5tkdO3bMvOIVr5g/H5YvbqaBHpbL7/+bMamLdo7u27dv8ujc3HQzO+uqzZZ/9aNXPvqJl+y4euf05KMnOv2LIJRYqgQ9CihTPJhSec0R5js24ymM840JTFmNk/lavIyEgngOC3HVepq8bt3rmhxaZLIgVhMcL6Nn4LnG9KswrVXrWjvXtEtb4JcADTxYa8hLn8ElN6wCoHYgCE/FjWNSlAP49kFdg8bsFoIOcZ6bX+yd6fXvODK7cP0n7jzy7v/9Q1+7nnYnmunp+e0TE7N79uyZu+aaa5a+3zG/YjM4DPAb5JyHE4eBpzzlKSM333zz2KlTpyZPLC5yOy6KMH6/3Zt2vei+F1z+wzs23f/CTZOXEyfsnZic2jnaW9iMbUzBWLk8BmJsKGIRGS7BdIxPPy1DS6TgebFPvrUuGOnav3kGUBGAlbj25VV5pj7W2U7dCul+qxpp55Yxdh0rS9snj27jkXLNlyJNU+wVwZkc70eqhnJuU+pEizzXtxAid5fZvOFDNfOL3e4s9/BPsZP78Mxy/879p+e+fcOhEze++cYD37rl6Kls7eKFOYtbtoydYYfPHHf5Fom1dPkFtvDPUypcOE/A7g5Gb/COd7xj5MCBA6OnT5+eWFxcnJiZmdEjOPTo8Tx6PbFj89TE3umJiR2bNoxvbHrjG8fGRkdHumMbUIDRLvcaOPLuoRiQi7XwlQ+3oPl2NPCn1paxZDO8dC9Oqce5FYwvOI7UxSWqnJUC56wcL+jDF0t4753z1XVyGxiwI2Suzl/Ish61iX6ZuSxzvTy31Fs63esunZ6ZWzhyZn7h4On5+QNnznhf149LjIKQoOXp6enFsbGx+Q0bNixg9YtO88631dPPIP1AFaD24iaFDhrcveOOO0bwCKMLCwujxAkjuP1RvEV3ptfjqU7t6oySbdM94WbevVnB3cu/13Xb1/k6tjiL4937bvH22G+mpvrTeAVcG86hu8SWt+Xx8XH39C1dfPHFy09+8pN7P0jBtwS3CLfXP+ij/XUYyzqHDh3y08UjdJeWlvCRPYby5RwdQkTEvHtDyHqklrGp2uYdPXq04SbJvTX/jrK27XcUfJeMe6p/T3nxXcAQV88Rdo78+EYfi3cfX/byuZ0LoRcF+S59nu/se2Xw+e7su8ALDjCuefWrX51zmND44abTveJHsNmgTAOwd78eFHyXk+9W/57y7ynv7mDvqc7qPXrSVBPkOp4V0tvM9eM6B9Y5sM6BdQ6sc2CdA+scWOfAOgfWObDOgXUOrHNgnQPrHFjnwDoHfmAc+H8BZhoo5/u+Sz0AAAAASUVORK5CYII=">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Sampled from the Claude desktop app's dark settings panel. */
+    --page: #141413; --panel: #1a1a19; --head: #212120; --raised: #262625; --hover: #313130; --active: #41403f; --track: #032042;
+    --line: #2c2c2b; --line-soft: #262625; --head-line: #3d3d3c;
+    --text: #f0efec; --muted: #c3c2b7; --faint: #8a8983;
+    --blue: #2a78d6; --blue-strong: #2f6fe0; --link: #6da7ec;
+    /* Limit states, as in the app: amber when a limit is getting close, red when it's nearly gone. */
+    --amber: #e8a92a; --amber-track: #3a2a10; --red: #e5484d; --red-track: #3b1416;
+    /* Device colours: teal and lavender, so no laptop looks like the blue bars or the amber/red states.
+       Each has a dark tint of its own hue for its bar track. Validated for CVD against blue/amber/red. */
+    --c1: #36a88f; --c1-track: #0f2e27; --c2: #b39ceb; --c2-track: #27213f;
+    --c3: #8fb562; --c3-track: #1f2c15; --c4: #8ba0b8; --c4-track: #20262d;
+    /* The app's own fonts when they're installed (they ship with the Claude desktop app);
+       otherwise the closest Google Fonts, then system fonts. */
+    --serif: "Anthropic Serif", "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Anthropic Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 14.5px/1.5 var(--sans); /* the app sets the Usage panel in Anthropic Sans */
+    font-optical-sizing: auto;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--page); }
+  body { margin: 0; background: var(--page); color: var(--text); padding: 28px 16px 56px; -webkit-font-smoothing: antialiased; }
+  main { max-width: 960px; margin: 0 auto; display: grid; gap: 18px; }
+  a { color: var(--link); }
+  .muted { color: var(--muted); } .small { font-size: 12.5px; } .faint { color: var(--faint); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Panels ------------------------------------------------------------------ */
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--head); border-bottom: 1px solid var(--head-line); border-radius: 14px 14px 0 0; }
+  .panel-head h1 { font-size: 15px; font-weight: 600; margin: 0; }
+  .panel-body { padding: 20px 24px 24px; }
+  .section { padding-top: 26px; }
+  .section:first-child { padding-top: 0; }
+  .section-title { font-size: 15.5px; font-weight: 600; margin: 0 0 2px; }
+  .section-title .plan { color: var(--muted); font-weight: 400; font-size: 13.5px; margin-left: 10px; }
+  .section-desc { color: var(--muted); margin: 0; }
+  .row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .row-head .val { color: var(--faint); font-family: var(--sans); text-align: right; white-space: nowrap; }
+  .divider { height: 1px; background: var(--line); margin: 24px 0; }
+
+  .headline { font-size: 24px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; margin: 22px 0 8px; }
+  .headline-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* Buttons + segmented controls ------------------------------------------ */
+  .btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 8px; padding: 10px 16px; font: inherit; font-family: var(--sans); font-weight: 500; font-size: 13.5px; cursor: pointer; text-decoration: none; line-height: 1.2; }
+  .btn.primary { background: #ffffff; color: #1a1a19; }
+  .btn.primary:hover { background: #ffffff; }
+  .btn.secondary { background: var(--hover); color: var(--text); }
+  .btn.secondary:hover { background: var(--active); }
+  .btn[disabled] { opacity: .6; cursor: default; }
+  .btn svg { width: 15px; height: 15px; }
+  .spin svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .seg { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 1px; font-family: var(--sans); }
+  .seg button { background: none; border: 0; border-radius: 6px; color: var(--muted); padding: 4px 11px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .seg button:hover { color: var(--text); }
+  .seg button.on { background: var(--active); color: #fff; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .toolbar .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* Limit / product rows --------------------------------------------------- */
+  .lrow { display: grid; grid-template-columns: minmax(0, 290px) 1fr 84px; gap: 8px 24px; align-items: center; padding: 14px 0; }
+  .lrow .lbl { font-size: 15px; min-width: 0; }
+  .lrow .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .lrow .pct { text-align: right; color: var(--muted); font-size: 13.5px; white-space: nowrap; }
+  .lrow.child { padding: 7px 0; }
+  .lrow.child .lbl { font-size: 14px; color: var(--muted); padding-left: 18px; }
+  .lrow.child .sub { font-size: 12px; color: var(--faint); margin-top: 1px; }
+  .lrow.prod .lbl { font-size: 15px; }
+  /* Bars, like the app's: a bright fill on a dark track of the same hue. The fill keeps a
+     minimum width so 0.1 % is still visible; only an empty (or unknown) bar is grey. */
+  .track { height: 4px; background: var(--track); border-radius: 99px; overflow: hidden; }
+  .track i { display: block; height: 100%; min-width: 4px; border-radius: 99px; background: var(--blue); transition: width .4s ease; }
+  .track.warn { background: var(--amber-track); } .track.warn i { background: var(--amber); }
+  .track.crit { background: var(--red-track); } .track.crit i { background: var(--red); }
+  .track.zero { background: var(--raised); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 0; margin-right: 6px; }
+  .tag { display: inline-block; font-family: var(--sans); font-size: 11px; padding: 1px 6px; border-radius: 99px; background: var(--raised); color: var(--muted); margin-left: 6px; white-space: nowrap; vertical-align: 1px; }
+  .tag.live { color: #7fc39a; background: #1f3327; }
+  .tag.stale { color: #d29a85; background: #362620; }
+  .est { color: var(--faint); font-family: var(--sans); font-size: 11.5px; margin-left: 5px; }
+  .calib { color: var(--muted); }
+
+  /* Tables ----------------------------------------------------------------- */
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; vertical-align: middle; }
+  th { color: var(--faint); font-family: var(--sans); font-weight: 500; font-size: 12.5px; }
+  td:first-child, th:first-child { padding-left: 0; } td:last-child, th:last-child { padding-right: 0; }
+  tr:last-child td { border-bottom: 0; }
+  td.n, th.n { text-align: right; }
+  tr.other td { color: var(--muted); }
+  tr.other td.indent { padding-left: 24px; }
+  tr.sub td { font-weight: 500; }
+  #people td:first-child { white-space: normal; min-width: 230px; }
+  #people .est { display: block; margin: 1px 0 0; }
+  .sub-title { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--faint); margin: 0; }
+  .calib-row { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+  .how { margin-top: 10px; }
+  .how summary { color: var(--link); font-size: 12.5px; cursor: pointer; list-style: none; }
+  .how summary::-webkit-details-marker { display: none; }
+  .how summary::before { content: "▸ "; } .how[open] summary::before { content: "▾ "; }
+  .how .note { margin-top: 8px; max-width: 72ch; }
+  .kv { margin-top: 2px; }
+  .kv td { padding: 7px 12px 7px 0; }
+  .kv td:nth-child(2) { color: var(--text); font-weight: 500; }
+  .kv td:last-child { color: var(--faint); font-size: 12.5px; white-space: normal; padding-right: 0; }
+  .note { color: var(--faint); font-size: 12.5px; margin: 14px 0 0; }
+
+  /* Stats, heatmap, charts ------------------------------------------------- */
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .stat { background: var(--raised); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+  .stat div:first-child { color: var(--faint); font-family: var(--sans); font-size: 12.5px; }
+  .stat div:last-child { font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* The Overview/Models card keeps the Claude app's own card width, so the heatmap is
+     always 26 weeks × 7 days of 16 px cells with 3 px gaps, filling the card exactly. */
+  /* The side column stretches to the card's height: the calibration panel keeps its natural
+     size and the session chart fills whatever is left, so the two columns end together. */
+  .row2 { display: grid; grid-template-columns: 541px minmax(0, 1fr); gap: 18px; align-items: stretch; }
+  .row2 .grow { display: flex; flex-direction: column; }
+  .row2 .grow .panel-body { flex: 1; display: flex; flex-direction: column; }
+  .chart-fill { flex: 1; min-height: 200px; position: relative; margin-top: 12px; }
+  .chart-fill svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  @media (max-width: 939px) { .row2 { grid-template-columns: 1fr; } }
+  .heat { display: grid; grid-auto-flow: column; grid-template-columns: repeat(26, 16px); grid-template-rows: repeat(7, 16px); gap: 3px; margin-top: 18px; }
+  .heat i { border-radius: 3px; background: #2d2d2c; min-width: 0; }
+  svg text { fill: var(--faint); font-family: var(--sans); font-size: 11px; }
+  svg text.empty { fill: var(--muted); font-size: 12.5px; text-anchor: middle; }
+  svg .grid { stroke: var(--line-soft); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--sans); font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; background: var(--sw); }
+  .mlegend { margin-top: 12px; }
+  .mlegend td { padding: 7px 10px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+  .cols { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  /* Long project and model names get an ellipsis so the two breakdown columns fit side by side. */
+  .cols table td:first-child { max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Login ------------------------------------------------------------------ */
+  #login { max-width: 380px; margin: 14vh auto 0; padding: 24px; }
+  #login h1 { font-size: 17px; font-weight: 500; margin: 0 0 4px; }
+  input { width: 100%; background: var(--raised); border: 1px solid var(--line); color: var(--text); padding: 10px 12px; border-radius: 9px; font: inherit; margin: 14px 0; }
+  input:focus { outline: 0; border-color: var(--blue); }
+
+  @media (max-width: 640px) {
+    body { padding: 16px 12px 40px; }
+    .panel-body { padding: 16px 16px 20px; }
+    .panel-head { padding: 12px 16px; }
+    .headline { font-size: 23px; }
+    .lrow { grid-template-columns: 1fr 64px; gap: 6px 12px; }
+    .lrow .lbl { grid-column: 1 / -1; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .heat { grid-template-columns: repeat(26, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); gap: 2px; }
+    .heat i { aspect-ratio: 1; border-radius: 2px; }
+  }
+  /* Session titles may wrap, so the wide tables fit the card instead of scrolling. */
+  td.wrap { white-space: normal; min-width: 170px; }
+  /* Recent sessions: expandable rows */
+  tr.srow { cursor: pointer; }
+  tr.srow:hover td { background: rgba(255,255,255,.02); }
+  .caret { display: inline-block; width: 14px; color: var(--faint); }
+  tr.sdrow > td { padding: 0; }
+  /* The detail sits in a cell as wide as the whole table; it is pinned to the visible
+     width instead, so it never scrolls sideways with the table. */
+  .sdetail { position: sticky; left: 0; width: var(--vis, 100%); padding: 6px 0 16px 22px; }
+  .sdetail table { margin-top: 4px; }
+  .sdetail th, .sdetail td { white-space: normal; }
+  .sdetail td { overflow-wrap: anywhere; }
+  .sdetail td.n, .sdetail th.n { white-space: nowrap; }
+  .sgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 28px; }
+  @media (max-width: 640px) { .sgrid { grid-template-columns: 1fr; } .sdetail { padding-left: 0; } }
+  .k { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--faint); margin-bottom: 4px; }
+  .linkbtn { background: none; border: 0; padding: 0; color: var(--link); cursor: pointer; font: inherit; font-size: 13px; }
+  .stack { display: grid; gap: 22px; align-content: start; }
+  .refresh-note { color: var(--faint); font-size: 12.5px; align-self: center; }
+  /* Phones: tables drop their secondary columns so the % columns stay on screen instead of
+     behind a sideways scroll. Rows with colspan cells are unaffected where it matters. */
+  @media (max-width: 600px) {
+    #people :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
+    #models :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4), :nth-child(7)),
+    [id^="t_by_"] :is(th, td):is(:nth-child(3), :nth-child(4)),
+    #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
+    #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
+    #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
+    #people td:first-child { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="login" class="panel" hidden>
+  <h1>Claude Usage</h1>
+  <p class="muted" style="margin:0">Enter the hub key to see the shared usage.</p>
+  <form id="lf"><input id="key" type="password" autocomplete="current-password" placeholder="Hub key"><button class="btn primary" type="submit">Continue</button></form>
+</div>
+
+<main id="app" hidden>
+  <!-- Usage panel: reads like the Claude app's Usage modal -->
+  <section class="panel">
+    <div class="panel-head">
+      <h1>Usage</h1>
+      <span class="muted small num" id="updated" title="">Last updated: –</span>
+    </div>
+    <div class="panel-body">
+      <div class="section">
+        <h2 class="section-title">Your usage<span class="plan" id="plan">–</span></h2>
+        <p class="headline" id="headline">Waiting for the first sync…</p>
+        <p class="headline-sub" id="headlineSub"></p>
+        <div class="actions">
+          <button class="btn primary" id="refresh" title="Ask every laptop to sync now">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            <span>Refresh</span>
+          </button>
+          <a class="btn secondary" href="https://claude.ai/settings/usage" target="_blank" rel="noopener">Open Claude usage</a>
+          <span class="refresh-note" id="refreshNote"></span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div id="limits"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-body">
+      <div class="row-head"><h2 class="section-title">This week's usage by product</h2><span class="val small" id="prodAsOf"></span></div>
+      <p class="section-desc">Share of the weekly limit. The product split is Anthropic's; the per-laptop split of Claude Code is estimated from each laptop's logs.</p>
+      <div id="products" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-body">
+      <h2 class="section-title">Who used it, per device</h2>
+      <p class="section-desc">Percentages with “~” are estimates from the laptops' own logs; Chats, Cowork and Other are exact. Calls and tokens are for the current session.</p>
+      <div class="scroll" style="margin-top:12px"><table id="people"></table></div>
+      <div class="calib-row">
+        <h3 class="sub-title">How accurate the estimates are</h3><table class="kv" id="calib"></table>
+        <details class="how"><summary>How the estimates work</summary><p class="note" id="calibNote"></p></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="row2">
+  <!-- Overview / Models card, like the Claude Code home -->
+  <section class="panel ov">
+    <div class="panel-body" style="padding-top:16px">
+      <div class="toolbar">
+        <div class="seg" id="ovTab"><button data-v="overview" class="on">Overview</button><button data-v="models">Models</button></div>
+        <div class="right">
+          <div class="seg" id="ovDev"></div>
+          <div class="seg" id="ovRange"><button data-v="all" class="on">All</button><button data-v="30">30d</button><button data-v="7">7d</button></div>
+        </div>
+      </div>
+      <div id="ovBody"></div>
+    </div>
+  </section>
+  <!-- Fills the card's height beside it, whatever tab the card is on. -->
+  <section class="panel grow">
+    <div class="panel-body">
+      <h2 class="section-title">Session limit, last 24 hours</h2>
+      <p class="section-desc small">Official 5-hour %, as reported by Anthropic.</p>
+      <div class="chart-fill"><svg id="line"></svg></div>
+    </div>
+  </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-body">
+      <div class="row-head"><h2 class="section-title">Per-model consumption</h2><span class="val small" id="modelsAsOf"></span></div>
+      <p class="section-desc">This week, all synced laptops.</p>
+      <div class="scroll" style="margin-top:12px"><table id="models"></table></div>
+      <p class="note" id="modelNote"></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-body">
+      <div class="section">
+        <h2 class="section-title">Hourly usage by device, last 48 hours</h2><p class="section-desc">Estimated % of the weekly limit, from each laptop's logs.</p>
+        <div class="scroll" style="margin-top:12px"><svg id="bars" width="100%" height="190"></svg></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-body">
+      <h2 class="section-title">Open sessions: cost per message</h2>
+      <div id="ctxBody"></div>
+    </div>
+  </section>
+  <section class="panel" id="chatsPanel" hidden>
+    <div class="panel-body">
+      <h2 class="section-title">claude.ai chats</h2>
+      <p class="section-desc">Chats on the website, reported by the Claude Usage userscript in each
+        person's browser: the usage that never reaches the Claude Code logs. Context sizes are
+        estimated from the visible text; "session after" is the exact plan reading after the last message.
+        <a href="/userscript/claude-usage.user.js">Install the userscript</a> (needs Violentmonkey).</p>
+      <div class="scroll"><table id="chats"></table></div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-body">
+      <div class="section">
+        <div class="toolbar">
+          <div><h2 class="section-title">Breakdown</h2><p class="section-desc">By platform, model and project. “~%” is the estimated share of the <span id="rangeWord">session</span> limit.</p></div>
+          <div class="seg" id="tabs"><button data-r="window" class="on">This session</button><button data-r="week">This week</button></div>
+        </div>
+        <div class="cols" style="margin-top:12px">
+          <div class="stack"><div class="scroll"><table id="t_by_platform"></table></div><div class="scroll"><table id="t_by_model"></table></div></div>
+          <div class="scroll"><table id="t_by_project"></table></div>
+        </div>
+      </div>
+      <div class="section">
+        <h2 class="section-title">Recent sessions</h2>
+        <p class="section-desc">The latest Claude Code sessions on the synced laptops.</p>
+        <div class="scroll" style="margin-top:12px"><table id="sessions"></table></div>
+        <div id="sessionsMore" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DEV_COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
+const DEV_TRACKS = ["var(--c1-track)", "var(--c2-track)", "var(--c3-track)", "var(--c4-track)"];
+// Official limit bars turn amber at 75 % and red at 90 %, like the app's.
+const BAR_WARN = 75, BAR_CRIT = 90;
+// Stacked-bar shades, darkest for the biggest model (one hue, like the Claude app).
+const MODEL_COLORS = ["#2f6fe0", "#4a86e8", "#6fa0ef", "#93b7f4", "#b7cef8", "#d3e1fb", "#e6eefc"];
+const family = (m) => /fable|mythos/.test(m) ? "fable" : /opus/.test(m) ? "opus" : /sonnet/.test(m) ? "sonnet" : /haiku/.test(m) ? "haiku" : "other";
+// Output price per 1M tokens: turns the learned rate into "% per 1M output tokens".
+// Output $ per 1M tokens, as in the collector's price table.
+const OUT_PRICE = (m) => /fable|mythos/.test(m) ? 50 : /opus-5-5/.test(m) ? 20 : /opus-4-1|opus-4-2025/.test(m) ? 75 : /opus/.test(m) ? 25
+  : /sonnet-5/.test(m) ? 10 : /sonnet/.test(m) ? 15 : /3-5-haiku/.test(m) ? 4 : /haiku/.test(m) ? 5 : 25;
+const WAR_AND_PEACE = 780000; // ≈ tokens in Tolstoy's War and Peace (587k words)
+const $ = (id) => document.getElementById(id);
+let key = null, state = null, range = "window", ov = { tab: "overview", range: "all", dev: "" }, refreshing = false;
+
+try { key = localStorage.getItem("hubKey"); } catch {}
+// One-click login: https://…/#key=XXXX saves the key, then strips it from the address bar.
+const hashKey = new URLSearchParams(location.hash.slice(1)).get("key");
+if (hashKey) {
+  key = hashKey;
+  try { localStorage.setItem("hubKey", key); } catch {}
+  history.replaceState(null, "", location.pathname);
+}
+
+const fmt = {
+  pct: (v) => v == null ? "–" : `${Math.round(v)}%`,
+  tok: (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "k" : String(Math.round(v || 0)),
+  ago: (iso) => {
+    if (!iso) return "never";
+    const s = (Date.now() - new Date(iso)) / 1000;
+    return s < 60 ? "just now" : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 172800 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`;
+  },
+  until: (iso) => {
+    const m = Math.max(0, (new Date(iso) - Date.now()) / 60000);
+    return m < 60 ? `${Math.round(m)} min` : m < 2880 ? `${Math.floor(m / 60)} h ${Math.round(m % 60)} min` : `${Math.round(m / 1440)} days`;
+  },
+  clock: (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+  dayClock: (iso) => new Date(iso).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }),
+  time: (iso) => new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }),
+};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const name = (d) => d.label || d.device;
+const epct = (v) => v == null ? '<span class="calib">calibrating</span>' : v <= 0 ? "0%" : v < 0.1 ? "<0.1%" : v < 10 ? `${v.toFixed(1)}%` : `${Math.round(v)}%`;
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+// "Friday" / "today" / "tomorrow" — for the reset day.
+const dayWord = (t) => {
+  const now = Date.now();
+  if (sameDay(t, now)) return "today";
+  if (sameDay(t, now + 864e5)) return "tomorrow";
+  return new Date(t).toLocaleDateString([], { weekday: "long" });
+};
+// "Tuesday morning" / "tonight" / "tomorrow afternoon" — for a forecast moment.
+const whenWord = (t) => {
+  // Like the Claude app, the small hours count as the night before ("Monday night" = 3 AM Tuesday).
+  if (new Date(t).getHours() < 5) t -= 5 * 36e5;
+  const h = new Date(t).getHours(), now = Date.now();
+  const part = h < 5 ? "night" : h < 12 ? "morning" : h < 17 ? "afternoon" : h < 21 ? "evening" : "night";
+  if (sameDay(t, now)) return part === "night" ? "tonight" : `this ${part}`;
+  if (sameDay(t, now + 864e5)) return `tomorrow ${part}`;
+  return `${new Date(t).toLocaleDateString([], { weekday: "long" })} ${part}`;
+};
+
+// ---- estimation ---------------------------------------------------------------
+// % of limit = k · Σ m_family · (logged model-weighted usage). k and m come from /api/state.
+const fitOf = (scope) => state?.model?.[scope === "window" ? "five" : "week"];
+const estModels = (byModel, scope) => {
+  const f = fitOf(scope);
+  if (f?.a == null || !byModel) return null;
+  // a per unit of input/output/cache writes, b per unit of cache reads (learned separately).
+  return Object.entries(byModel).reduce((s, [m, v]) => s + (f.m[family(m)] ?? 1) * (f.a * (v.x || 0) + (f.b ?? f.a) * (v.r || 0)), 0);
+};
+// Totals without a model split (a project, an hour, a session) use the device's
+// average family multiplier for that scope.
+const avgMult = (d, scope) => {
+  const f = fitOf(scope), bm = d?.[scope]?.by_model || {};
+  let w = 0, u = 0;
+  // weighted by what each model's usage is worth (cache reads count b, not a)
+  for (const [m, v] of Object.entries(bm)) { const x = (f?.a ?? 1) * (v.x || 0) + (f?.b ?? f?.a ?? 1) * (v.r || 0); w += (f?.m?.[family(m)] ?? 1) * x; u += x; }
+  return u ? w / u : 1;
+};
+const estFlat = (u, scope, d) => {
+  const f = fitOf(scope);
+  return f?.a == null || !u ? null : avgMult(d, scope) * (f.a * (u.x || 0) + (f.b ?? f.a) * (u.r || 0));
+};
+const estDev = (d, scope) => estModels(d[scope]?.by_model, scope);
+
+// ---- data ---------------------------------------------------------------------
+async function api(path, opts = {}) {
+  const r = await fetch(path, { ...opts, headers: { Authorization: `Bearer ${key}`, ...(opts.headers || {}) }, cache: "no-store" });
+  if (r.status === 401) { try { localStorage.removeItem("hubKey"); } catch {} key = null; showLogin(); throw new Error("bad key"); }
+  return r.json();
+}
+// All-time history (daily stats, context & compaction analysis) is heavier, so it's
+// fetched on open, every 10 minutes, and after a Refresh — not on every 30 s poll.
+let detail = {}, detailAt = 0, web = {}, lastStamp = null;
+async function load(forceDetail = false) {
+  const wantDetail = forceDetail || Date.now() - detailAt > 10 * 60e3;
+  // The claude.ai chats (in /api/summary) change about as often as the history: fetch them together.
+  const [st, det, sum] = await Promise.all([api("/api/state"), wantDetail ? api("/api/detail").catch(() => null) : null,
+    wantDetail ? api("/api/summary").catch(() => null) : null]);
+  if (det) { detail = det; detailAt = Date.now(); }
+  if (sum) web = sum.web || {};
+  state = st;
+  state.devices.sort((a, b) => name(a).localeCompare(name(b)));
+  state.devices.forEach((d, i) => {
+    d.color = DEV_COLORS[i % DEV_COLORS.length]; d.track = DEV_TRACKS[i % DEV_TRACKS.length];
+    d.daily = detail[d.device]?.daily || d.daily; d.context = detail[d.device]?.context;
+    d.chats = detail[d.device]?.chats;
+  });
+  render();
+}
+const online = (d) => Date.now() - new Date(d.sent_at) < 12 * 60e3;
+// Newest official data, preferring devices on the current sync version (which also send
+// the product split and per-model limits).
+const freshest = () => state.devices.filter((d) => d.official?.five_hour)
+  .sort((a, b) => (!!b.official.breakdown - !!a.official.breakdown) || new Date(b.sent_at) - new Date(a.sent_at))[0];
+
+// Ask every online laptop to sync now. The daemons poll for the request every 60 s and
+// then read their logs and the official %, so an answer takes up to ~70 s; after 100 s
+// the wait ends and the note says which laptop stayed quiet.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function refresh() {
+  if (refreshing) return;
+  refreshing = true;
+  const btn = $("refresh"), label = btn.querySelector("span"), note = $("refreshNote");
+  btn.disabled = true; btn.classList.add("spin"); label.textContent = "Refreshing…"; note.textContent = "";
+  let missed = [];
+  try {
+    const { requested_at } = await api("/api/refresh", { method: "POST" });
+    const since = new Date(requested_at) - 2000;
+    const waitFor = state.devices.filter(online);
+    // The hub stamps every sync on arrival (received_at), so laptop clocks don't matter.
+    const answered = (w) => { const d = state.devices.find((x) => x.device === w.device); return d && new Date(d.received_at || d.sent_at) >= since; };
+    const deadline = Date.now() + 100000;
+    let pending = waitFor;
+    while (pending.length && Date.now() < deadline) {
+      await sleep(3000);
+      // Reload only when some laptop has synced since the last look (one Redis read otherwise).
+      const { stamp } = await api("/api/refresh");
+      if (stamp === lastStamp) continue;
+      lastStamp = stamp;
+      await load();
+      pending = waitFor.filter((w) => !answered(w));
+      if (pending.length) label.textContent = `Waiting for ${pending.length === waitFor.length && pending.length > 1 ? "the laptops" : pending.map(name).join(" and ")}…`;
+    }
+    missed = pending;
+    await load(true);
+  } catch {} finally {
+    refreshing = false; btn.disabled = false; btn.classList.remove("spin"); label.textContent = "Refresh";
+    note.textContent = missed.length ? `${missed.map(name).join(" and ")} didn't answer; showing ${missed.length > 1 ? "their" : "its"} last sync.` : "";
+    if (state) render();
+  }
+}
+
+// ---- rendering ----------------------------------------------------------------
+function render() {
+  $("login").hidden = true; $("app").hidden = false;
+  const src = freshest();
+  const plan = src?.official?.plan;
+  $("plan").textContent = plan ? plan.replace("default_claude_", "").replace(/max_(\d+)x/, "Max ($1x)").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "plan unknown";
+  $("updated").textContent = src ? `Last updated: ${fmt.ago(src.sent_at)}` : "Last updated: never";
+  $("updated").title = src ? `${new Date(src.sent_at).toLocaleString()}, from ${name(src)}` : "";
+  // The tab reads like the statusline: session % · week %.
+  const o = src?.official;
+  document.title = o?.five_hour ? `${fmt.pct(o.five_hour.pct)} session · ${fmt.pct(o.seven_day?.pct)} week — Claude Usage` : "Claude Usage";
+  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawModels(); drawOverview();
+  drawLine(); drawBars(); drawTables(); drawSessions(); drawContext(); drawChats();
+}
+
+// Pace forecast: average rate since the window started, projected to its reset.
+// Reset time to show: Anthropic sends e.g. 00:59:59.9 for a 01:00 reset; newer collectors round it.
+const resetOf = (lim) => lim?.resets_exact || lim?.resets_at;
+function pace(lim, hours) {
+  if (!lim?.resets_at || lim.pct == null) return null;
+  const now = Date.now(), reset = +new Date(resetOf(lim));
+  const elapsedH = Math.max(0.25, hours - (reset - now) / 36e5);
+  const rate = lim.pct / elapsedH;                       // % per hour
+  const runOut = rate > 0 ? now + ((100 - lim.pct) / rate) * 36e5 : Infinity;
+  return { reset, elapsedH, rate, runOut, projected: lim.pct + rate * Math.max(0, reset - now) / 36e5 };
+}
+function drawHeadline(src) {
+  const o = src?.official, w = o?.seven_day, p = pace(w, 168);
+  const H = $("headline"), S = $("headlineSub");
+  if (!p) { H.textContent = "Waiting for the first sync."; S.textContent = "The laptops report every 5 minutes, and within 30 seconds after Refresh."; return; }
+  const resetDay = dayWord(p.reset), resetAt = `${resetDay} ${fmt.clock(p.reset)}`;
+  if (w.pct >= 100) H.textContent = `You've hit the weekly limit. It resets ${resetAt}.`;
+  else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${resetDay === "today" ? "today's" : resetDay === "tomorrow" ? "tomorrow's" : resetDay + "'s"} reset.`;
+  else H.textContent = `You're on track. At this pace you'll have used about ${Math.min(99, Math.round(p.projected))}% of the week when it resets ${resetAt}.`;
+  const days = p.elapsedH / 24;
+  let sub = `Estimate from the average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? `${Math.round(p.elapsedH)} h` : `${days.toFixed(1)} days`}.`;
+  // Recent burn from the 5-min line, when it spans at least 3 h without a weekly reset.
+  const pts = (state.line || []).filter((h) => h.week != null && Date.now() - new Date(h.t) < 24 * 36e5).sort((a, b) => new Date(a.t) - new Date(b.t));
+  if (pts.length >= 2) {
+    const a = pts[0], b = pts[pts.length - 1], span = (new Date(b.t) - new Date(a.t)) / 36e5;
+    if (span >= 3 && b.week >= a.week) sub += ` Over the last ${Math.round(span)} h: about ${((b.week - a.week) / span * 24).toFixed(1)}% per day.`;
+  }
+  for (const s of o?.scoped || []) {
+    const q = pace(s, 168);
+    if (q && s.pct < 100 && q.runOut < q.reset && (p.runOut >= p.reset || q.runOut < p.runOut)) sub += ` ${esc(s.name)}'s separate limit runs out sooner, ${whenWord(q.runOut)}.`;
+  }
+  S.textContent = sub;
+}
+
+// One bar, styled like the app's: a bright fill on a dark track of the same hue. An official
+// limit goes amber past BAR_WARN and red past BAR_CRIT. A bar is grey only when it has
+// nothing to show (0 %, or a value that is still calibrating).
+function bar(v, { limit = false, color, track, severity } = {}) {
+  const pct = v == null ? 0 : Math.max(0, Math.min(100, v));
+  // Official limits use Anthropic's own severity (what turns the app's bars amber/red);
+  // the thresholds are only a fallback for data from older syncs.
+  const sev = !limit || !severity ? null : severity === "normal" ? "" : /crit|exceed|limit|block|high|severe/i.test(severity) ? "crit" : "warn";
+  const st = pct <= 0 ? "zero" : sev != null ? sev : limit && pct >= BAR_CRIT ? "crit" : limit && pct >= BAR_WARN ? "warn" : "";
+  const trackStyle = st || !track ? "" : ` style="background:${track}"`;
+  const fill = pct > 0 ? `<i style="width:${pct}%${st || !color ? "" : `;background:${color}`}"></i>` : "";
+  return `<div class="track${st ? " " + st : ""}"${trackStyle}>${fill}</div>`;
+}
+// A row under a product or limit: a device (its own colour) or the remainder (blue).
+const childRow = (label, sub, v, d) => `<div class="lrow child"><div class="lbl">${d ? `<span class="dot" style="background:${d.color}"></span>` : ""}${label}<span class="est">est.</span>${sub ? `<div class="sub">${sub}</div>` : ""}</div>
+    ${bar(v, d ? { color: d.color, track: d.track } : {})}<div class="pct num">${epct(v)}</div></div>`;
+const calibRow = () => `<div class="lrow child"><div class="lbl">Per-laptop split<span class="est">est.</span></div>${bar(null)}<div class="pct calib">calibrating</div></div>`;
+
+function limitRow(title, sub, lim) {
+  if (!lim) return "";
+  return `<div class="lrow"><div class="lbl">${esc(title)}<div class="sub">${sub}</div></div>
+    ${bar(lim.pct, { limit: true, severity: lim.severity })}<div class="pct num">${fmt.pct(lim.pct)} used</div></div>`;
+}
+// Per-laptop split of a model's own weekly limit (currently Fable), from its separate fit.
+function scopedSplit(s) {
+  const f = state.model?.fable;
+  if (!/fable/i.test(s.name)) return "";
+  if (f?.a == null) return calibRow();
+  let known = 0, html = "";
+  for (const d of state.devices) {
+    const e = Object.entries(d.week?.by_model || {}).filter(([m]) => family(m) === "fable")
+      .reduce((s, [, v]) => s + f.a * (v.x || 0) + (f.b ?? f.a) * (v.r || 0), 0);
+    known += e;
+    html += childRow(esc(name(d)), "", e, d);
+  }
+  return html + childRow(`${esc(s.name)} not in these logs`, "chats, web, cloud, other PCs", Math.max(0, (s.pct || 0) - known));
+}
+function drawLimits(src) {
+  const o = src?.official || {};
+  const resetLine = (lim, short) => !lim?.resets_at ? "" :
+    (short ? `Resets at ${fmt.clock(resetOf(lim))}` : `Resets ${fmt.dayClock(resetOf(lim))}`) + ` <span class="faint">· in ${fmt.until(resetOf(lim))}</span>`;
+  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour, true), o.five_hour) +
+    limitRow("This week", resetLine(o.seven_day), o.seven_day) +
+    (o.scoped || []).map((s) => limitRow(`${s.name} this week`, `${esc(s.name)} only · ${resetLine(s)}`, s) + scopedSplit(s)).join("") ||
+    '<p class="muted">No official limits yet.</p>';
+}
+
+function drawProducts(src) {
+  const o = src?.official, week = o?.seven_day?.pct;
+  if (!o?.breakdown?.length || week == null) { $("products").innerHTML = '<p class="muted">No product data yet.</p>'; $("prodAsOf").textContent = ""; return; }
+  $("prodAsOf").textContent = o.breakdown_as_of ? `as of ${fmt.ago(o.breakdown_as_of)}` : "";
+  let html = "";
+  for (const r of o.breakdown) {
+    const v = (week * r.percent) / 100;
+    html += `<div class="lrow prod"><div class="lbl">${esc(r.name)}</div>${bar(v)}<div class="pct num">${epct(v)}</div></div>`;
+    if (r.key !== "claude_code") continue;
+    if (fitOf("week")?.a == null) { html += calibRow(); continue; }   // one line, not one per laptop
+    let known = 0;
+    for (const d of state.devices) {
+      const e = estDev(d, "week");
+      known += e || 0;
+      html += childRow(esc(name(d)), "", e, d);
+    }
+    html += childRow("Claude Code not in these logs", "web or cloud sessions, other PCs, logs deleted before they synced", Math.max(0, v - known));
+  }
+  $("products").innerHTML = html;
+}
+
+function drawPeople(src) {
+  const off5 = src?.official?.five_hour?.pct, offW = src?.official?.seven_day?.pct;
+  const devs = state.devices;
+  let html = `<tr><th>Device</th><th>Person</th><th class="n">~% of session</th><th class="n">~% of week</th><th class="n">Calls</th><th class="n">Tokens</th><th>Last used</th><th>Synced</th></tr>`;
+  for (const p of [...new Set(devs.map((d) => d.person))]) {
+    const mine = devs.filter((d) => d.person === p);
+    for (const d of mine) {
+      const active = d.last_activity && Date.now() - new Date(d.last_activity) < 5 * 60e3;
+      html += `<tr><td><span class="dot" style="background:${d.color}"></span>${esc(name(d))}${active ? '<span class="tag live">active now</span>' : ""}</td>
+        <td class="muted">${esc(d.person)}</td><td class="n">${epct(estDev(d, "window"))}</td><td class="n">${epct(estDev(d, "week"))}</td>
+        <td class="n">${d.window?.calls || 0}</td><td class="n">${fmt.tok(d.window?.tokens || 0)}</td><td class="muted">${fmt.ago(d.last_activity)}</td>
+        <td>${online(d) ? `<span class="muted">${fmt.ago(d.sent_at)}</span>` : `<span class="tag stale" style="margin:0">offline · ${fmt.ago(d.sent_at)}</span>`}${d.official_error ? `<div class="faint" style="font-size:12px;margin-top:2px" title="${esc(d.official_error)}">can't read the official % (${esc(d.official_error.replace(/ \(.*$/, ""))})</div>` : ""}</td></tr>`;
+    }
+    if (mine.length > 1) html += `<tr class="sub"><td>${esc(p)} total</td><td></td>
+      <td class="n">${epct(mine.reduce((a, d) => a + (estDev(d, "window") || 0), 0))}</td>
+      <td class="n">${epct(mine.reduce((a, d) => a + (estDev(d, "week") || 0), 0))}</td><td colspan="4"></td></tr>`;
+  }
+  const k5 = devs.reduce((a, d) => a + (estDev(d, "window") || 0), 0), kW = devs.reduce((a, d) => a + (estDev(d, "week") || 0), 0);
+  const o5 = off5 == null || fitOf("window")?.a == null ? null : Math.max(0, off5 - k5);
+  // Weekly: Chats / Cowork / Other are known exactly from Anthropic's product split; only
+  // Claude Code run off the synced laptops needs the calibration.
+  const bd = src?.official?.breakdown || [];
+  const nonCC = offW == null ? null : bd.filter((r) => r.key !== "claude_code").reduce((a, r) => a + (offW * r.percent) / 100, 0);
+  const ccW = offW == null ? null : (offW * (bd.find((r) => r.key === "claude_code")?.percent ?? 100)) / 100;
+  const ccElse = ccW == null || fitOf("week")?.a == null ? null : Math.max(0, ccW - kW);
+  html += `<tr class="other"><td>Not on a synced laptop</td><td></td>
+    <td class="n">${epct(o5)}</td><td class="n">${nonCC == null ? "–" : ccElse == null ? `≥ ${epct(nonCC)}` : epct(nonCC + ccElse)}</td><td colspan="4"></td></tr>`;
+  for (const r of bd.filter((r) => r.key !== "claude_code"))
+    html += `<tr class="other"><td class="indent">${esc(r.name)}${r.key === "chat" ? " (claude.ai, apps, phone)" : ""}</td><td>exact</td>
+      <td class="n">–</td><td class="n">${epct((offW * r.percent) / 100)}</td><td colspan="4"></td></tr>`;
+  html += `<tr class="other"><td class="indent">Claude Code not in these logs <span class="est">web, cloud, other PCs, deleted logs</span></td><td>estimated</td>
+    <td class="n">${epct(o5)}</td><td class="n">${epct(ccElse)}</td><td colspan="4"></td></tr>`;
+  $("people").innerHTML = html;
+
+  // Calibration: one line per fit in the side panel, the explanation under this table.
+  const need = (f) => { const n = Math.max(0.1, Math.ceil((f?.need ?? 3) * 10) / 10); return `${n} more point${n === 1 ? "" : "s"}`; };
+  const rng = (r, unit = "") => r && r[0] !== r[1] ? ` (${r[0]}–${r[1]}${unit})` : "";
+  const rate = (v) => v == null ? "–" : v >= 0.1 ? v.toFixed(2) : v.toFixed(3);
+  const fitRow = (label, f, withWeights, unit = "Opus") => `<tr><td>${label}</td>` + (!f || f.a == null
+    ? `<td class="calib">calibrating</td><td>needs the official % to rise ${need(f)} while a laptop is in use</td>`
+    : `<td>±${f.err}%</td><td>${f.err_measured ? `± is the typical miss in ${f.check.clean} past windows, checked against the official % (${f.check.unlogged} more had use no laptop logged) · ` : ""}` +
+      `1 API-$ of ${unit} ≈ ${rate(f.a)}% of the limit${f.a_range ? ` (${rate(f.a_range[0])}–${rate(f.a_range[1])})` : ""}` +
+      ` · ${f.n} reading${f.n === 1 ? "" : "s"}${f.windows ? ` over ${f.windows} window${f.windows === 1 ? "" : "s"}` : ""}` +
+      (!withWeights || f.rho == null ? "" : ` · cached reads count ${f.rho}×${rng(f.rho_range)} their API price`) +
+      (!withWeights || f.phi == null ? "" : f.phi_learned ? ` · Fable counts ${f.phi}× its price vs. other models${rng(f.phi_range, "×")}` : ` · Fable's weight isn't pinned down yet${rng(f.phi_range, "×")}`) +
+      `</td>`) + `</tr>`;
+  const left = Object.entries(state.model?.devices || {}).filter(([, k]) => !k).map(([d]) => name(state.devices.find((x) => x.device === d) || { label: d }));
+  // Every laptop sends a short hash of the account it is logged into: they should all match.
+  const accts = [...new Set(state.devices.filter((d) => online(d) && d.account).map((d) => d.account))];
+  $("calib").innerHTML = fitRow("Session", fitOf("window"), true) + fitRow("Week", fitOf("week")) + fitRow("Fable limit", state.model?.fable, false, "Fable") +
+    (accts.length > 1 ? `<tr><td></td><td colspan="2" class="muted">These laptops are logged into ${accts.length} different Claude accounts, so one laptop's usage can't show up in the other's %.</td></tr>` : "") +
+    (left.length ? `<tr><td></td><td colspan="2" class="muted">${esc(left.join(", "))}: logged usage never moved this account's %, so it is left out of the fit (a different login or an API key on that laptop?)</td></tr>` : "");
+  $("calibNote").textContent = `Each laptop reads the official % about once a minute while it's busy, next to what its logs add up to. ` +
+    `Within a window the official % is the logged usage times a rate, plus whatever no laptop logged (which can only grow), rounded down to a whole point. ` +
+    `The fit is the rate that needs the least unlogged usage without ever over-counting a reading; every reading's whole-point floor pins it down. ` +
+    `The range is every rate the readings can't tell apart from the best one to within about two points. ` +
+    `± is measured: in each past window with a 5+ point rise, the estimate is set against what the official % actually did; windows the logs fall more than a quarter short of had usage no laptop logged and are set aside, and ± is the typical miss on the rest. Until there are three such windows, ± is the range's half-width. ` +
+    `Fable's weight and the value of cached reads are set so that Fable-heavy and cache-heavy stretches agree with the rest; a range means the readings can't tell yet. ` +
+    `The week reuses the session's weights and only learns its own rate; the Fable limit is calibrated separately, against Fable's own limit.`;
+}
+
+function drawModels() {
+  const agg = {};
+  for (const d of state.devices) for (const [m, v] of Object.entries(d.week?.by_model || {})) {
+    const a = agg[m] ||= { calls: 0, tokens: 0, x: 0, r: 0 };
+    a.calls += v.calls; a.tokens += v.tokens; a.x += v.x || 0; a.r += v.r || 0;
+  }
+  const inout = {};
+  const ws = freshest()?.week_start;
+  const wkStart = ws ? new Date(ws).toLocaleDateString("en-CA") : "";
+  for (const d of state.devices) for (const [day, v] of Object.entries(d.daily || {})) {
+    if (day < wkStart) continue;
+    for (const [m, a] of Object.entries(v.models)) { const t = inout[m] ||= [0, 0]; t[0] += a[0]; t[1] += a[1]; }
+  }
+  const f5 = fitOf("window"), fW = fitOf("week");
+  const rows = Object.entries(agg).map(([m, a]) => ({ m, ...a, w: estModels({ [m]: a }, "week") }))
+    .sort((a, b) => (b.w ?? b.x + b.r) - (a.w ?? a.x + a.r));
+  const per1M = (f, m) => f?.a == null ? null : f.a * (f.m[family(m)] ?? 1) * OUT_PRICE(m);
+  $("modelsAsOf").textContent = ws ? `since ${fmt.time(ws)}` : "";
+  $("models").innerHTML = `<tr><th>Model</th><th class="n">Calls</th><th class="n">Input</th><th class="n">Output</th><th class="n">All tokens</th>
+      <th class="n">~% of week</th><th class="n">1M output ≈</th><th class="n">Weight</th></tr>` +
+    rows.map((r) => {
+      const io = inout[r.m] || [0, 0], w1 = per1M(fW, r.m), s1 = per1M(f5, r.m), mult = fW?.m?.[family(r.m)];
+      return `<tr><td>${esc(r.m.replace("claude-", ""))}</td><td class="n">${r.calls}</td><td class="n">${fmt.tok(io[0])}</td><td class="n">${fmt.tok(io[1])}</td>
+        <td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.w)}</td>
+        <td class="n">${w1 == null ? epct(null) : `${w1.toFixed(1)}% of week${s1 == null ? "" : ` · ${s1.toFixed(0)}% of session`}`}</td>
+        <td class="n">${fW?.a == null ? '<span class="calib">calibrating</span>' : family(r.m) !== "fable" ? '<span class="muted">1× (price)</span>' : fW.phi_learned ? `${mult.toFixed(2)}×` : `<span class="muted">${fW.phi_range ? `${fW.phi_range[0]}–${fW.phi_range[1]}×` : `~${mult.toFixed(1)}×`}</span>`}</td></tr>`;
+    }).join("") + (rows.length ? "" : `<tr><td colspan="8" class="muted">No usage logged this week</td></tr>`);
+  $("modelNote").innerHTML = `“All tokens” includes cache reads and writes. “1M output ≈” counts output only; cache reads and writes add more (they're included in “~% of week”). ` +
+    `“Weight” is how much a model counts against the limit relative to its API price: other models stay at their price ratio, Fable's is learned from stretches where it ran next to them` +
+    (fW?.a == null ? "." : fW.phi_learned ? "." : " (a range until those stretches say more).");
+}
+
+// ---- Overview / Models panel (like the Claude app) ------------------------------
+function dailyRows(rangeOverride) {
+  const days = {};
+  for (const d of state.devices) {
+    if (ov.dev && d.device !== ov.dev) continue;
+    for (const [day, v] of Object.entries(d.daily || {})) {
+      const t = days[day] ||= { models: {}, hours: Array(24).fill(0), msgs: 0, sessions: 0 };
+      t.msgs += v.msgs; t.sessions += v.sessions;
+      v.hours.forEach((h, i) => t.hours[i] += h);
+      for (const [m, a] of Object.entries(v.models)) {
+        const x = t.models[m] ||= [0, 0, 0, 0, 0];
+        a.forEach((val, i) => x[i] += val);
+      }
+    }
+  }
+  const r = rangeOverride ?? ov.range;
+  const from = r === "all" ? "" : new Date(Date.now() - (+r - 1) * 864e5).toLocaleDateString("en-CA");
+  return Object.entries(days).filter(([day]) => day >= from).sort(([a], [b]) => a.localeCompare(b));
+}
+const dayTokens = (v) => Object.values(v.models).reduce((a, m) => a + m[0] + m[1], 0);
+// Heatmap shade: one blue ramp, from a deep navy (#1c4f8f) for a light day up to a bright
+// blue (#86b6ef) for the busiest, so "more" reads as brighter on the dark surface.
+const heatColor = (f) => { const a = [0x1c, 0x4f, 0x8f], b = [0x86, 0xb6, 0xef]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(",")})`; };
+function drawOverview() {
+  const devSeg = $("ovDev");
+  devSeg.innerHTML = `<button data-v="" class="${ov.dev ? "" : "on"}">All laptops</button>` +
+    state.devices.map((d) => `<button data-v="${esc(d.device)}" class="${ov.dev === d.device ? "on" : ""}">${esc(name(d))}</button>`).join("");
+  const rows = dailyRows();
+  if (ov.tab === "overview") {
+    const tokens = rows.reduce((s, [, v]) => s + dayTokens(v), 0);
+    const hours = Array(24).fill(0); rows.forEach(([, v]) => v.hours.forEach((h, i) => hours[i] += h));
+    const peak = hours.indexOf(Math.max(...hours));
+    const byModel = {}; rows.forEach(([, v]) => Object.entries(v.models).forEach(([m, a]) => byModel[m] = (byModel[m] || 0) + a[0] + a[1]));
+    const fav = Object.entries(byModel).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const stat = (l, v) => `<div class="stat"><div>${l}</div><div>${v}</div></div>`;
+    // Heatmap: always the last 26 weeks (one column per week, Monday on top), whatever
+    // the range filter says; the filter only changes the tiles, as in the Claude app.
+    const allRows = dailyRows("all");
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const start = new Date(today); start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 25 * 7);
+    const val = Object.fromEntries(allRows.map(([day, v]) => [day, dayTokens(v)]));
+    const max = Math.max(1, ...Object.values(val));
+    let cells = "";
+    for (let i = 0, d = new Date(start); i < 26 * 7; i++, d.setDate(d.getDate() + 1)) {
+      if (d > today) { cells += `<i></i>`; continue; }          // rest of this week
+      const k = d.toLocaleDateString("en-CA"), v = val[k] || 0;
+      cells += `<i title="${k}: ${fmt.tok(v)} tokens" style="${v ? `background:${heatColor(Math.sqrt(v / max))}` : ""}"></i>`;
+    }
+    const wp = tokens / WAR_AND_PEACE;
+    const fun = !tokens ? "" : wp >= 1 ? `You've used ~${wp >= 10 ? Math.round(wp) : wp.toFixed(1)}× more tokens than War and Peace.` :
+      `You've used about ${Math.round(wp * 100)}% of War and Peace in tokens.`;
+    $("ovBody").innerHTML = `<div class="stats">
+        ${stat("Sessions", rows.reduce((s, [, v]) => s + v.sessions, 0).toLocaleString())}
+        ${stat("Messages", rows.reduce((s, [, v]) => s + v.msgs, 0).toLocaleString())}
+        ${stat("Total tokens", fmt.tok(tokens))}
+        ${stat("Active days", rows.filter(([, v]) => Object.keys(v.models).length).length)}
+        ${stat("Peak hour", tokens ? new Date(2000, 0, 1, peak).toLocaleTimeString([], { hour: "numeric" }) : "–")}
+        ${stat("Favorite model", fav ? esc(fav.replace("claude-", "")) : "–")}
+      </div><div class="heat">${cells}</div>
+      <p class="note">${fun} Total tokens = input + output (cache excluded), counted once per API response; the Claude app counts every logged content block, so for Claude Code it shows about 2.5× more.</p>`;
+  } else {
+    const models = {}; rows.forEach(([, v]) => Object.entries(v.models).forEach(([m, a]) => { const t = models[m] ||= [0, 0]; t[0] += a[0]; t[1] += a[1]; }));
+    const order = Object.entries(models).sort((a, b) => (b[1][0] + b[1][1]) - (a[1][0] + a[1][1])).map(([m]) => m);
+    const color = Object.fromEntries(order.map((m, i) => [m, MODEL_COLORS[i % MODEL_COLORS.length]]));
+    const total = order.reduce((s, m) => s + models[m][0] + models[m][1], 0) || 1;
+    const W = Math.max($("ovBody").clientWidth || 800, 400), H = 190, P = 44;
+    const max = Math.max(1, ...rows.map(([, v]) => dayTokens(v)));
+    const bw = (W - P - 8) / Math.max(rows.length, 1);
+    let g = [0, max / 2, max].map((v) => { const y = H - 20 - (v / max) * (H - 34); return `<line class="grid" x1="${P}" x2="${W - 8}" y1="${y}" y2="${y}"/><text x="0" y="${y + 4}">${fmt.tok(v)}</text>`; }).join("");
+    rows.forEach(([day, v], i) => {
+      let base = H - 20;
+      for (const m of order) {
+        const a = v.models[m]; if (!a) continue;
+        const h = ((a[0] + a[1]) / max) * (H - 34);
+        g += `<rect x="${P + i * bw + 1}" y="${base - h}" width="${Math.max(1, bw - 2)}" height="${Math.max(0, h - 1)}" fill="${color[m]}"><title>${day} · ${esc(m)}: ${fmt.tok(a[0])} in, ${fmt.tok(a[1])} out</title></rect>`;
+        base -= h;
+      }
+      if (i % Math.ceil(rows.length / 8) === 0) g += `<text x="${P + i * bw}" y="${H - 4}">${new Date(day + "T12:00").toLocaleDateString([], { month: "short", day: "numeric" })}</text>`;
+    });
+    $("ovBody").innerHTML = `<div class="scroll" style="margin-top:16px"><svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">${g}</svg></div>
+      <table class="mlegend">${order.map((m) => `<tr><td><span class="sw" style="background:${color[m]}"></span>${esc(m.replace("claude-", ""))}</td>
+        <td class="n muted">${fmt.tok(models[m][0])} in · ${fmt.tok(models[m][1])} out</td><td class="n">${((models[m][0] + models[m][1]) / total * 100).toFixed(1)}%</td></tr>`).join("") ||
+        `<tr><td class="muted">No usage in this range</td></tr>`}</table>`;
+  }
+}
+
+function drawLine() {
+  // The chart fills its panel, whose height follows the Overview card beside it.
+  const svg = $("line"), W = svg.clientWidth || 800, H = Math.max(170, svg.clientHeight || 0), P = 34, since = Date.now() - 24 * 36e5;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const pts = (state.line || []).filter((h) => h.five != null && new Date(h.t) >= since).sort((a, b) => new Date(a.t) - new Date(b.t));
+  const R = 16, x = (t) => P + ((new Date(t) - since) / (24 * 36e5)) * (W - P - R), y = (v) => H - 22 - (v / 100) * (H - 36);
+  let g = [0, 50, 100].map((v) => `<line class="grid" x1="${P}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="0" y="${y(v) + 4}">${v}%</text>`).join("");
+  // The amber and red thresholds, as faint guides.
+  g += [BAR_WARN, BAR_CRIT].map((v) => `<line x1="${P}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${v === BAR_CRIT ? "var(--red)" : "var(--amber)"}" stroke-opacity=".28" stroke-dasharray="3 4"/>`).join("");
+  for (let h = 0; h <= 24; h += 6) g += `<text x="${x(since + h * 36e5) - (h === 24 ? 22 : 10)}" y="${H - 4}">${h === 24 ? "now" : `-${24 - h}h`}</text>`;
+  if (pts.length) {
+    // One connected line through the readings. A session reset (known from each reading's
+    // reset time) drops it to 0 at that moment; it stays at 0 until the next window opened
+    // (5 h before its own reset) and climbs to that window's first reading from there.
+    const pt = (t, v) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`;
+    const path = [];
+    pts.forEach((p, i) => {
+      const prev = pts[i - 1];
+      if (prev) {
+        const at = prev.r5 ? new Date(prev.r5) : null;
+        const reset = at && at > new Date(prev.t) && at <= new Date(p.t) ? at
+          : !prev.r5 && p.five < prev.five ? new Date(p.t) : null;      // older readings: no reset time stored
+        if (reset) {
+          const opened = p.r5 ? Math.max(+reset, new Date(p.r5) - 5 * 36e5) : +reset;
+          path.push(pt(reset, prev.five), pt(reset, 0), pt(Math.min(opened, +new Date(p.t)), 0));
+        }
+      }
+      path.push(pt(p.t, p.five));
+    });
+    g += `<polyline fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" points="${path.join(" ")}"/>`;
+    const last = pts[pts.length - 1];
+    g += `<circle cx="${x(last.t)}" cy="${y(last.five)}" r="3.5" fill="var(--blue)"/>`;
+    g += pts.map((p) => `<circle cx="${x(p.t)}" cy="${y(p.five)}" r="6" fill="transparent"><title>${fmt.time(p.t)}: ${p.five}% of the session${p.week == null ? "" : ` · ${p.week}% of the week`}</title></circle>`).join("");
+  } else g += `<text class="empty" x="${(W + P) / 2}" y="${H / 2}">No snapshots in the last 24 hours yet</text>`;
+  svg.innerHTML = g;
+}
+
+function drawBars() {
+  const devs = state.devices, svg = $("bars"), W = Math.max(svg.clientWidth || 800, 480), H = 190, P = 44, N = 48;
+  const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() - N + 1);
+  const hours = [...Array(N)].map((_, i) => new Date(+start + i * 36e5));
+  const val = (d, h) => { const k = Object.keys(d.hourly || {}).find((k) => +new Date(k) === +h); return k ? estFlat(d.hourly[k], "week", d) || 0 : 0; };
+  const stacks = hours.map((h) => devs.map((d) => val(d, h)));
+  const max = Math.max(0.2, ...stacks.map((s) => s.reduce((a, b) => a + b, 0)));
+  const bw = (W - P - 8) / N;
+  const calibrating = fitOf("week")?.a == null;
+  // While calibrating there are no values, so the % axis would only mislead: keep the baseline.
+  let g = (calibrating ? [0] : [0, max / 2, max]).map((v) => { const y = H - 20 - (v / max) * (H - 34); return `<line class="grid" x1="${P}" x2="${W - 8}" y1="${y}" y2="${y}"/><text x="0" y="${y + 4}">${v.toFixed(1)}%</text>`; }).join("");
+  stacks.forEach((s, i) => {
+    let base = H - 20;
+    s.forEach((v, j) => {
+      const h = (v / max) * (H - 34);
+      if (h > 0) g += `<rect x="${P + i * bw + 1}" y="${base - h}" width="${Math.max(1, bw - 2)}" height="${Math.max(1, h - 1)}" fill="${devs[j].color}" rx="1.5"><title>${fmt.time(hours[i])} · ${esc(name(devs[j]))}: ~${v.toFixed(2)}% of week (estimate)</title></rect>`;
+      base -= h;
+    });
+    if (hours[i].getHours() % 6 === 0) g += `<text x="${P + i * bw}" y="${H - 4}">${hours[i].toLocaleTimeString([], { hour: "numeric" })}</text>`;
+  });
+  if (calibrating) g += `<text class="empty" x="${(W + P) / 2}" y="${H / 2 - 4}">Calibrating</text><text x="${(W + P) / 2}" y="${H / 2 + 14}" text-anchor="middle">The split by laptop appears once the weekly fit is known.</text>`;
+  svg.innerHTML = g;
+  $("legend").innerHTML = devs.map((d) => `<span style="--sw:${d.color}">${esc(name(d))}</span>`).join("");
+}
+
+function drawTables() {
+  $("rangeWord").textContent = range === "window" ? "session" : "weekly";
+  for (const [k, label] of [["by_platform", "Platform"], ["by_model", "Model"], ["by_project", "Project"]]) {
+    // A model's own share is exact under the fit; platforms and projects mix models, so
+    // they use the device's average model weight.
+    const est = (key, v, d) => k === "by_model" ? estModels({ [key]: v }, range) : estFlat(v, range, d);
+    const rows = state.devices.flatMap((d) => Object.entries(d[range]?.[k] || {}).map(([key, v]) => ({ key, d, ...v, e: est(key, v, d) })))
+      .sort((a, b) => (b.e ?? b.x + b.r) - (a.e ?? a.x + a.r)).slice(0, 12);
+    $("t_" + k).innerHTML = `<tr><th>${label}</th><th>Device</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n" title="Estimated share of the ${range === "window" ? "session" : "weekly"} limit">~%</th></tr>` +
+      rows.map((r) => `<tr><td title="${esc(r.key)}">${k === "by_model" ? shortModel(r.key) : esc(r.key)}</td><td><span class="dot" style="background:${r.d.color}"></span>${esc(name(r.d))}</td>
+        <td class="n">${r.calls}</td><td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.e)}</td></tr>`).join("") +
+      (rows.length ? "" : `<tr><td colspan="5" class="muted">Nothing yet</td></tr>`);
+  }
+}
+
+const shortModel = (m) => esc(String(m || "?").replace("claude-", "").replace(/-\d{8}$/, ""));
+const ktok = (n) => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.round(n / 1e3) + "k";
+let showAllSessions = false, longSessions = false;
+const SESSIONS_SHORT = 10;
+const openSessions = new Set();
+function sessionDetail(s) {
+  if (Array.isArray(s.models)) return `<div class="small muted">This laptop runs an older sync that doesn't report context, models or subagents per session.
+    Update it by re-running the install command (<code>curl -fsSL ${location.origin}/collector/install.sh | bash -s -- …</code>).</div>`;
+  const f = fitOf("week"), est = (u) => f?.a == null ? null : (f.m?.[family(u.model || "")] ?? 1) * (f.a * (u.x || 0) + (f.b ?? f.a) * (u.r || 0));
+  const models = Object.entries(s.models || {}).sort((a, b) => (b[1].x + b[1].r) - (a[1].x + a[1].r));
+  const mrows = `<tr><th>Model</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>` +
+    models.map(([m, v]) => `<tr><td>${shortModel(m)}</td><td class="n">${v.calls}</td><td class="n">${fmt.tok(v.tokens)}</td><td class="n">${epct(est({ ...v, model: m }))}</td></tr>`).join("");
+  const agents = (s.agents || []).map((a) => `<tr><td>${esc(a.type || "agent")}${a.desc ? `<div class="sub">${esc(a.desc)}</div>` : ""}</td>
+      <td class="small">${a.models.map(shortModel).join(", ")}${a.depth > 1 ? ` <span class="muted">· depth ${a.depth}</span>` : ""}</td>
+      <td class="n">${a.calls}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(est({ ...a, model: a.models[0] }))}</td></tr>`).join("");
+  const changes = (s.changes || []).map((c) => `${fmt.time(c.t)} → ${shortModel(c.model)}`).join(" · ");
+  const sw = (s.switches || []).map((c) => `${fmt.time(c.t)}: /model → ${esc(c.to)}`).join(" · ");
+  const comps = (s.compactions || []).map((c) => `${fmt.time(c.t)} (${esc(c.trigger || "?")}): ${ktok(c.pre)} → ${ktok(c.post)}`).join(" · ");
+  return `<div class="sgrid">
+      <div><div class="k">Models used</div><table>${mrows}</table></div>
+      <div><div class="k">Context window</div><div class="small">max ${ktok(s.ctx_max)} · average ${ktok(s.ctx_avg)} · now ${ktok(s.ctx_last)}</div>
+        <div class="k" style="margin-top:10px">Compactions</div><div class="small">${comps || '<span class="muted">none</span>'}</div>
+        <div class="k" style="margin-top:10px">Model on the main thread</div><div class="small">${changes || "–"}</div>
+        ${sw ? `<div class="k" style="margin-top:10px">/model switches</div><div class="small">${sw}</div>` : ""}</div>
+    </div>
+    ${agents ? `<div class="k" style="margin-top:14px">Subagents (${s.agents.length})</div><table><tr><th>Agent</th><th>Models</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>${agents}</table>` : ""}`;
+}
+function drawSessions() {
+  let rows = state.devices.flatMap((d) => (d.sessions || []).map((s) => ({ ...s, d }))).sort((a, b) => new Date(b.last) - new Date(a.last));
+  const hidden = rows.filter((s) => s.calls < 2 && /sdk/.test(s.platform)).length;
+  if (!showAllSessions) rows = rows.filter((s) => !(s.calls < 2 && /sdk/.test(s.platform)));
+  const total = Math.min(rows.length, 25);
+  rows = rows.slice(0, longSessions ? 25 : SESSIONS_SHORT);
+  const vis = `${$("sessions").parentElement.clientWidth}px`;
+  $("sessions").innerHTML = `<tr><th>Device</th><th>Session</th><th>Model now</th><th class="n">Calls</th><th class="n">Context</th><th class="n">Compacts</th><th class="n">Agents</th><th>Last active</th><th class="n">~% of week</th></tr>` +
+    rows.map((s) => {
+      const k = s.d.device + ":" + s.id, open = openSessions.has(k);
+      return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}</td>
+        <td class="wrap"><span class="caret">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}<div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
+        <td class="small">${shortModel(s.current_model || (Array.isArray(s.models) ? s.models[s.models.length - 1] : s.models && Object.keys(s.models)[0]))}</td>
+        <td class="n">${s.calls}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${(s.compactions || []).length || "–"}</td>
+        <td class="n">${(s.agents || []).length || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(estFlat(s, "week", s.d))}</td></tr>` +
+        (open ? `<tr class="sdrow"><td colspan="9"><div class="sdetail" style="--vis:${vis}">${sessionDetail(s)}</div></td></tr>` : "");
+    }).join("") + (rows.length ? "" : `<tr><td colspan="9" class="muted">No sessions yet</td></tr>`);
+  $("sessionsMore").innerHTML = [
+    total > SESSIONS_SHORT ? `<button class="linkbtn" id="toggleLong">${longSessions ? "Show fewer" : `Show all ${total} sessions`}</button>` : "",
+    hidden ? `<button class="linkbtn" id="toggleSdk">${showAllSessions ? "Hide" : "Show"} ${hidden} one-call scripted runs</button>` : ""].filter(Boolean).join(" · ");
+}
+
+// ---- open sessions: what a message costs now, and what /compact would do ---------
+// Chats on claude.ai. The userscript in each person's browser reports the open chat's size and
+// the plan's limits after every message; the older tracker-extension reading on a laptop fills
+// in for anyone not running the userscript yet. Sizes are estimates from the visible text.
+function drawChats() {
+  const colorOf = (person) => state.devices.find((d) => d.person === person)?.color || "var(--c4)";
+  const rows = [], seen = new Set();
+  for (const [person, chats] of Object.entries(web))
+    for (const c of chats) { seen.add(c.conv); rows.push({ person, id: c.conv, model: c.model, tokens: c.tokens, messages: c.messages, p5: c.p5, t: c.last, in_project: c.in_project, src: "browser" }); }
+  for (const d of state.devices)
+    for (const c of d.chats || []) if (!seen.has(c.id)) rows.push({ person: d.person, id: c.id, model: c.model, tokens: c.len, t: c.t, in_project: c.in_project, src: "extension" });
+  rows.sort((a, b) => new Date(b.t || 0) - new Date(a.t || 0));
+  const panel = $("chatsPanel");
+  panel.hidden = rows.length === 0;
+  if (!rows.length) return;
+  let html = `<tr><th>Person</th><th>Chat</th><th>Model</th><th class="n">Context</th><th class="n">Messages</th><th class="n">Session after</th><th>Last message</th></tr>`;
+  for (const c of rows.slice(0, 25))
+    html += `<tr><td><span class="dot" style="background:${colorOf(c.person)}"></span>${esc(c.person)}</td>
+      <td class="muted">${esc(c.id)}${c.in_project ? '<span class="tag">project</span>' : ""}${c.src === "extension" ? '<span class="tag">extension</span>' : ""}</td>
+      <td class="muted">${esc((c.model || "?").replace(/^claude-/, ""))}</td>
+      <td class="n">${c.tokens == null ? "–" : "≈" + fmt.tok(c.tokens)}</td>
+      <td class="n">${c.messages ?? "–"}</td>
+      <td class="n">${c.p5 == null ? "–" : c.p5 + "%"}</td>
+      <td class="muted">${fmt.ago(c.t)}</td></tr>`;
+  $("chats").innerHTML = html;
+}
+
+function drawContext() {
+  const f5 = fitOf("window"), src = freshest();
+  const left5 = src?.official?.five_hour?.pct == null ? null : Math.max(0, 100 - src.official.five_hour.pct);
+  const cost = (u, model) => u == null || f5?.a == null ? null : (f5.m?.[family(model || "")] ?? 1) * (f5.a * (u.x || 0) + (f5.b ?? f5.a) * (u.r || 0));
+  // Per-message cost right after a /compact, from this laptop's own past compactions (same
+  // model family), else from its calls with a small (<50k) context.
+  const afterCompact = (d, model) => {
+    const fam = family(model || ""), ctx = d.context || {};
+    const past = (ctx.after_compact || []).filter((a) => family(a.model || "") === fam);
+    if (past.length) return { x: past.reduce((s, a) => s + a.x, 0) / past.length, r: past.reduce((s, a) => s + a.r, 0) / past.length };
+    const small = (ctx.buckets || []).filter((b) => b.hi <= 50_000).map((b) => b.by_fam?.[fam]).filter(Boolean);
+    const n = small.reduce((s, b) => s + b[0], 0);
+    return n ? { x: small.reduce((s, b) => s + b[1], 0) / n, r: small.reduce((s, b) => s + b[2], 0) / n } : null;
+  };
+  const open = state.devices.flatMap((d) => (d.sessions || []).map((s) => ({ ...s, d })))
+    .filter((s) => Date.now() - new Date(s.last) < 3 * 36e5 && !(s.calls < 2 && /sdk/.test(s.platform)))
+    .sort((a, b) => new Date(b.last) - new Date(a.last));
+  const pc = (v) => v == null ? '<span class="calib">calibrating</span>' : v < 0.1 ? `${v.toFixed(3)}%` : `${v.toFixed(2)}%`;
+  const rows = open.map((s) => {
+    if (!s.recent) return `<tr><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}</td><td class="wrap">${esc(s.title || s.project)}</td>
+      <td colspan="6" class="muted small">needs the updated sync on this laptop</td></tr>`;
+    const now = cost(s.recent, s.recent.model), ac = afterCompact(s.d, s.recent.model), after = cost(ac, s.recent.model);
+    const left = now && left5 != null ? Math.floor(left5 / now) : null;
+    const gain = now && after ? now / after : null;
+    const advice = gain == null ? "–" : gain >= 2 ? `<b>${gain.toFixed(1)}× cheaper</b>` : gain >= 1.3 ? `${gain.toFixed(1)}× cheaper` : '<span class="muted">not worth it</span>';
+    return `<tr><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}${Date.now() - new Date(s.last) < 5 * 60e3 ? '<span class="tag live">active</span>' : ""}</td>
+      <td class="wrap">${esc(s.title || s.project)}<div class="sub">${esc(s.project)} · ${fmt.ago(s.last)}</div></td>
+      <td class="small">${shortModel(s.recent.model)}</td><td class="n">${ktok(s.ctx_last)}</td>
+      <td class="n">${pc(now)}</td><td class="n">${left == null ? "–" : left.toLocaleString()}</td>
+      <td class="n">${pc(after)}</td><td class="n">${advice}</td></tr>`;
+  }).join("");
+  $("ctxBody").innerHTML = `<p class="section-desc">Sessions used in the last 3 hours on either laptop. "Per message" is what one more message costs at the current context size (average of the last 10), as a share of the 5-hour session.</p>
+    <div class="scroll" style="margin-top:10px"><table><tr><th>Device</th><th>Session</th><th>Model</th><th class="n">Context</th><th class="n">Per message</th>
+      <th class="n">Left*</th><th class="n">After /compact</th><th class="n">Compact now?</th></tr>
+      ${rows || '<tr><td colspan="8" class="muted">No sessions in the last 3 hours.</td></tr>'}</table></div>
+    <p class="section-desc small" style="margin-top:8px">* Messages left until the session limit, if every message cost the same. "After /compact" is what messages cost right after this laptop's past compactions (same model), or with a small context if it never compacted.</p>`;
+}
+
+// ---- wiring -------------------------------------------------------------------
+$("sessions").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr.srow"); if (!tr) return;
+  const k = tr.dataset.k; openSessions.has(k) ? openSessions.delete(k) : openSessions.add(k);
+  drawSessions();
+});
+$("sessionsMore").addEventListener("click", (e) => {
+  if (e.target.id === "toggleSdk") { showAllSessions = !showAllSessions; drawSessions(); }
+  if (e.target.id === "toggleLong") { longSessions = !longSessions; drawSessions(); }
+});
+function showLogin() { $("app").hidden = true; $("login").hidden = false; $("key").focus(); }
+$("lf").onsubmit = (e) => { e.preventDefault(); key = $("key").value.trim(); try { localStorage.setItem("hubKey", key); } catch {} load().then(syncIfStale).catch(() => {}); };
+$("refresh").onclick = refresh;
+const seg = (id, fn) => $(id).onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  [...$(id).children].forEach((x) => x.classList.toggle("on", x === b)); fn(b); if (state) render();
+};
+seg("tabs", (b) => range = b.dataset.r);
+seg("ovTab", (b) => ov.tab = b.dataset.v);
+seg("ovRange", (b) => ov.range = b.dataset.v);
+seg("ovDev", (b) => ov.dev = b.dataset.v);
+window.onresize = () => state && render();
+// Poll every 30 s only while the tab is visible (the free database counts every read).
+// Every 30 s, ask the hub (one Redis read) whether any laptop has synced since; reload only then.
+async function poll() {
+  if (!key || refreshing || document.visibilityState !== "visible") return;
+  const { stamp } = await api("/api/refresh");
+  if (stamp && stamp === lastStamp) return;
+  lastStamp = stamp;
+  await load();
+}
+setInterval(() => poll().catch(() => {}), 30000);
+// Opening the page (or coming back to the tab) asks every laptop to sync, unless the
+// data is already under a minute old.
+const syncIfStale = () => {
+  const s = state && freshest();
+  if (!s || Date.now() - new Date(s.sent_at) > 60e3) refresh().catch(() => {});
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && key) load().then(syncIfStale).catch(() => {});
+});
+setInterval(() => { const s = state && freshest(); if (s) $("updated").textContent = `Last updated: ${fmt.ago(s.sent_at)}`; }, 15000);
+if (key) load().then(syncIfStale).catch(() => {}); else showLogin();
+</script>
+</body>
+</html>

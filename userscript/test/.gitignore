@@ -1,0 +1,5 @@
+report.log
+webext.log
+hook-only/core.js
+full/claude-usage.user.js
+*.png

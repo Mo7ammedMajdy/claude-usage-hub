@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "cuh-hook-test",
+  "version": "0.0.1",
+  "browser_specific_settings": {"gecko": {"id": "cuh-test@local"}},
+  "content_scripts": [{
+    "matches": ["http://127.0.0.1/*"],
+    "js": ["core.js", "runner.js"],
+    "run_at": "document_start"
+  }]
+}

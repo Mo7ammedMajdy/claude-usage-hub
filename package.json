@@ -1,0 +1,11 @@
+{
+  "name": "claude-usage-hub",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "type": "module",
+  "dependencies": {
+    "@upstash/redis": "^1.38.4"
+  },
+  "private": true
+}

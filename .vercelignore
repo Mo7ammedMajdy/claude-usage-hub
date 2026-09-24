@@ -1,0 +1,12 @@
+.agents
+.claude
+skills-lock.json
+.env*
+userscript/test
+HANDOFF.md
+userscript/core.js
+userscript/main.js
+userscript/build.py
+tools
+collector/*.md
+collector/__pycache__

@@ -1,0 +1,3 @@
+{ "manifest_version": 2, "name": "cuh-ui-test", "version": "0.0.1",
+  "browser_specific_settings": {"gecko": {"id": "cuh-ui-test@local"}},
+  "content_scripts": [{ "matches": ["http://127.0.0.1/*"], "js": ["shim.js", "claude-usage.user.js", "reporter.js"], "run_at": "document_start" }] }
