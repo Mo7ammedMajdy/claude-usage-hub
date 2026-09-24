@@ -34,8 +34,13 @@ const checks = [
   ["a·φ (Fable %/$) in 1.5-3", f.a * f.phi >= 1.5 && f.a * f.phi <= 3, f.a * f.phi],
   ["never over-counts a window by > 3 points", f.check.over_max <= 3, f.check.over_max],
   ["measured ± ≤ 25%", f.err_measured && f.err <= 25, f.err],
-  ["week is 5-9 sessions", f.a / fit.week.a >= 5 && f.a / fit.week.a <= 9, f.a / fit.week.a],
+  // Session peaks against the week's rise over the same readings: 324 / 37 ≈ 8.8 (the auditor's
+  // whole-span count, 380 / 42, gave 9.05).
+  ["week is 8-10.5 sessions, from the session windows", fit.week.from_sessions && f.a / fit.week.a >= 8 && f.a / fit.week.a <= 10.5,
+    `${+(f.a / fit.week.a).toFixed(2)}; week fit alone ${+(f.a / fit.week.a_envelope).toFixed(2)}`],
   ["week ± ≤ 25%", fit.week.err <= 25, fit.week.err],
+  // Two readings of 2026-09-19 bound it: 19:50→21:39Z the Fable limit went 52→66 % for $20.5 of Fable.
+  ["Fable-limit rate ≤ 0.8 %/Fable-$", fit.fable.a <= 0.8, `${+fit.fable.a.toFixed(3)} [${fit.fable.a_range}]`],
   ["both laptops counted", Object.values(fit.devices).every((k) => k === 1), JSON.stringify(fit.devices)],
   ["refit under 3 s here (Vercel is ~4x slower)", ms < 3000, `${ms} ms`],
   ["each window checked once", f.check.windows === risen, `${f.check.windows} checked, ${risen} rose 5+`],

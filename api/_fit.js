@@ -98,9 +98,23 @@ function thin(arr, n) {
 // arriving late. A transient costs (λ + 1)·its size once and is then forgotten.
 // Lag allowance: the logs and the official % can lag each other (a call is logged when
 // its first block arrives, counted by Anthropic when it completes, or the other way
-// round), so the floor uses the logged usage two readings later and the cap the usage
-// two readings earlier.
-const LAG = 2;
+// round), so the floor uses the logged usage up to LAG_MS later and the cap the usage up
+// to LAG_MS earlier. In time, not readings: it used to be two readings, which is ~10 min in a
+// busy session series but about an hour in a week or Fable series thinned from 1000 readings
+// to 60 — enough slack there to let the Fable-limit rate read 1.3 %/$ where two readings of
+// 2026-09-19 bound it at 0.73 (19:50→21:39Z: 52→66 % for $20.5 more Fable).
+const LAG_MS = 5 * 60e3;
+/** For sorted times (ms): fwd[i] = last reading at or before t_i + ms, back[i] = first reading
+ *  at or after t_i − ms. Two pointers, once per window, so cost() stays a plain index lookup. */
+export function lagIndex(times, ms = LAG_MS) {
+  const n = times.length, fwd = new Int32Array(n), back = new Int32Array(n);
+  for (let i = 0, j = 0, k = 0; i < n; i++) {
+    while (j + 1 < n && times[j + 1] <= times[i] + ms) j++;
+    while (times[k] < times[i] - ms) k++;
+    fwd[i] = Math.max(i, j); back[i] = Math.min(i, k);
+  }
+  return { fwd, back };
+}
 // Weighted usage U at every reading of a window, for one (ρ, φ, ψ). Kept apart from cost() so
 // it is computed once per weight setting, not once per candidate rate.
 function usage(W, rho, phi, psi) {
@@ -119,8 +133,8 @@ function cost(W, a, [uLo, uHi]) {
   // that explains it away (readings of a 7-day limit usually start days into its window).
   let O = null, rise = 0, fall = 0;
   for (let t = 0; t < n; t++) {
-    const L = W.p[t] - a * uHi[Math.min(n - 1, t + LAG)];
-    const H = W.p[t] + W.w[t] - a * uLo[Math.max(0, t - LAG)];
+    const L = W.p[t] - a * uHi[W.fwd[t]];
+    const H = W.p[t] + W.w[t] - a * uLo[W.back[t]];
     if (O === null) O = Math.max(0, L);
     else if (O < L) { rise += L - O; O = L; } else if (O > H) { fall += O - H; O = H; }
   }
@@ -158,16 +172,16 @@ export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, 
   // made two series of every window the laptops shared while they sat on different tables
   // (one laptop pv 1, the other pv 2), fitting and checking each of those windows twice. The tables
   // only clash when one laptop switches within a window (updated, not repriced yet): the
-  // window is cut there, all laptops' readings with it, and the parts are fitted apart.
+  // window is cut there, all laptops' readings with it, and the parts are fitted apart. A pv only
+  // goes up, so the cut is after the laptop's last reading on an older table (one cut per switch,
+  // even if a few readings arrive out of order around it).
   const byWin = {};
-  for (const [id, L] of Object.entries(inWin)) {
-    const pv = {};
-    let part = 0;
-    for (const s of gold.has(id) ? L : L.filter(recent)) {
-      if (pv[s.d] != null && pv[s.d] !== (s.pv || 1)) part++;
-      pv[s.d] = s.pv || 1;
-      (byWin[part ? `${id}|${part}` : id] ||= []).push(s);
-    }
+  for (const [id, L0] of Object.entries(inWin)) {
+    const L = gold.has(id) ? L0 : L0.filter(recent), top = {}, cuts = new Set();
+    for (const s of L) top[s.d] = Math.max(top[s.d] || 0, s.pv || 1);
+    for (const s of L) if ((s.pv || 1) < top[s.d]) cuts.add(`${s.d}|${s.pv || 1}`);
+    const at = [...cuts].map((c) => L.findLast((s) => `${s.d}|${s.pv || 1}` === c).t);
+    for (const s of L) { const part = at.filter((t) => t < s.t).length; (byWin[part ? `${id}|${part}` : id] ||= []).push(s); }
   }
   const keys = Object.keys(byWin).sort();
   const keep = new Set([...keys.filter((k) => !gold.has(k.split("|")[0])).slice(-maxWindows), ...keys.filter((k) => gold.has(k.split("|")[0]))]);
@@ -178,7 +192,8 @@ export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, 
     points += S.length;
     const ps = S.map((s) => s[p]);
     span = Math.max(span, Math.max(...ps) - Math.min(...ps));
-    windows.push({ key, id: key.split("|")[0], p: ps, w: ps.map(width), lo: S.map((s) => parts(s.lo || s)), hi: S.map((s) => parts(s.hi || s)) });
+    windows.push({ key, id: key.split("|")[0], p: ps, w: ps.map(width), lo: S.map((s) => parts(s.lo || s)), hi: S.map((s) => parts(s.hi || s)),
+      ...lagIndex(S.map((s) => Date.parse(s.t))) });
   }
   if (span < minSpan || points < 2) return { a: null, n: points, span, need: Math.max(1, +(minSpan - span).toFixed(1)) };
   // Usage in the data, to know which parameters it can speak about at all.
@@ -251,6 +266,35 @@ export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, 
   };
 }
 
+// Sessions per week, without the model: in every 5-hour window of the last 7 days (split at a week
+// reset), how far the session % rose from its first reading to its peak, against how far the week %
+// rose over the same readings. On 2026-09-24's readings the week fit alone said 6.5 (7.6 once the
+// lag allowance was in minutes); this says 8.8 (8.4-9.2), and the whole span counted from each
+// window's start, 380 / 42 points, says 9.05: a days-long series with unlogged use in it can't
+// pin a rate as tightly as 17 session windows can. Both sides are the plan's totals (claude.ai
+// included), so this uses the raw week %, not pw (its Claude Code share, which the week fit is
+// fitted on): week.a = five.a / k then turns logged
+// usage into points of the raw week %, which is what the split takes each person's share out of
+// (off.seven_day.pct in _split.js). Each rise is a difference of two floored %s, off by up to ±1
+// (sd √(1/6)), so both sums carry √(n/6) into k's range.
+const MIN_WEEK_RISE = 10;   // below this the week side is mostly rounding: keep the week fit's own rate
+export function sessionsPerWeek(samples, { now = null, days = MAX_AGE_DAYS } = {}) {
+  const end = Date.parse(now || samples.reduce((m, s) => (s.t > m ? s.t : m), ""));
+  const by = {};
+  for (const s of samples)
+    if (s.w5 && s.ww && s.p5 != null && s.pwr != null && end - Date.parse(s.t) <= days * 864e5) (by[`${s.ww}|${s.w5}`] ||= []).push(s);
+  let five = 0, week = 0, n = 0;
+  for (const L of Object.values(by)) {
+    const first = L.reduce((m, s) => (s.t < m.t ? s : m));
+    five += Math.max(...L.map((s) => s.p5)) - first.p5;
+    week += Math.max(...L.map((s) => s.pwr)) - first.pwr;
+    n++;
+  }
+  if (week <= 0 || five <= 0) return null;
+  const k = five / week, rel = Math.hypot(Math.sqrt(n / 6) / five, Math.sqrt(n / 6) / week);
+  return { k, range: [k / (1 + rel), k * (1 + rel)], rel, session_rise: five, week_rise: week, windows: n };
+}
+
 // `phiPrior`: the previous fit's φ. It becomes the session fit's prior for φ, so while Fable is too
 // scarce in the data to learn φ, the fit keeps what it last learned instead of dropping to 3.
 export function fitAll(samples, { phiPrior, ...over } = {}) {
@@ -262,11 +306,12 @@ export function fitAll(samples, { phiPrior, ...over } = {}) {
   // The weekly limit moves slowly, so its own data can't pin down per-model weights: it
   // reuses the session's ρ and φ and only fits its overall rate. Its % is the official
   // integer scaled by Anthropic's integer Claude Code share, so its rounding interval is
-  // a little wider than one point. Its prior rate: the weekly limit has been about 7.5
-  // sessions' worth (measured 2026-09-19).
+  // a little wider than one point. Its prior rate: sessionsPerWeek() when there is one, else
+  // about 7.5 sessions' worth (measured 2026-09-19).
   const rho = five.rho ?? PRIOR.rho, phi = five.phi ?? prior5.phi;
   const psi = five.psi ?? PRIOR.psi;
-  const shared = { rhos: [rho], phis: [phi], psis: [psi], prior: { a: (five.a ?? PRIOR.a) / 7.5, rho, phi, psi }, anchors: 0, maxPerWindow: MAX_PER_WEEK };
+  const spw = sessionsPerWeek(samples, { now: over.now });
+  const shared = { rhos: [rho], phis: [phi], psis: [psi], prior: { a: (five.a ?? PRIOR.a) / (spw?.k ?? 7.5), rho, phi, psi }, anchors: 0, maxPerWindow: MAX_PER_WEEK };
   const inherit = five.a != null ? { phi_learned: five.phi_learned, phi_range: five.phi_range, rho_learned: five.rho_learned,
     rho_range: five.rho_range, psi_learned: five.psi_learned, psi_range: five.psi_range } : {};
   const week = fitPath(samples, { w: "ww", p: "pw", x: "xw", r: "rw", xf: "xwf", rf: "rwf", xl: "xwl", rl: "rwl",
@@ -276,11 +321,22 @@ export function fitAll(samples, { phiPrior, ...over } = {}) {
   // fitted on its own; only ρ is shared, since its cache reads are too few to learn one.
   const fable = fitPath(samples, { w: "wf", p: "pf", x: "xf", r: "rf", minSpan: 4, ...over, rhos: [rho], phis: [1],
     psis: [1], prior: { a: (five.a ?? PRIOR.a) / 7.5 * phi * 4, rho, phi: 1, psi: 1 }, anchors: 0, maxPerWindow: MAX_PER_WEEK });
+  // The week's rate: the session's over sessionsPerWeek() once the week has risen enough for that
+  // ratio to mean something; the week fit's own rate stays alongside as a sanity value (a_envelope).
+  const bySessions = five.a != null && week.a != null && spw?.week_rise >= MIN_WEEK_RISE;
+  const weekRate = bySessions ? {
+    a: five.a / spw.k, b: (five.a / spw.k) * rho,
+    a_range: [five.a_range[0] / spw.range[1], five.a_range[1] / spw.range[0]].map((v) => +v.toFixed(4)),
+    err: Math.round(Math.hypot(five.err, 100 * spw.rel)), err_measured: false,   // (week.check is the envelope's)
+    a_envelope: week.a, a_range_envelope: week.a_range, err_envelope: week.err,
+  } : {};
+  const spwOut = { sessions_per_week: spw && +spw.k.toFixed(2), sessions_per_week_range: spw && spw.range.map((v) => +v.toFixed(2)),
+    sessions_per_week_from: spw && { windows: spw.windows, session_rise: spw.session_rise, week_rise: spw.week_rise }, from_sessions: bySessions };
   // The week and Fable fits ride on the session's weights: their ± can't be tighter than its.
   const atLeast = (f) => (f.a != null && five.err != null ? { ...f, err: Math.max(f.err, five.err) } : f);
   return {
     five: wrap(five),
-    week: wrap(atLeast({ ...week, ...inherit })),
+    week: wrap(atLeast({ ...week, ...inherit, ...weekRate, ...spwOut })),
     fable: wrap(atLeast({ ...fable, ...(five.a != null ? { rho_learned: five.rho_learned, rho_range: five.rho_range } : {}) })),
     at: new Date().toISOString(),
   };
@@ -308,7 +364,8 @@ export function windowHistory(perDevice, fit, max = 30) {
 }
 
 // Fit on every device's raw readings, choosing which laptops' usage counts (see above).
-// `over` goes to fitAll(): ingest passes { phiPrior: <previous fit's five.phi> }.
+// `over` goes to fitAll(): ingest passes { phiPrior } = the previous fit's five.phi when it was
+// learned, else its five.phi_prior (so a φ that was never learned isn't carried as if it were).
 export function fitDevices(raw, over = {}) {
   const perDevice = canonical(raw);
   const names = Object.keys(perDevice);
