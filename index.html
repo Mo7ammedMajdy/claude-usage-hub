@@ -76,6 +76,7 @@
   .iconbtn svg { width: 15px; height: 15px; }
   :is(.iconbtn, .seg button, .rowbtn, .linkbtn):focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
   /* max-width + scroll: three long laptop names otherwise push a 375 px phone page sideways. */
+  #ovDev .short { display: none; }
   .seg { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 1px; font-family: var(--sans); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .seg button { background: none; border: 0; border-radius: 6px; color: var(--muted); padding: 4px 11px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; }
   .seg button:hover { color: var(--text); }
@@ -217,6 +218,8 @@
     #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
     #people td:first-child { min-width: 0; }
     #wins .win-end { display: none; }     /* every session is 5 h: the start time is enough */
+    #wins .tag { display: none; }         /* the newest row is on top anyway; the tag made it scroll */
+    #ovDev .full { display: none; } #ovDev .short { display: inline; }
     th, td { padding-left: 6px; padding-right: 6px; }
   }
 </style>
@@ -926,8 +929,11 @@ const dayTokens = (v) => Object.values(v.models).reduce((a, m) => a + m[0] + m[1
 const heatColor = (f) => { const a = [0x1c, 0x4f, 0x8f], b = [0x86, 0xb6, 0xef]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(",")})`; };
 function drawOverview() {
   const devSeg = $("ovDev");
-  const segBtn = (v, label) => `<button data-v="${esc(v)}" class="${ov.dev === v ? "on" : ""}" aria-pressed="${ov.dev === v}">${esc(label)}</button>`;
-  devSeg.innerHTML = segBtn("", "All laptops") + state.devices.map((d) => segBtn(d.device, name(d))).join("");
+  // Phones get the short form ("All", "Ahmed"): three full laptop names don't fit a 390 px card.
+  const segBtn = (v, label, short) => `<button data-v="${esc(v)}" class="${ov.dev === v ? "on" : ""}" aria-pressed="${ov.dev === v}" title="${esc(label)}">` +
+    `<span class="full">${esc(label)}</span><span class="short">${esc(short)}</span></button>`;
+  const sole = (d) => state.devices.filter((x) => x.person === d.person).length === 1;
+  devSeg.innerHTML = segBtn("", "All laptops", "All") + state.devices.map((d) => segBtn(d.device, name(d), sole(d) ? d.person : name(d))).join("");
   const rows = dailyRows();
   if (ov.tab === "overview") {
     const tokens = rows.reduce((s, [, v]) => s + dayTokens(v), 0);

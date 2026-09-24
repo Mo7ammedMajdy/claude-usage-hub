@@ -19,7 +19,7 @@ CACHE_DIR = pathlib.Path(os.environ.get("XDG_CACHE_HOME") or HOME / ".cache") / 
 SCAN_DIR = CACHE_DIR / "statusline"
 WARN, DANGER = 70, 85          # context %: amber, then red + a nudge to /compact
 KEEP_S = 8 * 86400             # per-request records older than a week can't count toward anything
-STATE_VERSION = 2              # per-transcript state format; 2 added "turns"/"busy" (older state is re-read)
+STATE_VERSION = 3              # per-transcript state format; 2 added "turns"/"busy", 3 final-line pricing (older state is re-read)
 TURNS = 10                     # "msgs left" averages this chat's last 10 finished messages
 SYNC_LAG = 15 * 60             # the collector syncs every 5 min at most: 15 min without one is a fault
 WIDTH = 120                    # columns the whole line should fit in
@@ -98,7 +98,14 @@ def scan(path):
         size = os.path.getsize(path)
         if size < s["off"]:                      # rewritten from scratch
             s = fresh
+        # A first render of a long chat reads a big file: cap it at the last 64 MB (enough for any
+        # window's requests); older requests can't count toward the session or week anyway.
         with open(path, "rb") as f:
+            if size - s["off"] > 64 << 20:
+                s["off"] = size - (64 << 20)
+                f.seek(s["off"])
+                f.readline()                     # skip the partial line we landed in
+                s["off"] = f.tell()
             f.seek(s["off"])
             data = f.read()
     except Exception:
@@ -129,9 +136,11 @@ def scan(path):
         if not u:
             continue
         rid = r.get("requestId") or r.get("uuid")
-        if rid not in s["reqs"]:                 # one request, many content-block lines
-            x, cr = weight(msg.get("model", ""), u)
-            s["reqs"][rid] = [ts(r.get("timestamp", "")) or time.time(), family(msg.get("model", "")), x, cr]
+        # One request, many content-block lines: the last one carries the final output count, so
+        # each line replaces the price (the first line undercounted streamed replies by ~8%).
+        prev = s["reqs"].get(rid)
+        x, cr = weight(msg.get("model", ""), u)
+        s["reqs"][rid] = [prev[0] if prev else ts(r.get("timestamp", "")) or time.time(), family(msg.get("model", "")), x, cr]
         if not r.get("isSidechain"):
             s["ctx"] = u.get("input_tokens", 0) + u.get("cache_read_input_tokens", 0) + u.get("cache_creation_input_tokens", 0)
             s["ctx_est"] = False
@@ -157,7 +166,7 @@ def session(transcript):
     reqs = dict(main["reqs"])
     sub = pathlib.Path(transcript).with_suffix("") / "subagents"
     if sub.is_dir():
-        for f in sub.glob("*.jsonl"):
+        for f in sub.rglob("*.jsonl"):          # workflow agents sit one level deeper
             reqs.update(scan(f)["reqs"])
     return main["ctx"], main["ctx_est"], reqs, main
 

@@ -83,8 +83,12 @@ export function cleanSample(s) {
   return Object.fromEntries(SK.map((k) => [k, k === "t" ? s.t : s[k] == null ? null : (SAMPLE[k] || usd)(s[k])]));
 }
 /** A device's stored list, oldest first, each row re-checked; rows that don't parse are dropped. */
-export const readings = (list) =>
-  (list || []).map(tryParse).filter(Array.isArray).map(unpack).map(cleanSample).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t));
+export const readings = (list) => {
+  const rows = (list || []).map(tryParse).filter(Array.isArray).map(unpack).map(cleanSample).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t));
+  // A reply lost after the hub stored a sync makes the laptop send the same readings again:
+  // one per moment (compaction then saves the list without the repeats).
+  return rows.filter((s, i) => i === 0 || s.t !== rows[i - 1].t);
+};
 
 /** Older readings carry less news: past the last two days keep, per window, every reading where
  *  the official % moved plus up to 60 spread evenly (the fit thins to 60 per window anyway). */
