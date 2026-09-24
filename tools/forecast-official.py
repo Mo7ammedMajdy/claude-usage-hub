@@ -29,3 +29,27 @@ for h in range(60, 168, 12):
     print(f"{now:%a %H:%M}Z {pct:3.0f}%  avg-pace {m0:5.0f}  recent(hl36h) {m1:5.0f}  recent(hl24h) {m2:5.0f}  mix30/70 {mix:5.0f}")
 for i, name in enumerate(["avg-pace", "recent hl36", "recent hl24", "mix"], 2):
     print(f"{name:12s} MAE {st.mean(abs(r[i] - FINAL) for r in rows):5.1f}")
+
+# Independent cross-check of tools/forecast-pace.mjs (own increments, no repo code): the pace
+# estimators every 2 h from Sep 21 12:00 to Sep 24 16:00, the Sep 18-20 spike left out of the pace
+# (as Redis forecast:ignore has it), against a final of 83 and 84.
+IGN = (datetime(2026, 9, 18, 1, tzinfo=timezone.utc), datetime(2026, 9, 20, 14, tzinfo=timezone.utc))
+def pace(now, weight, span=72, ignore=True):
+    num = den = 0.0
+    for k in range(span):                        # k = 0: the last whole hour before `now`
+        a0 = now - timedelta(hours=k + 1); a, b = at(a0), at(now - timedelta(hours=k))
+        if a is None or b is None or (ignore and IGN[0] <= a0 < IGN[1]): continue
+        w = weight(k); num += w * (b - a); den += w
+    return num / den if den else None
+EST = {"EW 30 h": lambda k: 0.5 ** (k / 30), "mean 72 h": lambda k: 1.0, "EW over day blocks": lambda k: 0.5 ** (24 * (k // 24) / 30)}
+for ignore in (True, False):
+    print(f"\nevery 2 h, Sep 21 12:00-Sep 24 16:00, spike {'ignored' if ignore else 'NOT ignored'}:")
+    for name, wf in EST.items():
+        errs = {F: [] for F in (83, 84)}
+        now = datetime(2026, 9, 21, 12, tzinfo=timezone.utc)
+        while now <= datetime(2026, 9, 24, 16, tzinfo=timezone.utc):
+            r = pace(now, wf, ignore=ignore); left = (reset - now).total_seconds() / 3600
+            if r is not None:
+                for F in errs: errs[F].append(at(now) + r * left - F)
+            now += timedelta(hours=2)
+        print(f"  {name:20s} " + "  ".join(f"final {F}: MAE {st.mean(map(abs, e)):4.2f} bias {st.mean(e):+5.2f} (n={len(e)})" for F, e in errs.items()))

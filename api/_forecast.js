@@ -7,13 +7,33 @@
 // weekHours(): the official weekly % turned into hourly increments over the last 7 days, from
 // every laptop's readings (a reset counts as the % since the reset).
 // forecastWeek(): expected end = now + recent pace (exponentially weighted, 30 h half-life, over
-// the last 72 h) × hours left; the range and the chance of hitting the limit come from
+// the last 72 whole hours) × hours left; the range and the chance of hitting the limit come from
 // replaying the last 7 days as whole-day blocks in random order (bursts included), 400 runs.
+//
+// Checks on that week (tools/forecast-pace.mjs: a replay every 2 h, Sep 21 12:00-Sep 24 16:00,
+// 38 scored, final taken as 83 / 84):
+// - Pace, Sep 18-20 spike ignored: EW 30 h MAE 5.64 / 6.63 counting the clock hour in progress,
+//   5.45 / 6.44 over whole hours; plain mean of 72 h 5.40 / 6.40; EW over whole-day blocks 5.42 /
+//   6.42. All under-forecast by ~5 (usage went from 1-2 %/day to ~5 %/day), and the old average
+//   pace with the same ignore handling scores the same (5.37 / 6.37): the gain over it came from
+//   leaving the spike out. The 72 h mean swings least with the daily rhythm (1.4 %/day within
+//   16 h vs 2.4), but with the spike NOT marked, as any new burst is at first, it scores
+//   6.91 / 7.00 against 4.02 / 4.36 for EW (it holds a burst at full weight for 3 days); day
+//   blocks 4.13 / 4.39 and swing more then (5.0 vs 3.8). So: EW 30 h, whole hours. The hour in
+//   progress is left out because its usage is already in the current % and it counted as a full
+//   (mostly empty) hour, pulling the pace down.
+// - Range, burst days in the replayed pool: holds the final in 38/38 for both (median width
+//   20.4 points; aim is 80 %, so it may be wider than needed, but that is one week); p_limit > 0
+//   in 24/38, up to 0.7 while only 2-3 days could be replayed (flagged `thin`). Without them it
+//   held 83 in 21/38 and 84 in 12/38 (width 9.1), and p_limit was always 0.
 
 const H = 36e5;
 
-// `ignore`: [{from, to, note}] stretches that were one-offs (Redis `forecast:ignore`); their hours
-// don't count towards the recent pace or the replayed days. The fit still uses them.
+// `ignore`: [{from, to, note}] stretches that were one-offs (Redis `forecast:ignore`). They are
+// only marked (`ignored`, 0/1 per hour): the recent pace leaves them out, the replayed days keep
+// them, since bursts are exactly the tail risk the range and the chance of running out are for
+// (with them dropped from the replays too, p_limit was 0 in every replayed forecast of the week
+// ending 2026-09-25). The fit still uses them.
 export function weekHours(perDevice, now = Date.now(), ignore = [], pKey = "pwr", wKey = "ww") {
   const end = Math.floor(now / H) * H, n = 168;
   const pct = new Array(n).fill(null), win = new Array(n).fill(null);
@@ -33,37 +53,46 @@ export function weekHours(perDevice, now = Date.now(), ignore = [], pKey = "pwr"
     inc[i] = lastP == null ? null : sameWin ? Math.max(0, pct[i] - lastP) : pct[i];
     lastP = pct[i]; lastW = win[i];
   }
-  const skipped = [];
+  const skipped = [], ignored = new Array(n).fill(0);
   for (const g of ignore || []) {
     const a = Date.parse(g.from), b = Date.parse(g.to);
     for (let i = 0; i < n; i++) {
       const t = end - (n - 1 - i) * H;
-      if (t >= a && t < b && inc[i] != null) { inc[i] = null; if (!skipped.includes(g.note)) skipped.push(g.note); }
+      if (t >= a && t < b && inc[i] != null) { ignored[i] = 1; if (!skipped.includes(g.note)) skipped.push(g.note); }
     }
   }
-  return { end: new Date(end).toISOString(), inc, skipped };
+  return { end: new Date(end).toISOString(), inc, ignored, skipped };
 }
 
 // Deterministic, so the page doesn't flicker between reads.
 function rng(seed) { return () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32); }
 
-export function forecastWeek(lim, profile, now = Date.now()) {
+// Recent pace in % per hour: weighted mean of the hourly increments `k` hours back (k = 0 is the
+// clock hour in progress), leaving out unknown and ignored hours. `weight(k)` picks the estimator.
+export function recentPace(inc, ignored, weight, span) {
+  let num = 0, den = 0;
+  for (let k = 0; k < span && k < inc.length; k++) {
+    const i = inc.length - 1 - k, v = inc[i];
+    if (v == null || ignored?.[i]) continue;
+    const w = weight(k); num += w * v; den += w;
+  }
+  return den > 0 ? num / den : null;
+}
+// 30 h half-life over the 72 whole hours before the one in progress (see the top of the file)
+const pace30 = (inc, ignored) => recentPace(inc, ignored, (k) => (k ? 0.5 ** ((k - 1) / 30) : 0), 73);
+
+// `pace` is only for the back-test (tools/forecast-pace.mjs); the page always uses the default.
+export function forecastWeek(lim, profile, now = Date.now(), pace = pace30) {
   const at = lim?.resets_exact || lim?.resets_at;
   if (!at || lim.pct == null) return null;
   const reset = Date.parse(at), leftH = Math.max(0, (reset - now) / H), pct = lim.pct;
-  const inc = profile?.inc || [];
-  // recent pace: % per hour, weighted towards the last day and a half
-  let num = 0, den = 0;
-  for (let k = 0; k < 72 && k < inc.length; k++) {
-    const v = inc[inc.length - 1 - k];
-    if (v == null) continue;
-    const w = 0.5 ** (k / 30); num += w * v; den += w;
-  }
-  const known = inc.filter((v) => v != null).length;
-  if (den === 0 || known < 24) return { pct, resets_at: at, left_h: leftH, early: true, budget_per_day: leftH > 0 ? (100 - pct) / leftH * 24 : null };
-  const rate = num / den;
+  const inc = profile?.inc || [], ignored = profile?.ignored || [];
+  const rate = pace(inc, ignored);
+  const known = inc.filter((v, i) => v != null && !ignored[i]).length;
+  if (rate == null || known < 24) return { pct, resets_at: at, left_h: leftH, early: true, budget_per_day: leftH > 0 ? (100 - pct) / leftH * 24 : null };
   const expected = pct + rate * leftH;
-  // replay whole past days (24 h blocks ending at the current clock hour) in random order
+  // replay whole past days (24 h blocks ending at the current clock hour) in random order,
+  // ignored stretches included (see weekHours)
   const days = [];
   for (let d = 0; d < 7; d++) {
     const block = inc.slice(inc.length - 24 * (d + 1), inc.length - 24 * d);
