@@ -1,5 +1,6 @@
 import { viewer, redis, slug, family } from "./_lib.js";
 import { fitDevices } from "./_fit.js";
+import { freshestOfficial, split } from "./_split.js";
 export { combine } from "./_combine.js";
 
 // Calibration readings are stored per device as compact arrays in this field order.
@@ -16,14 +17,33 @@ const pack = (s) => SK.map((k) => s[k] ?? null);
 export const unpack = (a) => Object.fromEntries(SK.map((k, i) => [k, a[i]]));
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
 
-/** Refit on every device's readings and store it. */
+/** Refit on every device's readings and store it; also keep the week's split for the history. */
 export async function refit(names) {
   const q = redis.pipeline();
   for (const n of names) q.lrange(`ds:${n}`, 0, -1);
-  const lists = await q.exec();
+  q.hgetall("devices").get("week:current");
+  const got = await q.exec();
+  const lists = got.slice(0, names.length), [all, current] = got.slice(names.length);
   const perDevice = Object.fromEntries(names.map((n, i) => [n, (lists[i] || []).map(parse).map(unpack).sort((a, b) => a.t.localeCompare(b.t))]));
   const fit = fitDevices(perDevice);
-  await redis.set("fit", fit);
+  const w = redis.pipeline().set("fit", fit);
+  // Weekly history: the latest split of the running week, and when the week id moves on, the
+  // previous week's last split goes into `weeks` (as of the last refit before the reset).
+  const devices = Object.values(all || {}).map(parse);
+  const off = freshestOfficial(devices)?.official;
+  if (off?.seven_day?.resets_at) {
+    const id = off.seven_day.resets_exact || off.seven_day.resets_at;
+    const { people, elsewhere } = split(devices, fit, off);
+    const prev = parse(current);
+    if (prev?.id && Math.abs(Date.parse(prev.id) - Date.parse(id)) > 36e5) w.rpush("weeks", JSON.stringify(prev)).ltrim("weeks", -60, -1);
+    w.set("week:current", JSON.stringify({ id, at: new Date().toISOString(), week: off.seven_day.pct,
+      fable: (off.scoped || []).find((x) => /fable/i.test(x.name))?.pct ?? null,
+      breakdown: (off.breakdown || []).map((b) => ({ key: b.key, percent: b.percent })),
+      people: people.map((x) => ({ person: x.person, week: +x.week.toFixed(2), fable: +x.fable.toFixed(2) })),
+      elsewhere: elsewhere && { week: +elsewhere.week.toFixed(2), fable: elsewhere.fable == null ? null : +elsewhere.fable.toFixed(2) },
+      err: fit.week?.err ?? null }));
+  }
+  await w.exec();
   return fit;
 }
 

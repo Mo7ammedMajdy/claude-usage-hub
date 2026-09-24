@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage
 // @namespace    https://claude-usage-hub.vercel.app
-// @version      1.0.8
+// @version      1.0.9
 // @description  Context size, what the next message costs, and the shared plan's limits — inside claude.ai.
 // @match        https://claude.ai/*
 // @match        https://claude-usage-hub.vercel.app/*
@@ -407,9 +407,8 @@ function claudePage() {
       // A constructed stylesheet isn't an inline style, so it survives a CSP without
       // 'unsafe-inline'; fall back to a <style> element where adopting isn't allowed.
       try {
-        const sheet = new CSSStyleSheet();
-        sheet.replaceSync(CSS);
-        shadow.adoptedStyleSheets = [sheet];
+        if (!host.sheet) { host.sheet = new CSSStyleSheet(); host.sheet.replaceSync(CSS); }   // one sheet, shared
+        shadow.adoptedStyleSheets = [host.sheet];
         shadow.innerHTML = `<div class="root"></div>`;
       } catch (e) {
         shadow.innerHTML = `<style>${CSS}</style><div class="root"></div>`;
@@ -418,6 +417,8 @@ function claudePage() {
     return el;
   }
   function paint(root, html) {
+    if (root.__cuhHtml === html) return;       // unchanged: leave the DOM alone
+    root.__cuhHtml = html;
     root.innerHTML = html;
     for (const i of root.querySelectorAll("[data-w]")) i.style.width = i.dataset.w + "%";
     for (const d of root.querySelectorAll("[data-c]")) d.style.background = d.dataset.c;
@@ -591,7 +592,14 @@ function claudePage() {
   // share laid under its "Current session", "This week" and "Fable this week" bars, and a
   // dashboard link under the three. If those rows can't be found, the lines go after the
   // product table instead, as plain rows.
+  const OURS_ON_USAGE = ["cuh-split-five", "cuh-split-week", "cuh-split-fable", "cuh-dash-link", "cuh-forecast", "cuh-cd-five", "cuh-cd-week", "cuh-cd-fable"];
   function drawUsageCard() {
+    // Only the settings page has the usage rows; anywhere else, don't search the page at all
+    // (this runs on every redraw, and a streaming reply redraws often).
+    if (!/settings/.test(location.pathname + location.hash)) {
+      for (const id of OURS_ON_USAGE) { const x = document.getElementById(id); if (x) x.remove(); }
+      return;
+    }
     const ids = { five: "cuh-split-five", week: "cuh-split-week", fable: "cuh-split-fable" };
     const lines = Object.fromEntries(Object.entries(ids).map(([k, id]) => [k, host(id)]));
     const link = host("cuh-dash-link");
@@ -651,8 +659,8 @@ function claudePage() {
     if (/^no message box|but no box/.test(diag.composer) && /^\/(new|chat|project)/.test(location.pathname)) problems.push("can't find the message box: " + diag.composer);
     if (diag.hub !== "ok" && diag.hub !== "not tried") problems.push("hub: " + diag.hub);
     if (diag.errors.length) problems.push("errors: " + diag.errors.join(" | "));
+    if (!problems.length && !showDiag) { const x = document.getElementById("cuh-diag"); if (x) x.remove(); return; }
     const el = host("cuh-diag");
-    if (!problems.length && !showDiag) { el.remove(); return; }
     if (el.parentElement !== document.body) document.body.appendChild(el);
     pageColours(el);
     const root = el.shadowRoot.querySelector(".root");
@@ -669,12 +677,18 @@ function claudePage() {
     root.querySelector(".x").onclick = () => { el.dataset.open = open ? "0" : "1"; showDiag = false; schedule(); };
   }
 
-  // Redraw on page changes, but at most once a frame; the cache countdown needs a tick too.
-  let pending = false;
+  // Redraw on page changes, at most every 250 ms (a streaming reply changes the page thousands
+  // of times a second), and on a 1 s tick for the cache countdown.
+  let pending = false, lastDraw = 0;
   function schedule() {
     if (pending) return;
     pending = true;
-    window.requestAnimationFrame(() => { pending = false; for (const f of [maybeReadOnce, drawLine, drawUsageCard, drawDiag]) { try { f(); } catch (e) { oops(f.name, e); } } });
+    const run = () => window.requestAnimationFrame(() => {
+      pending = false; lastDraw = Date.now();
+      for (const f of [maybeReadOnce, drawLine, drawUsageCard, drawDiag]) { try { f(); } catch (e) { oops(f.name, e); } }
+    });
+    const wait = 250 - (Date.now() - lastDraw);
+    if (wait > 0) setTimeout(run, wait); else run();
   }
   const start = () => {
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });

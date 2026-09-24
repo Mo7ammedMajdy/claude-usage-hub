@@ -198,6 +198,7 @@
     [id^="t_by_"] :is(th, td):is(:nth-child(3), :nth-child(4)),
     #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
+    #weeks :is(th, td):last-child,
     #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
     #people td:first-child { min-width: 0; }
   }
@@ -254,6 +255,14 @@
         <h3 class="sub-title">How accurate the estimates are</h3><table class="kv" id="calib"></table>
         <details class="how"><summary>How the estimates work</summary><p class="note" id="calibNote"></p></details>
       </div>
+    </div>
+  </section>
+
+  <section class="panel" id="weeksPanel" hidden>
+    <div class="panel-body">
+      <h2 class="section-title">Weeks</h2>
+      <p class="section-desc">Each week's split of the weekly limit, as of the hub's last check before it reset.</p>
+      <div class="scroll" style="margin-top:12px"><table id="weeks"></table></div>
     </div>
   </section>
 
@@ -516,7 +525,7 @@ function render() {
   // The tab reads like the statusline: session % · week %.
   const o = src?.official;
   document.title = o?.five_hour ? `${fmt.pct(o.five_hour.pct)} session · ${fmt.pct(o.seven_day?.pct)} week — Claude Usage` : "Claude Usage";
-  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawModels(); drawOverview();
+  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawWeeks(); drawModels(); drawOverview();
   drawLine(); drawBars(); drawTables(); drawSessions(); drawContext(); drawChats();
 }
 
@@ -683,6 +692,23 @@ function drawPeople(src) {
     `± is measured: in each past window with a 5+ point rise, the estimate is set against what the official % actually did; windows the logs fall more than a quarter short of had usage no laptop logged and are set aside, and ± is the typical miss on the rest. Until there are three such windows, ± is the range's half-width. ` +
     `Fable's weight and the value of cached reads are set so that Fable-heavy and cache-heavy stretches agree with the rest; a range means the readings can't tell yet. ` +
     `The week reuses the session's weights and only learns its own rate; the Fable limit is calibrated separately, against Fable's own limit.`;
+}
+
+function drawWeeks() {
+  const weeks = (state.weeks || []).slice().reverse();          // newest first
+  $("weeksPanel").hidden = !weeks.length;
+  if (!weeks.length) return;
+  const people = [...new Set(weeks.flatMap((w) => (w.people || []).map((p) => p.person)))].sort();
+  const colour = (p) => state.devices.find((d) => d.person === p)?.color || "var(--faint)";
+  $("weeks").innerHTML = `<tr><th>Week</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}` +
+    `<th class="n">Not on a laptop</th><th class="n">Fable limit</th></tr>` +
+    weeks.map((w) => {
+      const end = new Date(w.id), start = new Date(+end - 7 * 864e5);
+      const label = w.running ? "This week, so far" : `${start.toLocaleDateString([], { month: "short", day: "numeric" })} – ${end.toLocaleDateString([], { month: "short", day: "numeric" })}`;
+      const of = (p) => (w.people || []).find((x) => x.person === p)?.week;
+      return `<tr><td>${label}</td><td class="n">${fmt.pct(w.week)}</td>${people.map((p) => `<td class="n">${epct(of(p))}</td>`).join("")}` +
+        `<td class="n">${w.elsewhere ? epct(w.elsewhere.week) : "–"}</td><td class="n">${fmt.pct(w.fable)}</td></tr>`;
+    }).join("");
 }
 
 function drawModels() {

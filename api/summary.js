@@ -1,4 +1,5 @@
-import { family, redact, redis, slug, viewer } from "./_lib.js";
+import { redact, redis, slug, viewer } from "./_lib.js";
+import { freshestOfficial, split } from "./_split.js";
 
 // The small view the claude.ai userscript needs: the official limits, each person's estimated
 // share, the learned rates for pricing the next message, and the claude.ai chats seen so far.
@@ -19,27 +20,14 @@ function pace(lim, hours, now) {
     runs_out_at: runOut != null && runOut < reset && lim.pct < 100 ? new Date(runOut).toISOString() : null };
 }
 
-const estimate = (byModel, f) => f?.a == null || !byModel ? null
-  : Object.entries(byModel).reduce((s, [m, v]) => s + (f.m?.[family(m)] ?? 1) * (f.a * (v.x || 0) + (f.b ?? f.a) * (v.r || 0)), 0);
-
 export default async function handler(req, res) {
   const who = viewer(req);
   if (!who) return res.status(401).json({ error: "bad key" });
   const [all, fit, people, line] = await redis.pipeline().hgetall("devices").get("fit").smembers("webpeople").lrange("line", 0, -1).exec();
   const devices = Object.values(all || {}).map((d) => redact(parse(d), who));
-  const fresh = devices.filter((d) => d.official?.five_hour).sort((a, b) => (b.sent_at || "").localeCompare(a.sent_at || ""))[0];
-  const five = fit?.five, week = fit?.week, fable = fit?.fable;
-
-  const byPerson = {};
-  for (const d of devices) {
-    const p = (byPerson[d.person] ||= { person: d.person, five: 0, week: 0, fable: 0, calibrated: five?.a != null, fable_calibrated: fable?.a != null });
-    p.five += estimate(d.window?.by_model, five) || 0;
-    p.week += estimate(d.week?.by_model, week) || 0;
-    // Fable has its own weekly limit and its own fit; only Fable calls count toward it (as the
-    // dashboard's scopedSplit does).
-    if (fable?.a != null) for (const [m, v] of Object.entries(d.week?.by_model || {}))
-      if (family(m) === "fable") p.fable += fable.a * (v.x || 0) + (fable.b ?? fable.a) * (v.r || 0);
-  }
+  const fresh = freshestOfficial(devices);
+  const { people: peopleSplit, elsewhere } = split(devices, fit, fresh?.official);
+  const five = fit?.five;
 
   const web = {};
   if ((people || []).length) {
@@ -67,16 +55,12 @@ export default async function handler(req, res) {
     forecast = { week: wk, recent,
       scoped: (off.scoped || []).map((x) => ({ name: x.name, ...pace(x, 168, now) })).filter((x) => x.runs_out_at) };
   }
-  const sum = (k) => Object.values(byPerson).reduce((s, p) => s + p[k], 0);
   res.setHeader("Cache-Control", "no-store");
   res.status(200).json({
     now: new Date().toISOString(), viewer: who,
     official: off && { five: off.five_hour, week: off.seven_day, scoped: off.scoped, breakdown: off.breakdown, read_at: fresh.sent_at },
-    people: Object.values(byPerson),
-    elsewhere: off && five?.a != null ? {
-      five: Math.max(0, (off.five_hour?.pct ?? 0) - sum("five")), week: Math.max(0, (off.seven_day?.pct ?? 0) - sum("week")),
-      fable: fable?.a != null ? Math.max(0, ((off.scoped || []).find((x) => /fable/i.test(x.name))?.pct ?? 0) - sum("fable")) : null,
-    } : null,
+    people: peopleSplit,
+    elsewhere,
     // For pricing a message: % of the session per API-$ of non-cache tokens (a), of cache reads
     // (b), and the per-family weights. The userscript turns a context size into a %.
     forecast,

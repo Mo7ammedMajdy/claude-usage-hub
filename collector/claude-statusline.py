@@ -155,7 +155,7 @@ def plan():
         d = json.loads((CACHE_DIR / "official.json").read_text())
         stale = time.time() - os.path.getmtime(CACHE_DIR / "official.json") > 900
         five, week = d.get("five_hour") or {}, d.get("seven_day") or {}
-        start = lambda w, hours: (ts(w["resets_at"]) - hours * 3600) if w.get("resets_at") else None
+        start = lambda w, hours: (ts(w.get("resets_exact") or w["resets_at"]) - hours * 3600) if w.get("resets_at") else None
         num = lambda v: None if v is None else round(v)
         return num(five.get("pct")), num(week.get("pct")), stale, start(five, 5), start(week, 168)
     except Exception:
@@ -235,7 +235,10 @@ def main():
     share = lambda v: "" if v is None else f" {DIM}(this chat ≈{v:.1f}){RESET}" if v >= 0.1 else f" {DIM}(this chat <0.1){RESET}"
     if five is not None:
         pc = RED if five >= 85 else AMBER if five >= 70 else GREY
-        parts.append(f"{pc}session {'~' if stale else ''}{five}%{RESET}{share(mine5)}")
+        # Time until the session resets, e.g. "↻1h15m" (from the window's start + 5 h).
+        left = None if five_start is None else five_start + 5 * 3600 - time.time()
+        reset = "" if left is None or left <= 0 else f" {DIM}↻{int(left // 3600)}h{int(left % 3600 // 60):02d}m{RESET}" if left >= 3600 else f" {DIM}↻{int(left // 60)}m{RESET}"
+        parts.append(f"{pc}session {'~' if stale else ''}{five}%{RESET}{reset}{share(mine5)}")
     if week is not None:
         wc = RED if week >= 90 else AMBER if week >= 75 else GREY
         parts.append(f"{wc}week {week}%{RESET}{share(mineW)}")

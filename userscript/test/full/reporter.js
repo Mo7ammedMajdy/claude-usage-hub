@@ -15,9 +15,10 @@ setTimeout(() => {
       after: (e.previousElementSibling ? e.previousElementSibling.textContent : "").replace(/\s+/g, " ").trim().slice(0, 40),
       text: e.shadowRoot.querySelector(".root").textContent.replace(/\s+/g, " ").trim() } : null; };
     out.splitFive = split("cuh-split-five"); out.splitWeek = split("cuh-split-week");
+    const fc = document.getElementById("cuh-forecast");
+    out.forecast = fc && fc.shadowRoot ? fc.shadowRoot.querySelector(".root").textContent.replace(/\s+/g, " ").trim().slice(0, 90) : null;
     const dg = document.getElementById("cuh-diag");
     out.diag = dg && dg.shadowRoot ? dg.shadowRoot.querySelector(".root").textContent.replace(/\s+/g, " ").trim() : null;
-    out.card = card && card.shadowRoot ? card.shadowRoot.querySelector(".root").textContent.replace(/\s+/g, " ").trim() : null;
   } catch (e) { out.err = String(e) + " @ " + (e.stack || "").split("\n")[0]; }
   fetch("http://127.0.0.1:8765/report?who=ui", { method: "POST", body: JSON.stringify(out) });
 }, 6500);

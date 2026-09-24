@@ -301,6 +301,50 @@ def self_update(conf):
     return changed
 
 
+NOTIFY_AT = {"five_hour": (80, 95), "seven_day": (90, 97)}
+NOTIFIED = CACHE.with_name("notified.json")
+
+
+def notify(conf, off):
+    """A desktop notification when the shared limits cross a threshold, once per window and
+    level. The account is shared, so whoever is at a laptop gets the heads-up, whoever burned it.
+    HUB_NOTIFY=0 in the config turns it off."""
+    if conf.get("HUB_NOTIFY", "1") == "0" or not off or off.get("from_hub"):
+        return
+    import shutil, subprocess
+    if not shutil.which("notify-send"):
+        return
+    try:
+        seen = json.loads(NOTIFIED.read_text())
+    except Exception:
+        seen = {}
+    names = {"five_hour": "session", "seven_day": "week"}
+    changed = False
+    for key, levels in NOTIFY_AT.items():
+        lim = off.get(key) or {}
+        pct, win = lim.get("pct"), lim.get("resets_at")
+        if pct is None or not win:
+            continue
+        hit = max((l for l in levels if pct >= l), default=None)
+        if hit is None or seen.get(key, {}).get(win, 0) >= hit:
+            continue
+        at = datetime.fromisoformat(lim.get("resets_exact") or win).astimezone()
+        when = at.strftime("%H:%M") if key == "five_hour" else at.strftime("%a %H:%M")
+        try:
+            subprocess.Popen(["notify-send", "-a", "Claude usage", "-u", "critical" if hit == levels[-1] else "normal",
+                              f"Claude {names[key]} at {pct:.0f}%", f"Shared limit. Resets {when}."],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            continue
+        seen[key] = {win: hit}          # only the current window matters
+        changed = True
+    if changed:
+        try:
+            NOTIFIED.write_text(json.dumps(seen))
+        except Exception:
+            pass
+
+
 def hub_windows(conf):
     """When this laptop can't read the official limits, the hub still knows the current
     windows from the other laptops. Readings taken against those windows carry no % but still
@@ -690,7 +734,9 @@ def main():
 
     def read(now):
         """Official limits, or the hub's current windows (no %) when this laptop can't read them."""
-        return official(idx.dirs) or hub_windows(conf)
+        off = official(idx.dirs)
+        notify(conf, off)
+        return off or hub_windows(conf)
 
     def sync(now):
         off = read(now)
