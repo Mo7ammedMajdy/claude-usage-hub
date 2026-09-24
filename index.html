@@ -442,7 +442,13 @@ const estFlat = (u, scope, d) => {
   const f = fitOf(scope);
   return f?.a == null || !u ? null : avgMult(d, scope) * (f.a * (u.x || 0) + (f.b ?? f.a) * (u.r || 0));
 };
-const estDev = (d, scope) => estModels(d[scope]?.by_model, scope);
+// A laptop that slept through a reset still carries the old window's totals: those count 0 now.
+const inWindow = (d, scope) => {
+  const o = freshest()?.official, lim = scope === "window" ? o?.five_hour : o?.seven_day, hours = scope === "window" ? 5 : 168;
+  const at = lim && (lim.resets_exact || lim.resets_at), sent = d.received_at || d.sent_at;
+  return !at || !sent || Date.parse(sent) >= Date.parse(at) - hours * 36e5;
+};
+const estDev = (d, scope) => inWindow(d, scope) ? estModels(d[scope]?.by_model, scope) : 0;
 
 // ---- data ---------------------------------------------------------------------
 async function api(path, opts = {}) {
@@ -485,7 +491,7 @@ const online = (d) => Date.now() - new Date(d.sent_at) < 12 * 60e3;
 // Newest official data, preferring devices on the current sync version (which also send
 // the product split and per-model limits).
 const freshest = () => state.devices.filter((d) => d.official?.five_hour)
-  .sort((a, b) => (!!b.official.breakdown - !!a.official.breakdown) || new Date(b.sent_at) - new Date(a.sent_at))[0];
+  .sort((a, b) => (!!b.official.breakdown - !!a.official.breakdown) || new Date(b.received_at || b.sent_at) - new Date(a.received_at || a.sent_at))[0];
 
 // Ask every online laptop to sync now. The daemons poll for the request every 60 s and
 // then read their logs and the official %, so an answer takes up to ~70 s; after 100 s
