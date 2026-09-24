@@ -50,8 +50,15 @@ export default async function handler(req, res) {
   const device = slug(label);
   if (!device) return res.status(400).json({ error: "device required" });
   Object.assign(snap, { device, label, received_at: new Date().toISOString() });
-  // A personal key can only ever file usage under its own owner.
-  if (who !== "*") snap.person = who;
+  // A personal key can only ever file usage under its own owner, and only on a laptop that is
+  // its own: the first sync claims a device name, and another person's key can't write to it
+  // (a copied config or a clashing name would otherwise overwrite someone else's laptop).
+  if (who !== "*") {
+    snap.person = who;
+    const owner = await redis.hget("owner", device);
+    if (owner && owner !== who) return res.status(403).json({ error: `"${label}" belongs to ${owner}: pick another device name` });
+    if (!owner) await redis.hsetnx("owner", device, who);
+  }
 
   let samples = snap.samples || [];
   if (!snap.samples && snap.official?.five_hour) samples = [fromSnapshot(snap)];

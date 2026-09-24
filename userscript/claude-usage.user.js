@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage
 // @namespace    https://claude-usage-hub.vercel.app
-// @version      1.0.7
+// @version      1.0.8
 // @description  Context size, what the next message costs, and the shared plan's limits — inside claude.ai.
 // @match        https://claude.ai/*
 // @match        https://claude-usage-hub.vercel.app/*
@@ -313,10 +313,14 @@ function claudePage() {
   }
   async function refreshSummary() {
     const s = await hub("GET", "/api/summary");
-    if (s) { st.summary = s; schedule(); }
+    if (s) { st.summary = s; st.summaryAt = Date.now(); schedule(); }
   }
   setInterval(flush, 15e3);
-  setInterval(refreshSummary, 5 * 60e3);
+  // Only the tab being looked at keeps the split fresh (every hub read costs Redis commands, and
+  // claude.ai tends to stay open in several tabs); a tab coming back into view catches up.
+  const stale = () => Date.now() - (st.summaryAt || 0) > 5 * 60e3;
+  setInterval(() => document.visibilityState === "visible" && stale() && refreshSummary(), 30e3);
+  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && stale() && refreshSummary());
 
   // ------------------------------------------------------------ numbers
   const fmtTok = (n) => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(n);

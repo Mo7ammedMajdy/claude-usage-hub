@@ -215,6 +215,10 @@ def official(dirs):
     """The official limits, or None — and in that case `official.why` says what went wrong,
     so the hub can show it instead of a laptop that just silently never reads the %."""
     official.why = None
+    if time.time() < official.until:
+        # Anthropic asked us to slow down: don't ask again until it said we may.
+        official.why = f"rate limited by Anthropic, retrying in {int(official.until - time.time())} s"
+        return None
     try:
         creds = next((json.loads((d / ".credentials.json").read_text())
                       for d in dirs if (d / ".credentials.json").exists()), None)
@@ -255,6 +259,12 @@ def official(dirs):
         cache_official(out)
         return out
     except urllib.error.HTTPError as e:
+        if e.code == 429:
+            try:
+                wait = int(e.headers.get("Retry-After") or 0)
+            except ValueError:
+                wait = 0
+            official.until = time.time() + min(3600, max(wait, 300))
         official.why = f"Anthropic answered HTTP {e.code}" + (" (login token rejected)" if e.code in (401, 403) else
                                                              " (rate limited)" if e.code == 429 else "")
     except Exception as e:  # offline, etc. — the other laptop may cover it
@@ -264,6 +274,7 @@ def official(dirs):
 
 
 official.why = None
+official.until = 0.0     # no official reads before this time (set by a 429)
 
 
 def self_update(conf):

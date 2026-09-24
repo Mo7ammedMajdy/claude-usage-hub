@@ -434,7 +434,19 @@ async function api(path, opts = {}) {
 // All-time history (daily stats, context & compaction analysis) is heavier, so it's
 // fetched on open, every 10 minutes, and after a Refresh — not on every 30 s poll.
 let detail = {}, detailAt = 0, web = {}, lastStamp = null;
+// Set when the hub didn't answer; the header says so instead of quietly showing old numbers.
+let hubDown = false;
+function showHubState() {
+  const s = state && freshest();
+  $("updated").textContent = hubDown ? `Can't reach the hub · showing data from ${s ? fmt.ago(s.sent_at) : "earlier"}`
+    : s ? `Last updated: ${fmt.ago(s.sent_at)}` : "Last updated: never";
+  $("updated").style.color = hubDown ? "var(--amber)" : "";
+}
 async function load(forceDetail = false) {
+  try { await loadInner(forceDetail); hubDown = false; }
+  catch (e) { if (key) { hubDown = true; showHubState(); } throw e; }
+}
+async function loadInner(forceDetail = false) {
   const wantDetail = forceDetail || Date.now() - detailAt > 10 * 60e3;
   // The claude.ai chats (in /api/summary) change about as often as the history: fetch them together.
   const [st, det, sum] = await Promise.all([api("/api/state"), wantDetail ? api("/api/detail").catch(() => null) : null,
@@ -499,7 +511,7 @@ function render() {
   const src = freshest();
   const plan = src?.official?.plan;
   $("plan").textContent = plan ? plan.replace("default_claude_", "").replace(/max_(\d+)x/, "Max ($1x)").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "plan unknown";
-  $("updated").textContent = src ? `Last updated: ${fmt.ago(src.sent_at)}` : "Last updated: never";
+  showHubState();
   $("updated").title = src ? `${new Date(src.sent_at).toLocaleString()}, from ${name(src)}` : "";
   // The tab reads like the statusline: session % · week %.
   const o = src?.official;
@@ -618,7 +630,9 @@ function drawPeople(src) {
     const mine = devs.filter((d) => d.person === p);
     for (const d of mine) {
       const active = d.last_activity && Date.now() - new Date(d.last_activity) < 5 * 60e3;
-      html += `<tr><td><span class="dot" style="background:${d.color}"></span>${esc(name(d))}${active ? '<span class="tag live">active now</span>' : ""}</td>
+      // Collectors before v4 don't update themselves: that laptop has to run setup.sh once.
+      const old = (d.version || 0) < 4 ? `<span class="tag stale" title="This laptop runs an old sync script. Re-run the setup command on it once; later versions update themselves.">old sync · run setup</span>` : "";
+      html += `<tr><td><span class="dot" style="background:${d.color}"></span>${esc(name(d))}${active ? '<span class="tag live">active now</span>' : ""}${old}</td>
         <td class="muted">${esc(d.person)}</td><td class="n">${epct(estDev(d, "window"))}</td><td class="n">${epct(estDev(d, "week"))}</td>
         <td class="n">${d.window?.calls || 0}</td><td class="n">${fmt.tok(d.window?.tokens || 0)}</td><td class="muted">${fmt.ago(d.last_activity)}</td>
         <td>${online(d) ? `<span class="muted">${fmt.ago(d.sent_at)}</span>` : `<span class="tag stale" style="margin:0">offline · ${fmt.ago(d.sent_at)}</span>`}${d.official_error ? `<div class="faint" style="font-size:12px;margin-top:2px" title="${esc(d.official_error)}">can't read the official % (${esc(d.official_error.replace(/ \(.*$/, ""))})</div>` : ""}</td></tr>`;
@@ -1006,8 +1020,10 @@ window.onresize = () => state && render();
 // Every 30 s, ask the hub (one Redis read) whether any laptop has synced since; reload only then.
 async function poll() {
   if (!key || refreshing || document.visibilityState !== "visible") return;
-  const { stamp } = await api("/api/refresh");
-  if (stamp && stamp === lastStamp) return;
+  let stamp;
+  try { ({ stamp } = await api("/api/refresh")); hubDown = false; }
+  catch (e) { if (key) { hubDown = true; showHubState(); } throw e; }
+  if (stamp && stamp === lastStamp) { showHubState(); return; }
   lastStamp = stamp;
   await load();
 }
@@ -1021,7 +1037,7 @@ const syncIfStale = () => {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && key) load().then(syncIfStale).catch(() => {});
 });
-setInterval(() => { const s = state && freshest(); if (s) $("updated").textContent = `Last updated: ${fmt.ago(s.sent_at)}`; }, 15000);
+setInterval(showHubState, 15000);
 if (key) load().then(syncIfStale).catch(() => {}); else showLogin();
 </script>
 </body>

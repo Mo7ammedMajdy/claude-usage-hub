@@ -11,3 +11,5 @@
 - `bidi.mjs` — minimal WebDriver BiDi client for a *copied* Firefox profile (never the real
   one: remote debugging sets navigator.webdriver and trips Cloudflare).
 - `data/samples-2026-09-24-before-reprice.json` — backup of all readings before the price fix.
+- `test-fit.mjs` — regression test of the fit on `fixtures/readings-2026-09-24.json` (real,
+  repriced readings). Run it before deploying any change to `api/_fit.js` or `api/_combine.js`.
