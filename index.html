@@ -432,9 +432,15 @@ const fmt = {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const name = (d) => d.label || d.device;
 const epct = (v) => v == null ? '<span class="calib">calibrating</span>' : (v = num(v)) <= 0 ? "0%" : v < 0.1 ? "<0.1%" : v < 10 ? `${v.toFixed(1)}%` : `${Math.round(v)}%`;
-// One name for usage that no synced laptop logged, wherever it appears.
-const NS_TIP = "Usage no synced laptop logged: claude.ai chats, phones, other computers, cloud sessions";
-const notSynced = `<span class="ns" title="${NS_TIP}">Not synced</span>`;
+// One name for usage that neither synced laptop logged, wherever it appears; the tooltip says
+// what that can be in each place (under Claude Code it can't be claude.ai chats, for instance).
+const NS_TIPS = {
+  all: "Usage neither synced laptop logged: claude.ai chats and the apps, someone else on the account, or Claude Code on another computer or in the cloud.",
+  code: "Claude Code usage neither synced laptop logged: another computer, Claude Code in the cloud, or logs deleted before they synced. claude.ai chats have their own row.",
+  fable: "Fable usage neither synced laptop logged: Fable chats on claude.ai or the apps, or Claude Code on another computer.",
+};
+const nsLabel = (kind = "all") => `<span class="ns" title="${NS_TIPS[kind]}">Not synced</span>`;
+const notSynced = nsLabel("all");
 const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
 // "Friday" / "today" / "tomorrow" — for the reset day.
 const dayWord = (t) => {
@@ -692,7 +698,7 @@ function scopedSplit(s) {
     known += e;
     html += childRow(esc(name(d)), "", e, d);
   }
-  return html + childRow(notSynced, "", Math.max(0, num(s.pct) - known));
+  return html + childRow(nsLabel("fable"), "", Math.max(0, num(s.pct) - known));
 }
 function drawLimits(src) {
   const o = src?.official || {};
@@ -730,7 +736,7 @@ function drawProducts(src) {
       known += e || 0;
       html += childRow(esc(name(d)), "", e, d);
     }
-    html += childRow(notSynced, "Claude Code in the cloud, on other computers, or in logs deleted before they synced", Math.max(0, v - known));
+    html += childRow(nsLabel("code"), "Claude Code on another computer, in the cloud, or in logs deleted before they synced", Math.max(0, v - known));
   }
   $("products").innerHTML = html;
 }
