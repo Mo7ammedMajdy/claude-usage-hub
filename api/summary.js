@@ -1,6 +1,7 @@
 import { redact, redis, slug, viewer } from "./_lib.js";
 import { freshestOfficial, split } from "./_split.js";
 import { forecastWeek } from "./_forecast.js";
+import { cleanChat } from "./web.js";
 
 // The small view the claude.ai userscript needs: the official limits, each person's estimated
 // share, the learned rates for pricing the next message, and the claude.ai chats seen so far.
@@ -43,7 +44,9 @@ export default async function handler(req, res) {
     for (const p of people) q.hgetall(`webchat:${slug(p)}`);
     const got = await q.exec();
     people.forEach((p, i) => {
-      web[p] = Object.values(got[i] || {}).map(parse).sort((a, b) => (b.last || "").localeCompare(a.last || "")).slice(0, 30);
+      // Re-checked on the way out too: a chat stored before /api/web checked its fields stays until pushed out.
+      web[p] = Object.values(got[i] || {}).map((v) => { try { return cleanChat(parse(v)); } catch { return null; } }).filter(Boolean)
+        .sort((a, b) => (b.last || "").localeCompare(a.last || "")).slice(0, 30);
     });
   }
 

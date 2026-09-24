@@ -1,4 +1,4 @@
-import { viewer, redis, slug, family } from "./_lib.js";
+import { viewer, redis, slug, family, plain, num, pct, id, text, when, day, bool, list, obj, map } from "./_lib.js";
 import { fitDevices } from "./_fit.js";
 import { freshestOfficial, split } from "./_split.js";
 import { forecastWeek, weekHours } from "./_forecast.js";
@@ -14,10 +14,73 @@ const SAMPLES_MAX = 4000;         // per device, hard cap; compact() keeps lists
 const COMPACT_AT = 2500;          // a laptop's list is compacted (at its own refit) past this
 const FIT_EVERY_MS = 15 * 60e3;   // refitting reads every device's readings, so not on every sync
 const LINE_MAX = 4000;            // ~2 days even with busy 2-minute syncs; /api/state sends a thinned 26 h
+const SAMPLES_PER_POST = 500;     // the collector sends at most 200 (its pending list is capped there)
+const SKEW_MS = 10 * 60e3;        // how far a laptop's clock may be off the hub's
+const SPAN_MS = 8 * 864e5;        // reset times and readings further than this from now are nonsense
 
 const pack = (s) => SK.map((k) => s[k] ?? null);
 export const unpack = (a) => Object.fromEntries(SK.map((k, i) => [k, a[i]]));
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
+const tryParse = (v) => { try { return parse(v); } catch { return null; } };
+
+// ---- What a laptop may send. Only these fields are stored (a new collector field needs adding
+// here), each cut to its expected shape; see the helpers in _lib.js.
+const n0 = num(0, 1e12);          // counts and tokens: never negative
+const usd = num(0, 1e6);          // API-$ (x, r): even a laptop's all-time total is in the thousands
+const usage = obj({ calls: n0, tokens: n0, x: usd, r: usd });
+const totals = obj({ calls: n0, tokens: n0, x: usd, r: usd,
+  by_platform: map(id(40), usage, 20), by_project: map(text(100), usage, 200), by_model: map(id(60), usage, 40) });
+const stat = obj({ calls: n0, x: usd, r: usd, ctx: n0, model: id(60) });
+const session = obj({ id: id(16), title: text(200), project: text(100), platform: text(80), start: when, last: when,
+  calls: n0, x: usd, r: usd, tokens: n0, current_model: id(60), models: map(id(60), usage, 20),
+  changes: list(obj({ t: when, model: id(60) }), 12), switches: list(obj({ t: when, to: text(80) }), 12),
+  agents: list(obj({ id: id(16), type: text(60), desc: text(200), parent: id(40), depth: n0, calls: n0, x: usd, r: usd,
+    tokens: n0, models: list(id(60), 10), first: when, last: when }), 25),
+  ctx_max: n0, ctx_last: n0, ctx_avg: n0, recent: stat,
+  compactions: list(obj({ t: when, trigger: id(20), pre: n0, post: n0 }), 50) });
+export const cleanSnapshot = obj({ person: text(40), host: text(60), sent_at: when, version: num(0, 1e3), pv: num(1, 99),
+  official_error: text(300), windows_from_hub: bool, account: id(16), window_start: when, week_start: when,
+  last_activity: when, window: totals, week: totals, hourly: map(when, obj({ x: usd, r: usd }), 400), sessions: list(session, 40) });
+export const cleanDetail = obj({
+  daily: map(day, obj({ models: map(id(60), list(n0, 5, true), 40), hours: list(n0, 24, true), msgs: n0, sessions: n0 }), 3000),
+  context: obj({ buckets: list(obj({ lo: n0, hi: n0, calls: n0, x: usd, r: usd, by_fam: map(id(20), list(n0, 3, true), 10) }), 20),
+    after_compact: list(stat, 40) }),
+  chats: list(obj({ id: id(16), len: n0, cost: n0, model: id(60), effort: text(30), est: bool, in_project: bool, t: when }), 80) });
+
+/** The official limits, or null if any part is off. They set every window id and every % the fit
+ *  learns from, so a half-valid reading is worse than none (another laptop covers it). */
+export function cleanOfficial(o, now = Date.now()) {
+  if (!plain(o)) return null;
+  const lim = (l, named) => {                 // null: not sent; undefined: invalid
+    if (l == null) return null;
+    if (!plain(l) || (l.pct != null && (typeof l.pct !== "number" || pct(l.pct) == null))) return undefined;
+    const at = {};
+    for (const k of ["resets_at", "resets_exact"]) {
+      if (l[k] == null) { at[k] = null; continue; }
+      if (!(Math.abs(Date.parse(when(l[k])) - now) <= SPAN_MS)) return undefined;
+      at[k] = l[k];
+    }
+    return { ...(named ? { name: text(60)(l.name) } : {}), pct: pct(l.pct), ...at, severity: id(20)(l.severity) };
+  };
+  const five = lim(o.five_hour), week = lim(o.seven_day);
+  const scoped = (Array.isArray(o.scoped) ? o.scoped.slice(0, 10) : []).map((l) => lim(l, true));
+  if (five === undefined || week === undefined || scoped.includes(undefined)) return null;
+  return { five_hour: five, seven_day: week, scoped: scoped.filter(Boolean),
+    breakdown: list(obj({ key: id(40), name: text(60), percent: pct }), 10)(o.breakdown),
+    breakdown_as_of: when(o.breakdown_as_of) || day(o.breakdown_as_of), plan: id(60)(o.plan) };
+}
+
+// Per reading field: window ids are dates, p-fields are %s, pv the price table; the rest are API-$.
+const SAMPLE = { w5: when, ww: when, wf: when, p5: pct, pwr: pct, cc: pct, pf: pct, pv: num(1, 99) };
+/** One reading with every field checked, or null if its time isn't a date. Refit runs it over the
+ *  stored readings too, so a bad row stored before this check existed can't break the fit. */
+export function cleanSample(s) {
+  if (!plain(s) || !when(s.t)) return null;
+  return Object.fromEntries(SK.map((k) => [k, k === "t" ? s.t : s[k] == null ? null : (SAMPLE[k] || usd)(s[k])]));
+}
+/** A device's stored list, oldest first, each row re-checked; rows that don't parse are dropped. */
+export const readings = (list) =>
+  (list || []).map(tryParse).filter(Array.isArray).map(unpack).map(cleanSample).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t));
 
 /** Older readings carry less news: past the last two days keep, per window, every reading where
  *  the official % moved plus up to 60 spread evenly (the fit thins to 60 per window anyway). */
@@ -45,7 +108,7 @@ export async function refit(names, own = null) {
   q.hgetall("devices").get("week:current").get("forecast:ignore");
   const got = await q.exec();
   const lists = got.slice(0, names.length), [all, current, ignore] = got.slice(names.length);
-  const perDevice = Object.fromEntries(names.map((n, i) => [n, (lists[i] || []).map(parse).map(unpack).sort((a, b) => a.t.localeCompare(b.t))]));
+  const perDevice = Object.fromEntries(names.map((n, i) => [n, readings(lists[i])]));
   const fit = fitDevices(perDevice);
   fit.week_hours = weekHours(perDevice, Date.now(), parse(ignore) || []);   // recent official pace, for the forecast
   fit.fable_hours = weekHours(perDevice, Date.now(), parse(ignore) || [], "pf", "wf");
@@ -103,11 +166,17 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
   const who = viewer(req);
   if (!who) return res.status(401).json({ error: "bad key" });
-  const snap = req.body;
-  const label = String(snap?.device || "").slice(0, 60);
+  const raw = plain(req.body) ? req.body : {};
+  const label = text(60)(String(raw.device ?? "")) || "";
   const device = slug(label);
   if (!device) return res.status(400).json({ error: "device required" });
-  Object.assign(snap, { device, label, received_at: new Date().toISOString() });
+  // received_at is the hub's own clock and the one every "which is newest" choice uses; sent_at
+  // is only shown, but a laptop claiming to be from the future would look online forever.
+  const now = Date.now(), sent = Date.parse(when(raw.sent_at));
+  if (Math.abs(sent - now) > SKEW_MS)
+    return res.status(400).json({ error: `sent_at is ${Math.round((sent - now) / 60e3)} min off the hub's clock: set this laptop's clock` });
+  const snap = { ...cleanSnapshot(raw), device, label, received_at: new Date(now).toISOString(), official: cleanOfficial(raw.official, now) };
+  snap.sent_at ||= snap.received_at;
   // A personal key can only ever file usage under its own owner, and only on a laptop that is
   // its own: the first sync claims a device name, and another person's key can't write to it
   // (a copied config or a clashing name would otherwise overwrite someone else's laptop).
@@ -118,11 +187,18 @@ export default async function handler(req, res) {
     if (!owner) await redis.hsetnx("owner", device, who);
   }
 
-  let samples = snap.samples || [];
-  if (!snap.samples && snap.official?.five_hour) samples = [fromSnapshot(snap)];
+  // Readings go straight into the fit: each is checked, and one timed outside the plausible span
+  // (a week back to a few minutes ahead) is dropped.
+  const samples = [];
+  let dropped = 0;
+  for (const s of Array.isArray(raw.samples) ? raw.samples.slice(-SAMPLES_PER_POST) : []) {
+    const c = cleanSample(s), t = c ? Date.parse(c.t) : NaN;
+    if (t > now - SPAN_MS && t < now + SKEW_MS) samples.push(c); else dropped++;
+  }
+  if (Array.isArray(raw.samples)) dropped += Math.max(0, raw.samples.length - SAMPLES_PER_POST);
+  if (!raw.samples && snap.official?.five_hour) samples.push(cleanSample(fromSnapshot(snap)));
   // The heavy all-time parts go to their own hash, read only by /api/detail.
-  const detail = { daily: snap.daily, context: snap.context, chats: snap.chats };
-  delete snap.samples; delete snap.daily; delete snap.context; delete snap.chats;
+  const detail = cleanDetail({ daily: raw.daily, context: raw.context, chats: raw.chats });
 
   const p = redis.pipeline()
     .set("stamp", snap.received_at)       // lets the dashboard skip reloads when nothing changed
@@ -136,17 +212,21 @@ export default async function handler(req, res) {
   const out = await p.exec();
   const storedPv = Number(out[out.length - 3] || 1), fit = out[out.length - 2], names = out[out.length - 1] || [];
 
-  // Refit on a schedule (or right away if there's no fit yet).
-  if (!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) await refit(names, device);
+  // Refit on a schedule (or right away if there's no fit yet). The sync above is already stored,
+  // so a fit that throws is logged and retried at the next sync instead of failing this one.
+  if (!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) {
+    try { await refit(names, device); } catch (e) { console.error("refit failed:", e); }
+  }
   // This laptop now prices usage with a newer table than its stored readings were: ask it to
   // reprice them from its logs (it answers at /api/reprice), so old and new readings agree.
   let reprice;
   if ((snap.pv || 1) > storedPv) {
-    const held = ((await redis.lrange(`ds:${device}`, 0, -1)) || []).map(parse).map(unpack);
+    const held = readings(await redis.lrange(`ds:${device}`, 0, -1));
     reprice = held.filter((s) => (s.pv || 1) < snap.pv).map((s) => [s.t, s.w5, s.ww, s.wf]);
     if (!reprice.length) { await redis.hset("pv", { [device]: snap.pv }); reprice = undefined; }
   }
   // The learned rates, so a laptop can price its own sessions without another request.
   const r = (f) => f?.a != null ? { a: f.a, b: f.b ?? f.a, m: f.m || {}, err: f.err ?? null } : null;
-  res.status(200).json({ ok: true, device, samples: samples.length, rate: { five: r(fit?.five), week: r(fit?.week) }, ...(reprice ? { reprice } : {}) });
+  res.status(200).json({ ok: true, device, samples: samples.length, ...(dropped ? { dropped } : {}),
+    rate: { five: r(fit?.five), week: r(fit?.week) }, ...(reprice ? { reprice } : {}) });
 }
