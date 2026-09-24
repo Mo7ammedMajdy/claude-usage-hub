@@ -266,6 +266,15 @@
     </div>
   </section>
 
+  <section class="panel" id="winPanel" hidden>
+    <div class="panel-body">
+      <h2 class="section-title">Sessions</h2>
+      <p class="section-desc">Each 5-hour session's final official %, and what each person's logged usage in it adds up to.</p>
+      <div class="scroll" style="margin-top:12px"><table id="wins"></table></div>
+      <div id="winsMore" style="margin-top:8px"></div>
+    </div>
+  </section>
+
   <div class="row2">
   <!-- Overview / Models card, like the Claude Code home -->
   <section class="panel ov">
@@ -525,7 +534,7 @@ function render() {
   // The tab reads like the statusline: session % · week %.
   const o = src?.official;
   document.title = o?.five_hour ? `${fmt.pct(o.five_hour.pct)} session · ${fmt.pct(o.seven_day?.pct)} week — Claude Usage` : "Claude Usage";
-  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawWeeks(); drawModels(); drawOverview();
+  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawWeeks(); drawWindows(); drawModels(); drawOverview();
   drawLine(); drawBars(); drawTables(); drawSessions(); drawContext(); drawChats();
 }
 
@@ -710,6 +719,33 @@ function drawWeeks() {
         `<td class="n">${w.elsewhere ? epct(w.elsewhere.week) : "–"}</td><td class="n">${fmt.pct(w.fable)}</td></tr>`;
     }).join("");
 }
+
+let allWins = false;
+function drawWindows() {
+  const wins = (state.windows5 || []).slice().reverse();
+  $("winPanel").hidden = !wins.length;
+  if (!wins.length) return;
+  const personOf = (dev) => state.devices.find((d) => d.device === dev)?.person || dev;
+  const people = [...new Set(state.devices.map((d) => d.person))].sort();
+  const colour = (p) => state.devices.find((d) => d.person === p)?.color || "var(--faint)";
+  const label = (id) => {
+    const end = new Date(id), start = new Date(+end - 5 * 36e5), day = dayWord(start);
+    return `${day === "today" || day === "tomorrow" ? day[0].toUpperCase() + day.slice(1) : day.slice(0, 3)} ${fmt.clock(start)}–${fmt.clock(end)}`;
+  };
+  const shown = allWins ? wins : wins.slice(0, 8);
+  $("wins").innerHTML = `<tr><th>Session</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}<th class="n">Not on a laptop</th></tr>` +
+    shown.map((w) => {
+      const by = {};
+      for (const [dev, v] of Object.entries(w.devices || {})) by[personOf(dev)] = (by[personOf(dev)] || 0) + v;
+      const known = Object.values(by).reduce((a, b) => a + b, 0);
+      const running = Date.parse(w.id) > Date.now();
+      return `<tr><td>${label(w.id)}${running ? '<span class="tag live">now</span>' : ""}</td><td class="n">${fmt.pct(w.pct)}</td>` +
+        people.map((p) => `<td class="n">${by[p] == null ? "–" : epct(by[p])}</td>`).join("") +
+        `<td class="n">${epct(Math.max(0, w.pct - known))}</td></tr>`;
+    }).join("");
+  $("winsMore").innerHTML = wins.length > 8 ? `<button class="linkbtn" id="toggleWins">${allWins ? "Show fewer" : `Show all ${wins.length}`}</button>` : "";
+}
+document.addEventListener("click", (e) => { if (e.target.id === "toggleWins") { allWins = !allWins; drawWindows(); } });
 
 function drawModels() {
   const agg = {};

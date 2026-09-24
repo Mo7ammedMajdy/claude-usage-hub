@@ -19,5 +19,7 @@ export default async function handler(req, res) {
     // Past weeks' final split (newest last) and the running week's latest.
     weeks: [...(weeks || []).map(parse), ...(current ? [{ ...parse(current), running: true }] : [])],
     model: { five: fit?.five || empty, week: fit?.week || empty, fable: fit?.fable || empty, devices: fit?.devices || {} },
+    // Past 5-hour windows: final official % and each laptop's estimated share (from the fit).
+    windows5: fit?.windows5 || [],
   });
 }

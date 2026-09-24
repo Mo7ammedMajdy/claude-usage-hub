@@ -238,6 +238,27 @@ export function fitAll(samples, over = {}) {
   };
 }
 
+/** Past 5-hour windows: each one's final official % and what each laptop's logged usage in it
+ *  is worth at the fitted rates. From the (canonical) readings the fit already has. */
+export function windowHistory(perDevice, fit, max = 30) {
+  const f = fit?.five;
+  if (f?.a == null) return [];
+  const U = (s) => {
+    const fx = s.x5f || 0, fr = s.r5f || 0, lx = s.x5l || 0, lr = s.r5l || 0;
+    return f.a * ((s.x5 - fx - lx) + f.rho * (s.r5 - fr - lr) + f.phi * (fx + f.rho * fr) + (f.psi ?? 1) * (lx + f.rho * lr));
+  };
+  const wins = {};
+  for (const [d, list] of Object.entries(perDevice)) for (const s of list) {
+    if (!s.w5 || s.x5 == null) continue;
+    const w = (wins[s.w5] ||= { id: s.w5, pct: null, devices: {} });
+    if (s.p5 != null && (w.pct == null || s.p5 > w.pct)) w.pct = s.p5;
+    const prev = w.devices[d];
+    if (!prev || s.t > prev.t) w.devices[d] = { t: s.t, est: U(s) };
+  }
+  return Object.values(wins).filter((w) => w.pct != null).sort((a, b) => a.id.localeCompare(b.id)).slice(-max)
+    .map((w) => ({ id: w.id, pct: w.pct, devices: Object.fromEntries(Object.entries(w.devices).map(([d, v]) => [d, +v.est.toFixed(2)])) }));
+}
+
 // Fit on every device's raw readings, choosing which laptops' usage counts (see above).
 export function fitDevices(raw, over = {}) {
   const perDevice = canonical(raw);
@@ -254,5 +275,7 @@ export function fitDevices(raw, over = {}) {
     const adj = cost + others.reduce((s, d) => s + (weight[d] ? 0 : 1.5), 0);
     if (!best || adj < best.adj) best = { adj, fit: { ...fit, devices: { [primary]: 1, ...weight } } };
   }
-  return best ? best.fit : { ...fitAll([], over), devices: {} };
+  if (!best) return { ...fitAll([], over), devices: {} };
+  best.fit.windows5 = windowHistory(perDevice, best.fit);
+  return best.fit;
 }
