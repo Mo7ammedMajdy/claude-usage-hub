@@ -306,6 +306,13 @@ def self_update(conf):
 
 
 NOTIFY_AT = {"five_hour": (80, 95), "seven_day": (90, 97)}
+
+
+def same_window(a, b):
+    try:
+        return abs((datetime.fromisoformat(a) - datetime.fromisoformat(b)).total_seconds()) < 1800
+    except (TypeError, ValueError):
+        return a == b
 NOTIFIED = CACHE.with_name("notified.json")
 
 
@@ -330,7 +337,10 @@ def notify(conf, off):
         if pct is None or not win:
             continue
         hit = max((l for l in levels if pct >= l), default=None)
-        if hit is None or seen.get(key, {}).get(win, 0) >= hit:
+        # Anthropic's reset time jitters around the boundary (00:59:59.9 one read, 01:00:00 the
+        # next), so the minute-rounded id flips: a window within 30 min of the one on record is it.
+        done = max((v for w, v in seen.get(key, {}).items() if same_window(w, win)), default=0)
+        if hit is None or done >= hit:
             continue
         at = datetime.fromisoformat(lim.get("resets_exact") or win).astimezone()
         when = at.strftime("%H:%M") if key == "five_hour" else at.strftime("%a %H:%M")
