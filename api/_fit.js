@@ -53,9 +53,21 @@ import { canonical, combine } from "./_combine.js";
 // hardly any Fable in them — and then unlogged claude.ai use got blamed on the little Fable there
 // was (φ read 11.6; the Fable-only stretches of 2026-09-19 say ≈ 3.5-4). Back-tested 2026-09-24
 // (scratchpad backtest.mjs): no held-out window over-predicted, vs. two by 40+ points before.
+// The age cut alone brings that back once those windows are a week old (cut the 2026-09-24
+// readings at 09-20 and φ reads 11.6 again), hence two guards:
+//  - anchors: a window where Fable was most of the logged usage and the official % rose 5+
+//    points is what pins φ, so the newest few such windows stay in the fit past the age cut;
+//  - φ is only searched when Fable is at least FABLE_SHARE of the logged usage (API $): ~$1 of
+//    Fable among $300 can't tell 3 from 12, so φ stays at its prior — which ingest carries over
+//    from the previous fit (fitDevices' phiPrior), not the 2026-09-19 guess.
 const MAX_PER_WINDOW = 60;
+const MAX_PER_WEEK = 240;    // a week-long window at 60 readings is one per ~3 h (week ± 40 % on 2026-09-24's readings, 14 % at 240)
 const MAX_WINDOWS = 60;
 const MAX_AGE_DAYS = 7;
+const MAX_ANCHORS = 4;      // Fable-heavy windows kept past the age cut, newest first
+const ANCHOR_SHARE = 0.5;   // Fable's share of a window's logged usage (at the prior weights)
+const ANCHOR_RISE = 5;      // … and the official rise it must have, in points
+const FABLE_SHARE = 0.05;
 const MIN_SPAN = 3;         // a window needs a ≥3-point rise before it says anything
 const LAMBDA = 0.6;         // cost of a point of unlogged usage (O going up)
 const MU = 1;               // cost of a point of over-counting (O going down)
@@ -116,36 +128,66 @@ function cost(W, a, [uLo, uHi]) {
 }
 
 export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, minSpan = MIN_SPAN, rhos = RHOS, phis = PHIS, psis = PSIS, prior = PRIOR, lambda = LAMBDA, delta = DELTA,
-  maxWindows = MAX_WINDOWS, maxPerWindow = MAX_PER_WINDOW, maxAgeDays = MAX_AGE_DAYS, fableShare = 0, skip = null }) {
-  const byWin = {};
-  const newest = samples.reduce((m, s) => (s.t > m ? s.t : m), "");
-  for (const s of samples) {
-    if (skip && skip(s)) continue;
-    if (maxAgeDays && Date.parse(newest) - Date.parse(s.t) > maxAgeDays * 864e5) continue;
-    const v = s.lo || s;
-    // Readings priced with different tables aren't comparable within a window: keep them apart.
-    if (s[w] && s[p] != null && v[x] != null && v[r] != null) (byWin[`${s[w]}|${s.pv || 1}`] ||= []).push(s);
-  }
+  maxWindows = MAX_WINDOWS, maxPerWindow = MAX_PER_WINDOW, maxAgeDays = MAX_AGE_DAYS, fableShare = FABLE_SHARE, anchors = MAX_ANCHORS, now = null, skip = null }) {
   // Six components: Opus-tier x/r, Fable x/r, Sonnet+Haiku x/r (0 when a reading predates the split).
   const parts = (v) => {
     const fx = xf ? v[xf] || 0 : 0, fr = rf ? v[rf] || 0 : 0, lx = xl ? v[xl] || 0 : 0, lr = rl ? v[rl] || 0 : 0;
     return [v[x] - fx - lx, v[r] - fr - lr, fx, fr, lx, lr];
   };
+  const mid = (s) => { const a = parts(s.lo || s), b = parts(s.hi || s); return a.map((v, k) => (v + b[k]) / 2); };
+  const inWin = {};
+  for (const s of samples) {
+    if (skip && skip(s)) continue;
+    const v = s.lo || s;
+    if (s[w] && s[p] != null && v[x] != null && v[r] != null) (inWin[s[w]] ||= []).push(s);
+  }
+  for (const L of Object.values(inWin)) L.sort((a, b) => a.t.localeCompare(b.t));
+  const end = Date.parse(now || samples.reduce((m, s) => (s.t > m ? s.t : m), ""));
+  const recent = (s) => !maxAgeDays || end - Date.parse(s.t) <= maxAgeDays * 864e5;
+  // Anchors (see the top): Fable's share of what the window's logged usage is worth at the prior
+  // weights, since at API prices it is always the minority (Fable counts ~3× its price; the
+  // 2026-09-19 windows are about a quarter Fable in API $, 63-66 % at φ 3 and still 59-61 % at 2.5).
+  const gold = new Set(Object.entries(inWin).filter(([, L]) => {
+    const first = mid(L[0]), d = mid(L[L.length - 1]).map((v, k) => v - first[k]);
+    const fab = prior.phi * (d[2] + prior.rho * d[3]);
+    const all = d[0] + prior.rho * d[1] + fab + prior.psi * (d[4] + prior.rho * d[5]);
+    return L[L.length - 1][p] - L[0][p] >= ANCHOR_RISE && fab > ANCHOR_SHARE * all;
+  }).map(([id]) => id).sort().slice(anchors > 0 ? -anchors : Infinity));
+  // One series per window: combine() already puts every laptop's usage into each reading, so
+  // the laptops' readings go on one timeline. Keying by window|pv (to keep price tables apart)
+  // made two series of every window the laptops shared while they sat on different tables
+  // (one laptop pv 1, the other pv 2), fitting and checking each of those windows twice. The tables
+  // only clash when one laptop switches within a window (updated, not repriced yet): the
+  // window is cut there, all laptops' readings with it, and the parts are fitted apart.
+  const byWin = {};
+  for (const [id, L] of Object.entries(inWin)) {
+    const pv = {};
+    let part = 0;
+    for (const s of gold.has(id) ? L : L.filter(recent)) {
+      if (pv[s.d] != null && pv[s.d] !== (s.pv || 1)) part++;
+      pv[s.d] = s.pv || 1;
+      (byWin[part ? `${id}|${part}` : id] ||= []).push(s);
+    }
+  }
+  const keys = Object.keys(byWin).sort();
+  const keep = new Set([...keys.filter((k) => !gold.has(k.split("|")[0])).slice(-maxWindows), ...keys.filter((k) => gold.has(k.split("|")[0]))]);
   const windows = [];
   let points = 0, span = 0;
-  for (const key of Object.keys(byWin).sort().slice(-maxWindows)) {
-    const S = thin(byWin[key].sort((a, b) => a.t.localeCompare(b.t)), maxPerWindow);
+  for (const key of keys.filter((k) => keep.has(k))) {
+    const S = thin(byWin[key], maxPerWindow);
     points += S.length;
     const ps = S.map((s) => s[p]);
     span = Math.max(span, Math.max(...ps) - Math.min(...ps));
-    windows.push({ key, p: ps, w: ps.map(width), lo: S.map((s) => parts(s.lo || s)), hi: S.map((s) => parts(s.hi || s)) });
+    windows.push({ key, id: key.split("|")[0], p: ps, w: ps.map(width), lo: S.map((s) => parts(s.lo || s)), hi: S.map((s) => parts(s.hi || s)) });
   }
   if (span < minSpan || points < 2) return { a: null, n: points, span, need: Math.max(1, +(minSpan - span).toFixed(1)) };
   // Usage in the data, to know which parameters it can speak about at all.
   const tot = [0, 0, 0, 0, 0, 0];
   for (const W of windows) { const last = W.lo[W.lo.length - 1]; for (let k = 0; k < 6; k++) tot[k] += last[k]; }
   const all = tot.reduce((a, b) => a + b, 0);
-  const hasFable = tot[2] + tot[3] > fableShare * all, hasReads = tot[1] + tot[3] + tot[5] > 0;
+  // An anchor is enough Fable on its own: a week of Opus around it would otherwise push one below
+  // FABLE_SHARE (holding out the 23:40 window of 2026-09-19 left the 18:40 one at 4.9 %).
+  const hasFable = gold.size > 0 || tot[2] + tot[3] > fableShare * all, hasReads = tot[1] + tot[3] + tot[5] > 0;
   // ψ is only worth searching when Sonnet/Haiku are a visible share of the logged usage.
   const light = tot[4] + tot[5], hasLight = light > 0.05 * (tot[0] + tot[1] + tot[2] + tot[3] + light);
   const phiGrid = hasFable ? phis : [prior.phi], rhoGrid = hasReads ? rhos : [prior.rho];
@@ -178,13 +220,15 @@ export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, 
   // "had unlogged use" and the typical miss on the others is the error. Over-counting — the fit
   // saying more than the official % showed — is always a real miss, reported as over_max.
   const U = (v) => v[0] + est.rho * v[1] + est.phi * (v[2] + est.rho * v[3]) + (est.psi ?? 1) * (v[4] + est.rho * v[5]);
-  const checks = [];
+  // Per window, not per series: the parts of a window cut at a price-table switch add up.
+  const perWin = {};
   for (const W of windows) {
-    const n = W.p.length, rise = W.p[n - 1] - W.p[0];
-    if (rise < 5) continue;
-    const pred = est.a * ((U(W.lo[n - 1]) + U(W.hi[n - 1])) / 2 - (U(W.lo[0]) + U(W.hi[0])) / 2);
-    checks.push({ key: W.key, rise, pred: +pred.toFixed(1), short: (rise - pred) / rise });
+    const n = W.p.length, c = (perWin[W.id] ||= { key: W.id, rise: 0, pred: 0 });
+    c.rise += W.p[n - 1] - W.p[0];
+    c.pred += est.a * ((U(W.lo[n - 1]) + U(W.hi[n - 1])) / 2 - (U(W.lo[0]) + U(W.hi[0])) / 2);
   }
+  const checks = Object.values(perWin).filter((c) => c.rise >= 5)
+    .map((c) => ({ key: c.key, rise: c.rise, pred: +c.pred.toFixed(1), short: (c.rise - c.pred) / c.rise }));
   const clean = checks.filter((c) => c.short <= CLEAN).map((c) => Math.abs(c.short)).sort((m, q) => m - q);
   const check = {
     windows: checks.length, clean: clean.length, unlogged: checks.length - clean.length,
@@ -200,25 +244,29 @@ export function fitPath(samples, { w, p, x, r, xf, rf, xl, rl, width = () => 1, 
     rho_learned: hasReads && rhoR[1] - rhoR[0] <= 0.25,
     psi_learned: hasLight && range("psi")[1] / range("psi")[0] < 2,
     psi_range: hasLight ? range("psi").map((v) => +v.toFixed(2)) : null,
+    phi_prior: +prior.phi.toFixed(2), anchors: [...gold],
     n: points, windows: windows.length, span, cost: +best.toFixed(2),
     // ± shown: the measured error once there are enough clean windows, else the profile range.
     err: check.err ?? err, err_profile: err, err_measured: check.err != null, check,
   };
 }
 
-export function fitAll(samples, over = {}) {
+// `phiPrior`: the previous fit's φ. It becomes the session fit's prior for φ, so while Fable is too
+// scarce in the data to learn φ, the fit keeps what it last learned instead of dropping to 3.
+export function fitAll(samples, { phiPrior, ...over } = {}) {
   // Model weights: API price ratios, except Fable, which gets the learned φ.
   const wrap = (f) => ({ ...f, m: { fable: f.phi ?? 1, opus: 1, other: 1, sonnet: f.psi ?? 1, haiku: f.psi ?? 1 },
     learned: !!f.phi_learned });
-  const five = fitPath(samples, { w: "w5", p: "p5", x: "x5", r: "r5", xf: "x5f", rf: "r5f", xl: "x5l", rl: "r5l", ...over });
+  const prior5 = phiPrior >= PHIS[0] && phiPrior <= PHIS[PHIS.length - 1] ? { ...PRIOR, phi: phiPrior } : PRIOR;
+  const five = fitPath(samples, { w: "w5", p: "p5", x: "x5", r: "r5", xf: "x5f", rf: "r5f", xl: "x5l", rl: "r5l", prior: prior5, ...over });
   // The weekly limit moves slowly, so its own data can't pin down per-model weights: it
   // reuses the session's ρ and φ and only fits its overall rate. Its % is the official
   // integer scaled by Anthropic's integer Claude Code share, so its rounding interval is
   // a little wider than one point. Its prior rate: the weekly limit has been about 7.5
   // sessions' worth (measured 2026-09-19).
-  const rho = five.rho ?? PRIOR.rho, phi = five.phi ?? PRIOR.phi;
+  const rho = five.rho ?? PRIOR.rho, phi = five.phi ?? prior5.phi;
   const psi = five.psi ?? PRIOR.psi;
-  const shared = { rhos: [rho], phis: [phi], psis: [psi], prior: { a: (five.a ?? PRIOR.a) / 7.5, rho, phi, psi } };
+  const shared = { rhos: [rho], phis: [phi], psis: [psi], prior: { a: (five.a ?? PRIOR.a) / 7.5, rho, phi, psi }, anchors: 0, maxPerWindow: MAX_PER_WEEK };
   const inherit = five.a != null ? { phi_learned: five.phi_learned, phi_range: five.phi_range, rho_learned: five.rho_learned,
     rho_range: five.rho_range, psi_learned: five.psi_learned, psi_range: five.psi_range } : {};
   const week = fitPath(samples, { w: "ww", p: "pw", x: "xw", r: "rw", xf: "xwf", rf: "rwf", xl: "xwl", rl: "rwl",
@@ -227,7 +275,7 @@ export function fitAll(samples, over = {}) {
   // has moved about 1 point per Fable API-$, i.e. ~4× faster than φ·a_week), so it is
   // fitted on its own; only ρ is shared, since its cache reads are too few to learn one.
   const fable = fitPath(samples, { w: "wf", p: "pf", x: "xf", r: "rf", minSpan: 4, ...over, rhos: [rho], phis: [1],
-    psis: [1], prior: { a: (five.a ?? PRIOR.a) / 7.5 * phi * 4, rho, phi: 1, psi: 1 } });
+    psis: [1], prior: { a: (five.a ?? PRIOR.a) / 7.5 * phi * 4, rho, phi: 1, psi: 1 }, anchors: 0, maxPerWindow: MAX_PER_WEEK });
   // The week and Fable fits ride on the session's weights: their ± can't be tighter than its.
   const atLeast = (f) => (f.a != null && five.err != null ? { ...f, err: Math.max(f.err, five.err) } : f);
   return {
@@ -260,6 +308,7 @@ export function windowHistory(perDevice, fit, max = 30) {
 }
 
 // Fit on every device's raw readings, choosing which laptops' usage counts (see above).
+// `over` goes to fitAll(): ingest passes { phiPrior: <previous fit's five.phi> }.
 export function fitDevices(raw, over = {}) {
   const perDevice = canonical(raw);
   const names = Object.keys(perDevice);
