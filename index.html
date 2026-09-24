@@ -77,6 +77,8 @@
   :is(.iconbtn, .seg button, .rowbtn, .linkbtn):focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
   /* max-width + scroll: three long laptop names otherwise push a 375 px phone page sideways. */
   #ovDev .short { display: none; }
+  /* A name cell that takes the room left and cuts long names with "…" instead of widening the table. */
+  td.nm { width: 100%; max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .seg { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 1px; font-family: var(--sans); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .seg button { background: none; border: 0; border-radius: 6px; color: var(--muted); padding: 4px 11px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; }
   .seg button:hover { color: var(--text); }
@@ -211,7 +213,7 @@
     #people :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #models :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4), :nth-child(7), :nth-child(8)),
     #wins :is(th, td):nth-last-child(1),
-    [id^="t_by_"] :is(th, td):is(:nth-child(3), :nth-child(4)),
+    [id^="t_by_"] :is(th, td):is(:nth-child(2), :nth-child(3)),
     #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
     #weeks :is(th, td):is(:nth-last-child(2), :nth-last-child(3)),
@@ -1083,10 +1085,12 @@ function drawTables() {
     const est = (key, v, d) => k === "by_model" ? estModels({ [key]: v }, range) : estFlat(v, range, d);
     const rows = state.devices.flatMap((d) => Object.entries(d[range]?.[k] || {}).map(([key, v]) => ({ key, d, ...v, e: est(key, v, d) })))
       .sort((a, b) => (b.e ?? b.x + b.r) - (a.e ?? a.x + a.r)).slice(0, 12);
-    $("t_" + k).innerHTML = `<tr><th>${label}</th><th>Device</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n" title="Estimated share of the ${range === "window" ? "session" : "weekly"} limit">~%</th></tr>` +
-      rows.map((r) => `<tr><td title="${esc(r.key)}">${k === "by_model" ? shortModel(r.key) : esc(r.key)}</td><td><span class="dot" style="background:${r.d.color}"></span>${esc(name(r.d))}</td>
+    // The laptop is its dot (named in the tooltip), and a long name is cut with "…", so the ~%
+    // column always fits (long project names used to push it out of the card).
+    $("t_" + k).innerHTML = `<tr><th>${label}</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n" title="Estimated share of the ${range === "window" ? "session" : "weekly"} limit">~%</th></tr>` +
+      rows.map((r) => `<tr><td class="nm" title="${esc(r.key)} · ${esc(name(r.d))}"><span class="dot" style="background:${r.d.color}"></span>${k === "by_model" ? shortModel(r.key) : esc(r.key)}</td>
         <td class="n">${num(r.calls)}</td><td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.e)}</td></tr>`).join("") +
-      (rows.length ? "" : `<tr><td colspan="5" class="muted">Nothing yet</td></tr>`);
+      (rows.length ? "" : `<tr><td colspan="4" class="muted">Nothing yet</td></tr>`);
   }
 }
 
