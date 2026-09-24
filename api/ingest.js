@@ -1,7 +1,7 @@
 import { viewer, redis, slug, family } from "./_lib.js";
 import { fitDevices } from "./_fit.js";
 import { freshestOfficial, split } from "./_split.js";
-import { weekHours } from "./_forecast.js";
+import { forecastWeek, weekHours } from "./_forecast.js";
 export { combine } from "./_combine.js";
 
 // Calibration readings are stored per device as compact arrays in this field order.
@@ -62,8 +62,19 @@ export async function refit(names, own = null) {
     const id = off.seven_day.resets_exact || off.seven_day.resets_at;
     const { people, elsewhere } = split(devices, fit, off);
     const prev = parse(current);
-    if (prev?.id && Math.abs(Date.parse(prev.id) - Date.parse(id)) > 36e5) w.rpush("weeks", JSON.stringify(prev)).ltrim("weeks", -60, -1);
-    w.set("week:current", JSON.stringify({ id, at: new Date().toISOString(), week: off.seven_day.pct,
+    const rolled = prev?.id && Math.abs(Date.parse(prev.id) - Date.parse(id)) > 36e5;
+    if (rolled) w.rpush("weeks", JSON.stringify(prev)).ltrim("weeks", -60, -1);
+    // Forecast track record: what the forecast said, every 6 h, kept with the week so it can be
+    // scored against the week's end. `avg` is what the old average-pace method would have said.
+    const forecasts = rolled || !prev ? [] : prev.forecasts || [];
+    const fc = forecastWeek(off.seven_day, fit.week_hours);
+    const last = forecasts[forecasts.length - 1];
+    if (fc && !fc.early && fc.expected != null && (!last || Date.now() - Date.parse(last.at) >= 6 * 36e5)) {
+      const elapsed = Math.max(1, 168 - fc.left_h);
+      forecasts.push({ at: new Date().toISOString(), pct: fc.pct, expected: +fc.expected.toFixed(1), lo: +fc.lo.toFixed(1), hi: +fc.hi.toFixed(1),
+        p: fc.p_limit, avg: +Math.min(200, fc.pct + (fc.pct / elapsed) * fc.left_h).toFixed(1) });
+    }
+    w.set("week:current", JSON.stringify({ id, at: new Date().toISOString(), week: off.seven_day.pct, forecasts,
       fable: (off.scoped || []).find((x) => /fable/i.test(x.name))?.pct ?? null,
       breakdown: (off.breakdown || []).map((b) => ({ key: b.key, percent: b.percent })),
       people: people.map((x) => ({ person: x.person, week: +x.week.toFixed(2), fable: +x.fable.toFixed(2) })),

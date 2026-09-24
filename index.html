@@ -198,7 +198,7 @@
     [id^="t_by_"] :is(th, td):is(:nth-child(3), :nth-child(4)),
     #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
-    #weeks :is(th, td):last-child,
+    #weeks :is(th, td):is(:nth-last-child(2), :nth-last-child(3)),
     #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
     #people td:first-child { min-width: 0; }
   }
@@ -263,6 +263,7 @@
       <h2 class="section-title">Weeks</h2>
       <p class="section-desc">Each week's split of the weekly limit, as of the hub's last check before it reset.</p>
       <div class="scroll" style="margin-top:12px"><table id="weeks"></table></div>
+      <p class="note" id="weeksNote"></p>
     </div>
   </section>
 
@@ -569,7 +570,7 @@ function drawHeadline(src) {
     if (f.runs_out_at) H.textContent = `Heads up. At the recent pace you'll hit the limit ${whenWord(Date.parse(f.runs_out_at))}, before ${reset_s} reset.`;
     else if (f.p_limit >= 0.15) H.textContent = `Probably fine, but a busy day could do it: about a ${r(f.p_limit * 100)}% chance of hitting the limit before ${reset_s} reset.`;
     else H.textContent = `You're on track. You'll likely end the week around ${r(f.expected)}% when it resets ${resetAt}.`;
-    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset. Recent pace: ${f.per_day_recent.toFixed(1)}% a day (last 3 days, the newest counting most); ` +
+    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}. Recent pace: ${f.per_day_recent.toFixed(1)}% a day (last 3 days, the newest counting most); ` +
       (f.left_h < 24 ? `${Math.round(100 - w.pct)}% is left for the last ${Math.max(1, Math.round(f.left_h))} h.`
         : `you can use up to ${f.budget_per_day.toFixed(0)}% a day and still reach the reset.`) +
       (f.skipped?.length ? ` Left out as one-offs: ${f.skipped.map(esc).join(", ")}.` : "");
@@ -730,15 +731,37 @@ function drawWeeks() {
   if (!weeks.length) return;
   const people = [...new Set(weeks.flatMap((w) => (w.people || []).map((p) => p.person)))].sort();
   const colour = (p) => state.devices.find((d) => d.person === p)?.color || "var(--faint)";
+  // Forecast track record: each week's saved forecasts (every 6 h) against where it ended.
+  const score = (w) => {
+    const fs = w.forecasts || [];
+    if (w.running || !fs.length) return null;
+    const med = (a) => { const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
+    return { n: fs.length, inside: fs.filter((f) => f.lo - 1 <= w.week && w.week <= f.hi + 1).length,
+      miss: med(fs.map((f) => Math.abs(f.expected - w.week))), old: med(fs.map((f) => Math.abs(f.avg - w.week))) };
+  };
+  const fcCell = (w) => {
+    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(f.expected)}% <span class="faint">(${Math.round(f.lo)}–${Math.round(f.hi)})</span>` : "–"; }
+    const sc = score(w);
+    return sc ? `<span title="The week's end fell inside the forecast range in ${sc.inside} of ${sc.n} forecasts (every 6 h). Typical miss ${sc.miss.toFixed(0)} points; the old average-pace method: ${sc.old.toFixed(0)}.">in range ${sc.inside}/${sc.n} · ±${sc.miss.toFixed(0)}</span>` : "–";
+  };
   $("weeks").innerHTML = `<tr><th>Week</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}` +
-    `<th class="n">Not on a laptop</th><th class="n">Fable limit</th></tr>` +
+    `<th class="n">Not on a laptop</th><th class="n">Fable limit</th><th class="n">Forecast</th></tr>` +
     weeks.map((w) => {
       const end = new Date(w.id), start = new Date(+end - 7 * 864e5);
       const label = w.running ? "This week, so far" : `${start.toLocaleDateString([], { month: "short", day: "numeric" })} – ${end.toLocaleDateString([], { month: "short", day: "numeric" })}`;
       const of = (p) => (w.people || []).find((x) => x.person === p)?.week;
       return `<tr><td>${label}</td><td class="n">${fmt.pct(w.week)}</td>${people.map((p) => `<td class="n">${epct(of(p))}</td>`).join("")}` +
-        `<td class="n">${w.elsewhere ? epct(w.elsewhere.week) : "–"}</td><td class="n">${fmt.pct(w.fable)}</td></tr>`;
+        `<td class="n">${w.elsewhere ? epct(w.elsewhere.week) : "–"}</td><td class="n">${fmt.pct(w.fable)}</td><td class="n">${fcCell(w)}</td></tr>`;
     }).join("");
+  // Overall, across the finished weeks
+  const scored = weeks.map(score).filter(Boolean);
+  const n = scored.reduce((a, x) => a + x.n, 0), inside = scored.reduce((a, x) => a + x.inside, 0);
+  $("weeksNote").textContent = !scored.length
+    ? "Forecast column: the running week's latest forecast. Once a week ends, it shows how its forecasts (saved every 6 h) did against where it really ended."
+    : `Forecast track record: across ${scored.length} finished week${scored.length > 1 ? "s" : ""}, the end fell inside the forecast's range in ${inside} of ${n} forecasts ` +
+      `(${Math.round(100 * inside / n)}%; the range is meant to hold it about 80% of the time). Typical miss ${scored.map((x) => x.miss).sort((a, b) => a - b)[Math.floor(scored.length / 2)].toFixed(0)} points, ` +
+      `where the old average-pace forecast missed by ${scored.map((x) => x.old).sort((a, b) => a - b)[Math.floor(scored.length / 2)].toFixed(0)}.` +
+      (weeks.some((w) => (w.forecasts || []).some((f) => f.replayed)) ? " Forecasts marked replayed were rebuilt afterwards from the stored readings." : "");
 }
 
 let allWins = false;

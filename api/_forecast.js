@@ -83,9 +83,14 @@ export function forecastWeek(lim, profile, now = Date.now()) {
     finals.sort((a, b) => a - b);
     lo = finals[40]; hi = finals[359]; pLimit = finals.filter((f) => f >= 100).length / finals.length;
   }
+  // The range always holds the expected value; with under 4 days to replay it is too narrow
+  // to mean much, so widen it (half to double the expected rise) and say so.
+  const thin = days.length < 4;
+  lo = Math.min(lo, expected, thin ? pct + (expected - pct) * 0.5 : Infinity);
+  hi = Math.max(hi, expected, thin ? pct + (expected - pct) * 2 : -Infinity);
   const runOut = rate > 0 ? now + ((100 - pct) / rate) * H : null;
   return { pct, resets_at: at, left_h: leftH, expected: Math.min(expected, 100), lo: Math.min(lo, 100), hi: Math.min(hi, 100),
     p_limit: +pLimit.toFixed(2), per_day_recent: rate * 24, budget_per_day: leftH > 0 ? (100 - pct) / leftH * 24 : null,
     runs_out_at: runOut != null && runOut < reset && pct < 100 ? new Date(runOut).toISOString() : null, days: days.length,
-    skipped: profile?.skipped || [] };
+    skipped: profile?.skipped || [], thin };
 }
