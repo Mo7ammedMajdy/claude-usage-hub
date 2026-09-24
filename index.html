@@ -541,24 +541,32 @@ function render() {
 // Pace forecast: average rate since the window started, projected to its reset.
 // Reset time to show: Anthropic sends e.g. 00:59:59.9 for a 01:00 reset; newer collectors round it.
 const resetOf = (lim) => lim?.resets_exact || lim?.resets_at;
-function pace(lim, hours) {
+// In a window's first day the rate so far rests on a few hours: blend it with `prior` (% per
+// hour, last week's average), moving fully to the window's own rate by hour 24. With no prior,
+// `early` is set and there's no projection yet.
+function pace(lim, hours, prior = null) {
   if (!lim?.resets_at || lim.pct == null) return null;
   const now = Date.now(), reset = +new Date(resetOf(lim));
   const elapsedH = Math.max(0.25, hours - (reset - now) / 36e5);
-  const rate = lim.pct / elapsedH;                       // % per hour
-  const runOut = rate > 0 ? now + ((100 - lim.pct) / rate) * 36e5 : Infinity;
-  return { reset, elapsedH, rate, runOut, projected: lim.pct + rate * Math.max(0, reset - now) / 36e5 };
+  const own = lim.pct / elapsedH, w = Math.min(1, elapsedH / 24);   // % per hour
+  const early = w < 1 && prior == null;
+  const rate = w < 1 && prior != null ? w * own + (1 - w) * prior : own;
+  const runOut = !early && rate > 0 ? now + ((100 - lim.pct) / rate) * 36e5 : Infinity;
+  return { reset, elapsedH, rate, runOut, early, blended: w < 1 && prior != null, projected: lim.pct + rate * Math.max(0, reset - now) / 36e5 };
 }
+const lastWeekPace = () => { const w = (state.weeks || []).filter((x) => !x.running).pop(); return w?.week != null ? w.week / 168 : null; };
 function drawHeadline(src) {
-  const o = src?.official, w = o?.seven_day, p = pace(w, 168);
+  const o = src?.official, w = o?.seven_day, p = pace(w, 168, lastWeekPace());
   const H = $("headline"), S = $("headlineSub");
   if (!p) { H.textContent = "Waiting for the first sync."; S.textContent = "The laptops report every 5 minutes, and within 30 seconds after Refresh."; return; }
   const resetDay = dayWord(p.reset), resetAt = `${resetDay} ${fmt.clock(p.reset)}`;
   if (w.pct >= 100) H.textContent = `You've hit the weekly limit. It resets ${resetAt}.`;
+  else if (p.early) H.textContent = `A new week started ${p.elapsedH < 1 ? "less than an hour" : `${Math.round(p.elapsedH)} h`} ago: ${Math.round(w.pct)}% used so far. It resets ${resetAt}.`;
   else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${resetDay === "today" ? "today's" : resetDay === "tomorrow" ? "tomorrow's" : resetDay + "'s"} reset.`;
   else H.textContent = `You're on track. At this pace you'll have used about ${Math.min(99, Math.round(p.projected))}% of the week when it resets ${resetAt}.`;
   const days = p.elapsedH / 24;
-  let sub = `Estimate from the average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? `${Math.round(p.elapsedH)} h` : `${days.toFixed(1)} days`}.`;
+  let sub = p.early ? `A forecast needs a few more hours of this week.`
+    : `Estimate from the average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? `${Math.round(p.elapsedH)} h` : `${days.toFixed(1)} days`}${p.blended ? `, steadied with last week's pace until the week is a day old` : ""}.`;
   // Recent burn from the 5-min line, when it spans at least 3 h without a weekly reset.
   const pts = (state.line || []).filter((h) => h.week != null && Date.now() - new Date(h.t) < 24 * 36e5).sort((a, b) => new Date(a.t) - new Date(b.t));
   if (pts.length >= 2) {

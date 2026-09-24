@@ -2,6 +2,14 @@ import { redact, redis, viewer } from "./_lib.js";
 
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
 
+// The chart needs the last 24 h, and a run of identical readings only needs its two ends
+// (the line is straight between them either way).
+function thinLine(pts) {
+  const since = Date.now() - 26 * 36e5, recent = pts.filter((h) => Date.parse(h.t) >= since);
+  const same = (a, b) => a && b && a.five === b.five && a.week === b.week && a.r5 === b.r5;
+  return recent.filter((h, i) => !(same(recent[i - 1], h) && same(h, recent[i + 1])));
+}
+
 export default async function handler(req, res) {
   const who = viewer(req);
   if (!who) return res.status(401).json({ error: "bad key" });
@@ -13,7 +21,7 @@ export default async function handler(req, res) {
   res.status(200).json({
     now: new Date().toISOString(),
     devices: Object.values(all || {}).map((d) => redact(parse(d), who)),
-    line: (line || []).map(parse),
+    line: thinLine((line || []).map(parse)),
     refresh_requested_at: refresh || null,
     viewer: who,
     // Past weeks' final split (newest last) and the running week's latest.

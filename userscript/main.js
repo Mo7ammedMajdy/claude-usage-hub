@@ -341,7 +341,9 @@ function claudePage() {
     if (!f || !f.week || !headline) { el.remove(); return; }
     if (el.previousElementSibling !== headline) headline.after(el);
     const w = f.week, days = w.elapsed_h / 24;
-    const lead = w.runs_out_at
+    const lead = w.projected == null
+      ? `A new week started ${w.elapsed_h < 1 ? "less than an hour" : Math.round(w.elapsed_h) + " h"} ago: ${Math.round(w.pct)}% used so far.`
+      : w.runs_out_at
       ? `At this pace you'll run out ${dayClock(w.runs_out_at)}, before the reset.`
       : `At this pace you'll have used about ${Math.min(99, Math.round(w.projected))}% of the week when it resets ${dayClock(w.resets_at)}.`;
     let more = `Average pace so far: ${Math.round(w.pct)}% in ${days < 1 ? Math.round(w.elapsed_h) + " h" : days.toFixed(1) + " days"}.`;

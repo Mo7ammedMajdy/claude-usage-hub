@@ -7,23 +7,30 @@ import { freshestOfficial, split } from "./_split.js";
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
 
 // Pace forecast, as the dashboard's pace(): the average rate since the window opened, carried
-// to its reset. `hours` is the window's length.
-function pace(lim, hours, now) {
+// to its reset. `hours` is the window's length. In a window's first day the rate so far rests on
+// a few hours, so it is blended with `prior` (% per hour, e.g. last week's average), moving
+// fully to the window's own rate by hour 24; with no prior there is no projection yet.
+function pace(lim, hours, now, prior = null) {
   const at = lim?.resets_exact || lim?.resets_at;      // exact when the collector sends it
   if (!at || lim.pct == null) return null;
   const reset = Date.parse(at);
   const elapsedH = Math.max(0.25, hours - (reset - now) / 36e5);
-  const rate = lim.pct / elapsedH;
-  const runOut = rate > 0 ? now + ((100 - lim.pct) / rate) * 36e5 : null;
-  return { pct: lim.pct, resets_at: at, elapsed_h: elapsedH, per_day: rate * 24,
-    projected: lim.pct + rate * Math.max(0, reset - now) / 36e5,
+  const own = lim.pct / elapsedH, w = Math.min(1, elapsedH / 24);
+  const early = w < 1 && prior == null;
+  const rate = w < 1 && prior != null ? w * own + (1 - w) * prior : own;
+  const runOut = !early && rate > 0 ? now + ((100 - lim.pct) / rate) * 36e5 : null;
+  return { pct: lim.pct, resets_at: at, elapsed_h: elapsedH, per_day: own * 24, early, blended: w < 1 && prior != null,
+    projected: early ? null : lim.pct + rate * Math.max(0, reset - now) / 36e5,
     runs_out_at: runOut != null && runOut < reset && lim.pct < 100 ? new Date(runOut).toISOString() : null };
 }
 
 export default async function handler(req, res) {
   const who = viewer(req);
   if (!who) return res.status(401).json({ error: "bad key" });
-  const [all, fit, people, line] = await redis.pipeline().hgetall("devices").get("fit").smembers("webpeople").lrange("line", 0, -1).exec();
+  const [all, fit, people, line, lastWeeks] = await redis.pipeline().hgetall("devices").get("fit").smembers("webpeople").lrange("line", 0, -1).lrange("weeks", -1, -1).exec();
+  // Last finished week's average pace (% per hour), to steady the forecast in a week's first day.
+  const lastWeek = (lastWeeks || []).map(parse)[0];
+  const prior = lastWeek?.week != null ? lastWeek.week / 168 : null;
   const devices = Object.values(all || {}).map((d) => redact(parse(d), who));
   const fresh = freshestOfficial(devices);
   const { people: peopleSplit, elsewhere } = split(devices, fit, fresh?.official);
@@ -42,7 +49,7 @@ export default async function handler(req, res) {
   const off = fresh?.official || null;
   const now = Date.now();
   let forecast = null;
-  const wk = off && pace(off.seven_day, 168, now);
+  const wk = off && pace(off.seven_day, 168, now, prior);
   if (wk) {
     // Recent burn from the 5-minute line, when it spans 3+ hours without a weekly reset.
     const pts = (line || []).map((v) => (typeof v === "string" ? JSON.parse(v) : v))

@@ -9,16 +9,36 @@ export const SK = ["t", "w5", "p5", "ww", "pwr", "cc", "wf", "pf", "x5", "r5", "
   "x5l", "r5l", "xwl", "rwl",
   // …and the collector's price-table version (missing = 1; see PRICE_VERSION in the collector)
   "pv"];
-const SAMPLES_MAX = 1500;         // per device
+const SAMPLES_MAX = 4000;         // per device, hard cap; compact() keeps lists well below it
+const COMPACT_AT = 2500;          // a laptop's list is compacted (at its own refit) past this
 const FIT_EVERY_MS = 15 * 60e3;   // refitting reads every device's readings, so not on every sync
-const LINE_MAX = 2 * 24 * 12 * 2;
+const LINE_MAX = 4000;            // ~2 days even with busy 2-minute syncs; /api/state sends a thinned 26 h
 
 const pack = (s) => SK.map((k) => s[k] ?? null);
 export const unpack = (a) => Object.fromEntries(SK.map((k, i) => [k, a[i]]));
 const parse = (v) => (typeof v === "string" ? JSON.parse(v) : v);
 
-/** Refit on every device's readings and store it; also keep the week's split for the history. */
-export async function refit(names) {
+/** Older readings carry less news: past the last two days keep, per window, every reading where
+ *  the official % moved plus up to 60 spread evenly (the fit thins to 60 per window anyway). */
+export function compact(list, now = Date.now()) {
+  const keep = [], old = {};
+  for (const s of list) {
+    if (now - Date.parse(s.t) < 2 * 864e5 || !s.w5) keep.push(s);
+    else (old[s.w5] ||= []).push(s);
+  }
+  for (const win of Object.values(old)) {
+    const idx = new Set([0, win.length - 1]);
+    for (let i = 1; i < win.length; i++) if (win[i].p5 !== win[i - 1].p5) idx.add(i);
+    for (let i = 0; i < 60; i++) idx.add(Math.round((i * (win.length - 1)) / 59));
+    keep.push(...[...idx].sort((a, b) => a - b).map((i) => win[i]));
+  }
+  return keep.sort((a, b) => a.t.localeCompare(b.t));
+}
+
+/** Refit on every device's readings and store it; also keep the week's split for the history.
+ *  `own` is the device whose ingest triggered this: its list is compacted when it's long (only
+ *  its own — it can't be appending while its own request is running). */
+export async function refit(names, own = null) {
   const q = redis.pipeline();
   for (const n of names) q.lrange(`ds:${n}`, 0, -1);
   q.hgetall("devices").get("week:current");
@@ -27,6 +47,10 @@ export async function refit(names) {
   const perDevice = Object.fromEntries(names.map((n, i) => [n, (lists[i] || []).map(parse).map(unpack).sort((a, b) => a.t.localeCompare(b.t))]));
   const fit = fitDevices(perDevice);
   const w = redis.pipeline().set("fit", fit);
+  if (own && perDevice[own]?.length > COMPACT_AT) {
+    const kept = compact(perDevice[own]);
+    w.del(`ds:${own}`).rpush(`ds:${own}`, ...kept.map((s) => JSON.stringify(pack(s))));
+  }
   // Weekly history: the latest split of the running week, and when the week id moves on, the
   // previous week's last split goes into `weeks` (as of the last refit before the reset).
   const devices = Object.values(all || {}).map(parse);
@@ -99,7 +123,7 @@ export default async function handler(req, res) {
   const storedPv = Number(out[out.length - 3] || 1), fit = out[out.length - 2], names = out[out.length - 1] || [];
 
   // Refit on a schedule (or right away if there's no fit yet).
-  if (!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) await refit(names);
+  if (!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) await refit(names, device);
   // This laptop now prices usage with a newer table than its stored readings were: ask it to
   // reprice them from its logs (it answers at /api/reprice), so old and new readings agree.
   let reprice;
