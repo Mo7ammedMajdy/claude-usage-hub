@@ -3,7 +3,7 @@
 Violentmonkey checks @updateURL and installs a newer @version by itself."""
 import pathlib
 
-VERSION = "1.0.12"
+VERSION = "1.0.13"
 HUB = "https://claude-usage-hub.vercel.app"
 HERE = pathlib.Path(__file__).parent
 
