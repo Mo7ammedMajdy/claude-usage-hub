@@ -42,8 +42,16 @@
 
   /* Panels ------------------------------------------------------------------ */
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--head); border-bottom: 1px solid var(--head-line); border-radius: 14px 14px 0 0; }
-  .panel-head h1 { font-size: 15px; font-weight: 600; margin: 0; }
+  /* Top bar: the page's four views and the refresh, pinned to the top while scrolling. */
+  .topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; padding: 10px 0; margin-top: -10px; background: var(--page); }
+  .topbar h1 { font-size: 16px; font-weight: 600; margin: 0; }
+  .topbar .head-right { margin-left: auto; }
+  #views button { padding: 5px 14px; font-size: 13.5px; }
+  .view { display: grid; gap: 18px; min-width: 0; }
+  /* A card's footer strip (the laptops under the usage card). */
+  .panel-foot { border-top: 1px solid var(--line); padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 26px; font-size: 13px; color: var(--muted); }
+  .panel-foot .lap .nm { color: var(--text); margin-right: 6px; }
+  .panel-foot .go { margin-left: auto; }
   .panel-body { padding: 20px 24px 24px; }
   .section { padding-top: 26px; }
   .section:first-child { padding-top: 0; }
@@ -94,7 +102,12 @@
   .lrow.child { padding: 7px 0; }
   .lrow.child .lbl { font-size: 14px; color: var(--muted); padding-left: 18px; }
   .lrow.child .sub { font-size: 12px; color: var(--faint); margin-top: 1px; }
-  .lrow.prod .lbl { font-size: 15px; }
+  /* Who used a limit: one line under its bar, one entry per person, then the rest. */
+  .split { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 3px 18px; font-size: 13px; color: var(--muted); margin-top: -4px; }
+  .split .it { white-space: nowrap; }
+  .split .v { color: var(--text); font-variant-numeric: tabular-nums; margin-left: 5px; }
+  .split .aside { flex-basis: 100%; color: var(--faint); font-size: 12.5px; }
+  .dot.ring { background: none; box-shadow: inset 0 0 0 1.5px var(--faint); }
   /* Bars, like the app's: a bright fill on a dark track of the same hue. The fill keeps a
      minimum width so 0.1 % is still visible; only an empty (or unknown) bar is grey. */
   .track { height: 4px; background: var(--track); border-radius: 99px; overflow: hidden; }
@@ -125,12 +138,6 @@
   #people td:first-child { white-space: normal; min-width: 230px; }
   #people .est { display: block; margin: 1px 0 0; }
   .sub-title { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--faint); margin: 0; }
-  .calib-row { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
-  .how { margin-top: 10px; }
-  .how summary { color: var(--link); font-size: 12.5px; cursor: pointer; list-style: none; }
-  .how summary::-webkit-details-marker { display: none; }
-  .how summary::before { content: "▸ "; } .how[open] summary::before { content: "▾ "; }
-  .how .note { margin-top: 8px; max-width: 72ch; }
   .kv { margin-top: 2px; }
   .kv td { padding: 7px 12px 7px 0; }
   .kv td:nth-child(2) { color: var(--text); font-weight: 500; }
@@ -143,16 +150,18 @@
   /* Lighter than --faint: small text on the raised tile needs 4.5:1 (this is ~5.4:1). */
   .stat div:first-child { color: #9a9993; font-family: var(--sans); font-size: 12.5px; }
   .stat div:last-child { font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* The Overview/Models card keeps the Claude app's own card width, so the heatmap is
-     always 26 weeks × 7 days of 16 px cells with 3 px gaps, filling the card exactly. */
-  /* The side column stretches to the card's height: the calibration panel keeps its natural
-     size and the session chart fills whatever is left, so the two columns end together. */
-  .row2 { display: grid; grid-template-columns: 541px minmax(0, 1fr); gap: 18px; align-items: stretch; }
+  /* The two 24-hour charts side by side; the session chart stretches to the bars' height. */
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+  /* Stats card: the heatmap (26 weeks × 7 days of 16 px cells) with the tiles beside it. */
+  .ovgrid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px 28px; align-items: start; margin-top: 18px; }
+  .ovgrid .heat, .ovgrid .stats { margin-top: 0; }
+  .ovgrid .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 800px) { .ovgrid { grid-template-columns: 1fr; } .ovgrid .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .row2 .grow { display: flex; flex-direction: column; }
   .row2 .grow .panel-body { flex: 1; display: flex; flex-direction: column; }
   .chart-fill { flex: 1; min-height: 200px; position: relative; margin-top: 12px; }
   .chart-fill svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  @media (max-width: 939px) { .row2 { grid-template-columns: 1fr; } }
+  @media (max-width: 800px) { .row2 { grid-template-columns: 1fr; } }
   .heat { display: grid; grid-auto-flow: column; grid-template-columns: repeat(26, 16px); grid-template-rows: repeat(7, 16px); gap: 3px; margin-top: 18px; }
   .heat i { border-radius: 3px; background: #2d2d2c; min-width: 0; }
   svg text { fill: var(--faint); font-family: var(--sans); font-size: 11px; }
@@ -177,11 +186,13 @@
   @media (max-width: 640px) {
     body { padding: 16px 12px 40px; }
     .panel-body { padding: 16px 16px 20px; }
-    .panel-head { padding: 12px 16px; }
+    .panel-foot { padding: 12px 16px; }
+    .topbar #views { order: 3; width: 100%; } #views button { flex: 1; padding: 5px 6px; }
     .headline { font-size: 23px; }
     .lrow { grid-template-columns: 1fr 64px; gap: 6px 12px; }
     .lrow .lbl { grid-column: 1 / -1; }
-    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .split { grid-column: 1 / -1; margin-top: 0; }
+    .stats, .ovgrid .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .heat { grid-template-columns: repeat(26, minmax(0, 1fr)); grid-template-rows: repeat(7, auto); gap: 2px; }
     .heat i { aspect-ratio: 1; border-radius: 2px; }
   }
@@ -193,6 +204,7 @@
   /* The title is a button so a row also opens from the keyboard. */
   .rowbtn { background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 4px; }
   .caret { display: inline-block; width: 14px; color: var(--faint); }
+  #sessions td.cr, #sessions th.cr { width: 1%; padding-right: 2px; }
   tr.sdrow > td { padding: 0; }
   /* The detail sits in a cell as wide as the whole table; it is pinned to the visible
      width instead, so it never scrolls sideways with the table. */
@@ -204,7 +216,18 @@
   .sdetail td { overflow-wrap: anywhere; }
   .sdetail td.n, .sdetail th.n { white-space: nowrap; }
   .sgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 28px; }
-  @media (max-width: 640px) { .sgrid { grid-template-columns: 1fr; } .sdetail { padding-left: 0; } }
+  /* A session's main facts, as tiles, above its models, timeline and subagents. */
+  .sfacts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
+  .fact { background: var(--raised); border-radius: 10px; padding: 9px 12px; min-width: 0; }
+  .fact .l { color: #9a9993; font-size: 12px; }
+  .fact .v { font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fact .s { color: var(--faint); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tl { list-style: none; margin: 4px 0 0; padding: 0; font-size: 13px; }
+  .tl li { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+  .tl li:last-child { border-bottom: 0; }
+  .tl .t { color: var(--faint); white-space: nowrap; }
+  .sdetail .more { margin-top: 8px; }
+  @media (max-width: 640px) { .sgrid { grid-template-columns: 1fr; } .sdetail { padding-left: 0; } .sfacts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .k { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--faint); margin-bottom: 4px; }
   .linkbtn { background: none; border: 0; padding: 0; color: var(--link); cursor: pointer; font: inherit; font-size: 13px; }
   .stack { display: grid; gap: 22px; align-content: start; }
@@ -219,13 +242,15 @@
     #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
     #weeks :is(th, td):is(:nth-last-child(2), :nth-last-child(3)),
-    #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
+    #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(4), :nth-child(7)),
+    .atab :is(th, td):is(:nth-child(2), :nth-child(4)) { display: none; }
+    #ctxBody td.wrap { min-width: 0; }
+    #weeks .rng { display: none; } #weeks td:first-child { white-space: normal; }
     #people td:first-child { min-width: 0; }
     #wins .win-end { display: none; }     /* every session is 5 h: the start time is enough */
     #wins .tag { display: none; }         /* the newest row is on top anyway; the tag made it scroll */
     #ovDev .full { display: none; } #ovDev .short { display: inline; }
     /* The laptop is just its colour dot, so the ~% column fits without scrolling. */
-    #sessions .dname { display: none; } #sessions > tbody > tr > :first-child { padding-right: 0; }
     th, td { padding-left: 6px; padding-right: 6px; }
   }
 </style>
@@ -244,53 +269,103 @@
 </div>
 
 <main id="app" hidden>
-  <!-- Usage panel: reads like the Claude app's Usage modal -->
-  <section class="panel">
-    <div class="panel-head">
-      <h1>Usage</h1>
-      <div class="head-right">
-        <span class="muted small num" id="updated" title="">Last updated: –</span>
-        <button class="iconbtn" id="refresh" type="button" title="Ask every laptop to sync now" aria-label="Refresh: ask every laptop to sync now">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-        </button>
-      </div>
+  <!-- The page's four views, pinned while scrolling, with the refresh beside them. -->
+  <header class="topbar">
+    <h1>Usage</h1>
+    <nav class="seg" id="views" aria-label="Views">
+      <button data-v="overview" class="on" aria-pressed="true">Overview</button><button data-v="activity" aria-pressed="false">Activity</button><button data-v="history" aria-pressed="false">History</button><button data-v="accuracy" aria-pressed="false">Accuracy</button>
+    </nav>
+    <div class="head-right">
+      <span class="muted small num" id="updated" title="">Last updated: –</span>
+      <button class="iconbtn" id="refresh" type="button" title="Ask every laptop to sync now" aria-label="Refresh: ask every laptop to sync now">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
     </div>
+  </header>
+
+  <!-- Overview: how much is left, who used it, what a message costs right now -->
+  <div class="view" data-view="overview">
+  <section class="panel">
     <div class="panel-body">
       <div class="section">
         <h2 class="section-title">Your usage<span class="plan" id="plan">–</span></h2>
         <p class="headline" id="headline">Waiting for the first sync…</p>
-        <p class="headline-sub" id="headlineSub"></p>
+        <p class="headline-sub"><span id="headlineSub"></span> <button class="linkbtn" data-go="history">Past weeks →</button></p>
         <div class="actions">
           <a class="btn secondary" href="https://claude.ai/settings/usage" target="_blank" rel="noopener">Open Claude usage</a>
           <span class="refresh-note" id="refreshNote" aria-live="polite"></span>
         </div>
       </div>
-
       <div class="divider"></div>
       <div id="limits"></div>
     </div>
+    <div class="panel-foot" id="laptops"></div>
   </section>
 
   <section class="panel">
     <div class="panel-body">
-      <div class="row-head"><h2 class="section-title">This week's usage by product</h2><span class="val small" id="prodAsOf"></span></div>
-      <p class="section-desc">Share of the weekly limit. The product split is Anthropic's; the per-laptop split of Claude Code is estimated from each laptop's logs.</p>
-      <div id="products" style="margin-top:8px"></div>
+      <h2 class="section-title">Open sessions: cost per message</h2>
+      <div id="ctxBody"></div>
+    </div>
+  </section>
+
+  <div class="row2">
+  <section class="panel grow">
+    <div class="panel-body">
+      <h2 class="section-title">Session limit, last 24 hours</h2>
+      <p class="section-desc small">Official 5-hour %, as reported by Anthropic.</p>
+      <div class="chart-fill"><svg id="line" role="img" aria-label="Official session limit %, last 24 hours"></svg></div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-body">
+      <h2 class="section-title" id="barsTitle">Hourly usage by laptop</h2><p class="section-desc small">Estimated % of the weekly limit, from each laptop's logs.</p>
+      <div style="margin-top:12px"><svg id="bars" width="100%" height="190" role="img" aria-label="Estimated hourly usage per laptop, % of the weekly limit"></svg></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+  </div>
+  </div>
+
+  <!-- Activity: what used it — sessions and their subagents, projects, models, chats -->
+  <div class="view" data-view="activity" hidden>
+  <section class="panel">
+    <div class="panel-body">
+      <h2 class="section-title">Recent sessions</h2>
+      <p class="section-desc">The latest Claude Code sessions on the synced laptops. Open one for its context, compactions and subagents.</p>
+      <div class="scroll" style="margin-top:12px"><table id="sessions"></table></div>
+      <div id="sessionsMore" style="margin-top:8px"></div>
     </div>
   </section>
 
   <section class="panel">
     <div class="panel-body">
-      <h2 class="section-title">Who used it, per device</h2>
-      <p class="section-desc">Percentages with “~” are estimates from the laptops' own logs; Chats, Cowork and Other are exact. Calls and tokens are for the current session.</p>
-      <div class="scroll" style="margin-top:12px"><table id="people"></table></div>
-      <div class="calib-row">
-        <h3 class="sub-title">How accurate the estimates are</h3><table class="kv" id="calib"></table>
-        <details class="how"><summary>How the estimates work</summary><p class="note" id="calibNote"></p></details>
+      <div class="toolbar">
+        <div><h2 class="section-title">Breakdown</h2><p class="section-desc">By platform, model and project. “~%” is the estimated share of the <span id="rangeWord">session</span> limit.</p></div>
+        <div class="seg" id="tabs"><button data-r="window" class="on" aria-pressed="true">This session</button><button data-r="week" aria-pressed="false">This week</button></div>
+      </div>
+      <div class="cols" style="margin-top:12px">
+        <div class="stack"><div class="scroll"><table id="t_by_platform"></table></div><div class="scroll"><table id="t_by_model"></table></div></div>
+        <div class="scroll"><table id="t_by_project"></table></div>
       </div>
     </div>
   </section>
 
+  <section class="panel" id="chatsPanel" hidden>
+    <div class="panel-body">
+      <h2 class="section-title">claude.ai chats</h2>
+      <p class="section-desc">Chats on the website, reported by the Claude Usage userscript in each
+        person's browser: the usage that never reaches the Claude Code logs. Context sizes are
+        estimated from the visible text; "session after" is the exact plan reading after the last message.
+        <a href="/userscript/claude-usage.user.js">Install the userscript</a> (needs Violentmonkey).</p>
+      <div class="scroll" style="margin-top:12px"><table id="chats"></table></div>
+      <div id="chatsMore" style="margin-top:8px"></div>
+    </div>
+  </section>
+  </div>
+
+  <!-- History: past weeks and sessions, and all-time stats -->
+  <div class="view" data-view="history" hidden>
   <section class="panel" id="weeksPanel" hidden>
     <div class="panel-body">
       <h2 class="section-title">Weeks</h2>
@@ -309,12 +384,11 @@
     </div>
   </section>
 
-  <div class="row2">
-  <!-- Overview / Models card, like the Claude Code home -->
+  <!-- Stats / Models card, like the Claude Code home -->
   <section class="panel ov">
     <div class="panel-body" style="padding-top:16px">
       <div class="toolbar">
-        <div class="seg" id="ovTab"><button data-v="overview" class="on" aria-pressed="true">Overview</button><button data-v="models" aria-pressed="false">Models</button></div>
+        <div class="seg" id="ovTab"><button data-v="overview" class="on" aria-pressed="true">Stats</button><button data-v="models" aria-pressed="false">Models</button></div>
         <div class="right">
           <div class="seg" id="ovDev"></div>
           <div class="seg" id="ovRange"><button data-v="all" class="on" aria-pressed="true">All</button><button data-v="30" aria-pressed="false">30d</button><button data-v="7" aria-pressed="false">7d</button></div>
@@ -323,71 +397,36 @@
       <div id="ovBody"></div>
     </div>
   </section>
-  <!-- Fills the card's height beside it, whatever tab the card is on. -->
-  <section class="panel grow">
+  </div>
+
+  <!-- Accuracy: where the estimates come from and how far to trust them -->
+  <div class="view" data-view="accuracy" hidden>
+  <section class="panel">
     <div class="panel-body">
-      <h2 class="section-title">Session limit, last 24 hours</h2>
-      <p class="section-desc small">Official 5-hour %, as reported by Anthropic.</p>
-      <div class="chart-fill"><svg id="line" role="img" aria-label="Official session limit %, last 24 hours"></svg></div>
+      <h2 class="section-title">Who used it, per laptop</h2>
+      <p class="section-desc">Percentages with “~” are estimates from the laptops' own logs; Chats, Cowork and Other are exact. Calls and tokens are for the current session.</p>
+      <div class="scroll" style="margin-top:12px"><table id="people"></table></div>
     </div>
   </section>
-  </div>
+
+  <section class="panel">
+    <div class="panel-body">
+      <h2 class="section-title">How accurate the estimates are</h2>
+      <table class="kv" id="calib" style="margin-top:8px"></table>
+      <h3 class="sub-title" style="margin-top:18px">How the estimates work</h3>
+      <p class="note" id="calibNote" style="margin-top:6px;max-width:110ch"></p>
+    </div>
+  </section>
 
   <section class="panel">
     <div class="panel-body">
       <div class="row-head"><h2 class="section-title">Per-model consumption</h2><span class="val small" id="modelsAsOf"></span></div>
-      <p class="section-desc">This week, all synced laptops.</p>
+      <p class="section-desc">This week, all synced laptops: what a million output tokens of each model costs, and how much each model counts.</p>
       <div class="scroll" style="margin-top:12px"><table id="models"></table></div>
       <p class="note" id="modelNote"></p>
     </div>
   </section>
-
-  <section class="panel">
-    <div class="panel-body">
-      <div class="section">
-        <h2 class="section-title" id="barsTitle">Hourly usage by device, last 48 hours</h2><p class="section-desc">Estimated % of the weekly limit, from each laptop's logs.</p>
-        <div style="margin-top:12px"><svg id="bars" width="100%" height="190" role="img" aria-label="Estimated hourly usage per laptop, % of the weekly limit"></svg></div>
-        <div class="legend" id="legend"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-body">
-      <h2 class="section-title">Open sessions: cost per message</h2>
-      <div id="ctxBody"></div>
-    </div>
-  </section>
-  <section class="panel" id="chatsPanel" hidden>
-    <div class="panel-body">
-      <h2 class="section-title">claude.ai chats</h2>
-      <p class="section-desc">Chats on the website, reported by the Claude Usage userscript in each
-        person's browser: the usage that never reaches the Claude Code logs. Context sizes are
-        estimated from the visible text; "session after" is the exact plan reading after the last message.
-        <a href="/userscript/claude-usage.user.js">Install the userscript</a> (needs Violentmonkey).</p>
-      <div class="scroll"><table id="chats"></table></div>
-    </div>
-  </section>
-  <section class="panel">
-    <div class="panel-body">
-      <div class="section">
-        <div class="toolbar">
-          <div><h2 class="section-title">Breakdown</h2><p class="section-desc">By platform, model and project. “~%” is the estimated share of the <span id="rangeWord">session</span> limit.</p></div>
-          <div class="seg" id="tabs"><button data-r="window" class="on" aria-pressed="true">This session</button><button data-r="week" aria-pressed="false">This week</button></div>
-        </div>
-        <div class="cols" style="margin-top:12px">
-          <div class="stack"><div class="scroll"><table id="t_by_platform"></table></div><div class="scroll"><table id="t_by_model"></table></div></div>
-          <div class="scroll"><table id="t_by_project"></table></div>
-        </div>
-      </div>
-      <div class="section">
-        <h2 class="section-title">Recent sessions</h2>
-        <p class="section-desc">The latest Claude Code sessions on the synced laptops.</p>
-        <div class="scroll" style="margin-top:12px"><table id="sessions"></table></div>
-        <div id="sessionsMore" style="margin-top:8px"></div>
-      </div>
-    </div>
-  </section>
+  </div>
 </main>
 
 <script>
@@ -604,7 +643,7 @@ function render() {
   // The tab reads like the statusline: session % · week %.
   const o = src?.official;
   document.title = o?.five_hour ? `${fmt.pct(o.five_hour.pct)} session · ${fmt.pct(o.seven_day?.pct)} week — Claude Usage` : "Claude Usage";
-  drawHeadline(src); drawLimits(src); drawProducts(src); drawPeople(src); drawWeeks(); drawWindows(); drawModels(); drawOverview();
+  drawHeadline(src); drawLimits(src); drawLaptops(); drawPeople(src); drawWeeks(); drawWindows(); drawModels(); drawOverview();
   drawLine(); drawBars(); drawTables(); drawSessions(); drawContext(); drawChats();
 }
 
@@ -679,31 +718,27 @@ function bar(v, { limit = false, color, track, severity } = {}) {
   const fill = pct > 0 ? `<i style="width:${pct}%${st || !color ? "" : `;background:${color}`}"></i>` : "";
   return `<div class="track${st ? " " + st : ""}"${trackStyle}>${fill}</div>`;
 }
-// A row under a product or limit: a device (its own colour) or the remainder (blue).
-// `label` and `sub` are HTML: callers escape what came from the API.
-const childRow = (label, sub, v, d) => `<div class="lrow child"><div class="lbl">${d ? `<span class="dot" style="background:${d.color}"></span>` : ""}${label}<span class="est">est.</span>${sub ? `<div class="sub">${sub}</div>` : ""}</div>
-    ${bar(v, d ? { color: d.color, track: d.track } : {})}<div class="pct num">${epct(v)}</div></div>`;
-const calibRow = () => `<div class="lrow child"><div class="lbl">Per-laptop split<span class="est">est.</span></div>${bar(null)}<div class="pct calib">calibrating</div></div>`;
-
-function limitRow(title, sub, lim) {
+function limitRow(title, sub, lim, split = "") {
   if (!lim) return "";
   return `<div class="lrow"><div class="lbl">${esc(title)}<div class="sub">${sub}</div></div>
-    ${bar(lim.pct, { limit: true, severity: lim.severity })}<div class="pct num">${fmt.pct(lim.pct)} used</div></div>`;
+    ${bar(lim.pct, { limit: true, severity: lim.severity })}<div class="pct num">${fmt.pct(lim.pct)} used</div>${split}</div>`;
 }
-// Per-laptop split of a model's own weekly limit (currently Fable), from its separate fit.
-function scopedSplit(s) {
-  const f = state.model?.fable;
-  if (!/fable/i.test(s.name)) return "";
-  if (f?.a == null) return calibRow();
-  let known = 0, html = "";
+// Who used a limit, on one line under its bar: each person (their laptops summed, in their
+// first laptop's colour), then what no synced laptop logged, then the exact products.
+const approx = (v) => v == null || num(v) < 0.1 ? epct(v) : `~${epct(v)}`;
+const splitItem = (label, v, color, exact) => `<span class="it"><span class="dot${color ? "" : " ring"}"${color ? ` style="background:${color}"` : ""}></span>${label}` +
+  `<span class="v">${exact ? epct(v) : approx(v)}</span></span>`;
+const splitLine = (fitted, est, total, ns, extra = [], aside = "") => {
+  if (!fitted) return `<div class="split"><span class="calib">Split by person: calibrating</span>${extra.join("")}${aside}</div>`;
+  const people = new Map();
   for (const d of state.devices) {
-    const e = Object.entries(d.week?.by_model || {}).filter(([m]) => family(m) === "fable")
-      .reduce((s, [, v]) => s + f.a * (v.x || 0) + (f.b ?? f.a) * (v.r || 0), 0);
-    known += e;
-    html += childRow(esc(name(d)), "", e, d);
+    const p = people.get(d.person) || { color: d.color, v: 0 };
+    p.v += est(d) || 0; people.set(d.person, p);
   }
-  return html + childRow(nsLabel("fable"), "", Math.max(0, num(s.pct) - known));
-}
+  const known = [...people.values()].reduce((a, p) => a + p.v, 0);
+  return `<div class="split">${[...people].map(([who, p]) => splitItem(esc(who), p.v, p.color)).join("")}` +
+    `${splitItem(ns, Math.max(0, num(total) - known))}${extra.join("")}${aside}</div>`;
+};
 function drawLimits(src) {
   const o = src?.official || {};
   // Same wording as the headline: "Resets tomorrow 4:00 AM · in 9 h 12 min".
@@ -711,38 +746,35 @@ function drawLimits(src) {
     `Resets ${dayWord(resetOf(lim))} ${fmt.clock(resetOf(lim))} <span class="faint">· in ${fmt.until(resetOf(lim))}</span>`;
   // Live: the running session's usage no synced laptop logged, over the last hour (api/_unlogged.js).
   const u = state.unlogged, cur = o.five_hour && u && Math.abs(Date.parse(u.window) - Date.parse(o.five_hour.resets_at)) < 10 * 60e3;
-  const unl = !cur ? "" : `<div class="lrow child"><div class="lbl">Not synced, last hour<span class="est">est.</span><div class="sub">${
-    u.synced ? "claude.ai, or Claude Code on another computer" : `unsure: ${u.stale.map((dv) => {
+  const unl = !cur || !(u.last60 >= 0.5) ? "" : `<span class="aside">Last hour: +${num(u.last60).toFixed(1)} pts that no synced laptop logged (est.)${u.synced ? "" : `; ${u.stale.map((dv) => {
       // when it really last synced (the device's own snapshot, else the last reading the fit saw)
       const d = state.devices.find((x) => x.device === dv), at = d?.received_at || d?.sent_at || u.last_seen?.[dv];
       return `${esc(name(d || { label: dv }))} last synced ${at ? fmt.ago(at) : "a while ago"}`;
-    }).join(", ")}, so part of this may be its usage`}</div></div>
-    ${bar(Math.max(0, num(u.last60)))}<div class="pct num">${u.last60 >= 0.5 ? `+${Math.max(0, num(u.last60)).toFixed(1)} pts` : "none"}</div></div>`;
-  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour) + unl +
-    limitRow("This week", resetLine(o.seven_day), o.seven_day) +
-    (o.scoped || []).map((s) => limitRow(`${s.name} this week`, resetLine(s), s) + scopedSplit(s)).join("") ||
+    }).join(", ")}, so part of it may be ${u.stale.length > 1 ? "theirs" : "its"}`}.</span>`;
+  // The week: Anthropic's product split is exact; only Claude Code needs the per-person estimate.
+  const w = o.seven_day, bd = o.breakdown || [], cc = bd.find((r) => r.key === "claude_code");
+  const products = !w ? [] : bd.filter((r) => r.key !== "claude_code" && r.percent > 0).map((r) => splitItem(esc(r.name), (num(w.pct) * r.percent) / 100, null, true));
+  const fable = state.model?.fable, fableEst = (d) => Object.entries(d.week?.by_model || {}).filter(([m]) => family(m) === "fable")
+    .reduce((s, [, v]) => s + fable.a * (v.x || 0) + (fable.b ?? fable.a) * (v.r || 0), 0);
+  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour,
+      splitLine(fitOf("window")?.a != null, (d) => estDev(d, "window"), o.five_hour?.pct, nsLabel("all"), [], unl)) +
+    limitRow("This week", resetLine(w), w,
+      splitLine(fitOf("week")?.a != null, (d) => estDev(d, "week"), w && (num(w.pct) * (cc ? cc.percent : 100)) / 100, nsLabel(cc ? "code" : "all"), products)) +
+    (o.scoped || []).map((s) => limitRow(`${s.name} this week`, resetLine(s), s,
+      /fable/i.test(s.name) ? splitLine(fable?.a != null, fableEst, s.pct, nsLabel("fable")) : "")).join("") ||
     '<p class="muted">No official limits yet.</p>';
 }
-
-function drawProducts(src) {
-  const o = src?.official, week = o?.seven_day?.pct;
-  if (!o?.breakdown?.length || week == null) { $("products").innerHTML = '<p class="muted">No product data yet.</p>'; $("prodAsOf").textContent = ""; return; }
-  $("prodAsOf").textContent = o.breakdown_as_of ? `as of ${fmt.ago(o.breakdown_as_of)}` : "";
-  let html = "";
-  for (const r of o.breakdown) {
-    const v = (week * r.percent) / 100;
-    html += `<div class="lrow prod"><div class="lbl">${esc(r.name)}</div>${bar(v)}<div class="pct num">${epct(v)}</div></div>`;
-    if (r.key !== "claude_code") continue;
-    if (fitOf("week")?.a == null) { html += calibRow(); continue; }   // one line, not one per laptop
-    let known = 0;
-    for (const d of state.devices) {
-      const e = estDev(d, "week");
-      known += e || 0;
-      html += childRow(esc(name(d)), "", e, d);
-    }
-    html += childRow(nsLabel("code"), "Claude Code on another computer, in the cloud, or in logs deleted before they synced", Math.max(0, v - known));
-  }
-  $("products").innerHTML = html;
+// Under the usage card: each laptop's state, so a silent one is noticed where the split is read.
+function drawLaptops() {
+  $("laptops").innerHTML = state.devices.map((d) => {
+    const at = d.received_at || d.sent_at, active = d.last_activity && Date.now() - new Date(d.last_activity) < 5 * 60e3;
+    const bits = [active ? '<span class="tag live" style="margin:0">active now</span>' : `used ${fmt.ago(d.last_activity)}`,
+      online(d) ? `synced ${fmt.ago(at)}` : `<span class="tag stale" style="margin:0">offline · last synced ${fmt.ago(at)}</span>`];
+    // Collectors before v4 don't update themselves: that laptop has to run setup.sh once.
+    if ((d.version || 0) < 4) bits.push(`<span class="tag stale" style="margin:0" title="This laptop runs an old sync script. Re-run the setup command on it once; later versions update themselves.">old sync · run setup</span>`);
+    if (d.official_error) bits.push(`<span class="faint" title="${esc(d.official_error)}">can't read the official %</span>`);
+    return `<span class="lap"><span class="dot" style="background:${d.color}"></span><span class="nm">${esc(name(d))}</span>${bits.join(" · ")}</span>`;
+  }).join("") + `<button class="linkbtn go" data-go="accuracy">How accurate is the split? →</button>`;
 }
 
 function drawPeople(src) {
@@ -830,7 +862,7 @@ function drawWeeks() {
       pair: both.length ? { n: both.length, miss: tally(both, end).miss, old: med(both.map((f) => Math.abs(num(f.avg) - end))) } : null };
   };
   const fcCell = (w) => {
-    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(num(f.expected))}% <span class="faint">(${Math.round(num(f.lo))}–${Math.round(num(f.hi))})</span>` : "–"; }
+    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(num(f.expected))}%<span class="faint rng"> (${Math.round(num(f.lo))}–${Math.round(num(f.hi))})</span>` : "–"; }
     const sc = score(w);
     if (!sc) return "–";
     const rp = sc.replayed.n ? `<div class="faint small" title="Rebuilt afterwards from the stored readings, so not counted in the score.">replayed: ${sc.replayed.inside}/${sc.replayed.n} in range</div>` : "";
@@ -886,7 +918,10 @@ function drawWindows() {
     }).join("");
   $("winsMore").innerHTML = wins.length > 8 ? `<button class="linkbtn" id="toggleWins">${allWins ? "Show fewer" : `Show all ${wins.length}`}</button>` : "";
 }
-document.addEventListener("click", (e) => { if (e.target.id === "toggleWins") { allWins = !allWins; drawWindows(); } });
+document.addEventListener("click", (e) => {
+  if (e.target.id === "toggleWins") { allWins = !allWins; drawWindows(); }
+  if (e.target.id === "toggleChats") { allChats = !allChats; drawChats(); }
+});
 
 function drawModels() {
   const agg = {};
@@ -974,14 +1009,14 @@ function drawOverview() {
     const wp = tokens / WAR_AND_PEACE;
     const fun = !tokens ? "" : wp >= 1 ? `You've used ~${wp >= 10 ? Math.round(wp) : wp.toFixed(1)}× more tokens than War and Peace.` :
       `You've used about ${Math.round(wp * 100)}% of War and Peace in tokens.`;
-    $("ovBody").innerHTML = `<div class="stats">
+    $("ovBody").innerHTML = `<div class="ovgrid"><div><div class="heat">${cells}</div></div><div class="stats">
         ${stat("Sessions", rows.reduce((s, [, v]) => s + v.sessions, 0).toLocaleString())}
         ${stat("Messages", rows.reduce((s, [, v]) => s + v.msgs, 0).toLocaleString())}
         ${stat("Total tokens", fmt.tok(tokens))}
         ${stat("Active days", rows.filter(([, v]) => Object.keys(v.models).length).length)}
         ${stat("Peak hour", tokens ? new Date(2000, 0, 1, peak).toLocaleTimeString([], { hour: "numeric" }) : "–")}
         ${stat("Favorite model", fav ? shortModel(fav) : "–")}
-      </div><div class="heat">${cells}</div>
+      </div></div>
       <p class="note">${fun} Total tokens = input + output (cache excluded), counted once per API response; the Claude app counts every logged content block, so for Claude Code it shows about 2.5× more.</p>`;
   } else {
     const models = {}; rows.forEach(([, v]) => Object.entries(v.models).forEach(([m, a]) => { const t = models[m] ||= [0, 0]; t[0] += a[0]; t[1] += a[1]; }));
@@ -1053,7 +1088,7 @@ function drawBars() {
   // screen shows the last 24 hours instead of 48 so the bars stay wide enough to read.
   const devs = state.devices, svg = $("bars"), W = svg.clientWidth || 800, H = 190, P = 44, N = W < 560 ? 24 : 48;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  $("barsTitle").textContent = `Hourly usage by device, last ${N} hours`;
+  $("barsTitle").textContent = `Hourly usage by laptop, last ${N} hours`;
   svg.setAttribute("aria-label", `Estimated hourly usage per laptop over the last ${N} hours, as % of the weekly limit`);
   const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() - N + 1);
   const hours = [...Array(N)].map((_, i) => new Date(+start + i * 36e5));
@@ -1109,27 +1144,56 @@ const ktok = (n) => n == null ? "–" : (n = num(n)) >= 1e6 ? (n / 1e6).toFixed(
 let showAllSessions = false, longSessions = false;
 const SESSIONS_SHORT = 10;
 const openSessions = new Set();
-function sessionDetail(s) {
+// Expanded parts of an open session ("<row key>:agents", "<row key>:events").
+const openMore = new Set();
+const FAMILY_NAME = { fable: "Fable", opus: "Opus", sonnet: "Sonnet", haiku: "Haiku", other: "Other" };
+const AGENTS_SHORT = 5, EVENTS_SHORT = 6;
+function sessionDetail(s, k) {
   if (Array.isArray(s.models)) return `<div class="small muted">This laptop runs an older sync that doesn't report context, models or subagents per session.
     Update it by re-running the install command (<code>curl -fsSL ${location.origin}/collector/install.sh | bash -s -- …</code>).</div>`;
   const f = fitOf("week"), est = (u) => f?.a == null ? null : (f.m?.[family(u.model || "")] ?? 1) * (f.a * (u.x || 0) + (f.b ?? f.a) * (u.r || 0));
-  const models = Object.entries(s.models || {}).sort((a, b) => (b[1].x + b[1].r) - (a[1].x + a[1].r));
+  const more = (part, n, total, what) => total > n ? `<button class="linkbtn more" data-more="${esc(k)}:${part}">${openMore.has(`${k}:${part}`) ? "Show fewer" : `Show all ${total} ${what}`}</button>` : "";
+  const models = Object.entries(s.models || {}).map(([m, v]) => ({ m, ...v, e: est({ ...v, model: m }) }))
+    .sort((a, b) => (b.e ?? b.x + b.r) - (a.e ?? a.x + a.r));
+  const agents = (s.agents || []).map((a) => ({ ...a, e: est({ ...a, model: (a.models || [])[0] }) }))
+    .sort((a, b) => (b.e ?? b.x + b.r) - (a.e ?? a.x + a.r));
+  const agentsE = f?.a == null ? null : agents.reduce((t, a) => t + (a.e || 0), 0);
+  // One timeline instead of three lists: compactions, /model commands and the main thread's model.
+  // A model change right after a /model switch says the same thing twice, so it is left out.
+  const sw = (s.switches || []).map((c) => ({ t: c.t, what: `/model → ${esc(c.to)}` }));
+  const events = [
+    ...(s.compactions || []).map((c) => ({ t: c.t, what: `Compacted${c.trigger === "auto" ? " (auto)" : ""}: ${ktok(c.pre)} → ${ktok(c.post)}` })),
+    ...sw,
+    ...(s.changes || []).filter((c) => !(s.switches || []).some((x) => Date.parse(c.t) - Date.parse(x.t) >= 0 && Date.parse(c.t) - Date.parse(x.t) < 15 * 60e3))
+      .map((c, i) => ({ t: c.t, what: `${i === 0 && c.t === (s.changes || [])[0]?.t ? "Started on" : "Switched to"} ${shortModel(c.model)}` })),
+  ].sort((a, b) => Date.parse(a.t) - Date.parse(b.t));
+  const shownEvents = openMore.has(`${k}:events`) ? events : events.slice(-EVENTS_SHORT);
+  const shownAgents = openMore.has(`${k}:agents`) ? agents : agents.slice(0, AGENTS_SHORT);
+  const lastComp = (s.compactions || []).slice(-1)[0], lastChange = (s.changes || []).slice(-1)[0];
+  const fact = (l, v, sub) => `<div class="fact"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  const fams = {};
+  for (const a of agents) { const g = fams[family((a.models || [])[0] || "")] ||= { n: 0, e: 0 }; g.n++; g.e += a.e || 0; }
+  const famLine = Object.entries(fams).sort((a, b) => b[1].e - a[1].e)
+    .map(([fm, g]) => `${FAMILY_NAME[fm]} ${g.n}${agentsE == null ? "" : ` (${approx(g.e)})`}`).join(" · ");
   const mrows = `<tr><th>Model</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>` +
-    models.map(([m, v]) => `<tr><td>${shortModel(m)}</td><td class="n">${num(v.calls)}</td><td class="n">${fmt.tok(v.tokens)}</td><td class="n">${epct(est({ ...v, model: m }))}</td></tr>`).join("");
-  const agents = (s.agents || []).map((a) => `<tr><td>${esc(a.type || "agent")}${a.desc ? `<div class="sub">${esc(a.desc)}</div>` : ""}</td>
+    models.map((r) => `<tr><td>${shortModel(r.m)}</td><td class="n">${num(r.calls)}</td><td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.e)}</td></tr>`).join("");
+  const arows = shownAgents.map((a) => `<tr><td>${esc(a.desc || a.type || "agent")}${a.desc && a.type ? `<div class="sub">${esc(a.type)}</div>` : ""}</td>
       <td class="small">${(a.models || []).map(shortModel).join(", ")}${a.depth > 1 ? ` <span class="muted">· depth ${num(a.depth)}</span>` : ""}</td>
-      <td class="n">${num(a.calls)}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(est({ ...a, model: (a.models || [])[0] }))}</td></tr>`).join("");
-  const changes = (s.changes || []).map((c) => `<span class="it">${fmt.time(c.t)} → ${shortModel(c.model)}</span>`).join(" · ");
-  const sw = (s.switches || []).map((c) => `<span class="it">${fmt.time(c.t)}: /model → ${esc(c.to)}</span>`).join(" · ");
-  const comps = (s.compactions || []).map((c) => `<span class="it">${fmt.time(c.t)} (${esc(c.trigger || "?")}): ${ktok(c.pre)} → ${ktok(c.post)}</span>`).join(" · ");
-  return `<div class="sgrid">
-      <div><div class="k">Models used</div><table>${mrows}</table></div>
-      <div><div class="k">Context window</div><div class="small">max ${ktok(s.ctx_max)} · average ${ktok(s.ctx_avg)} · now ${ktok(s.ctx_last)}</div>
-        <div class="k" style="margin-top:10px">Compactions</div><div class="small">${comps || '<span class="muted">none</span>'}</div>
-        <div class="k" style="margin-top:10px">Model on the main thread</div><div class="small">${changes || "–"}</div>
-        ${sw ? `<div class="k" style="margin-top:10px">/model switches</div><div class="small">${sw}</div>` : ""}</div>
+      <td class="n">${num(a.calls)}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(a.e)}</td></tr>`).join("");
+  return `<div class="sfacts">
+      ${fact("Context now", ktok(s.ctx_last), `max ${ktok(s.ctx_max)} · average ${ktok(s.ctx_avg)}`)}
+      ${fact("Compactions", num((s.compactions || []).length) || "none", lastComp ? `last ${fmt.time(lastComp.t)}` : "never compacted")}
+      ${fact("Subagents", num(agents.length) || "none", agents.length ? `${agentsE == null ? "" : `${approx(agentsE)} of the week`}` : "no agents launched")}
+      ${fact("Model now", shortModel(s.current_model || lastChange?.model || "?"), lastChange ? `since ${fmt.time(lastChange.t)}` : "")}
     </div>
-    ${agents ? `<div class="k" style="margin-top:14px">Subagents (${num(s.agents.length)})</div><table><tr><th>Agent</th><th>Models</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>${agents}</table>` : ""}`;
+    <div class="sgrid">
+      <div><div class="k">Models used</div><table>${mrows}</table></div>
+      <div><div class="k">Timeline</div>${events.length ? `<ol class="tl">${shownEvents.map((e) => `<li><span class="t">${fmt.time(e.t)}</span><span>${e.what}</span></li>`).join("")}</ol>` : '<p class="small muted" style="margin:4px 0 0">Nothing to show: no compactions or model changes.</p>'}
+        ${more("events", EVENTS_SHORT, events.length, "events")}</div>
+    </div>
+    ${agents.length ? `<div class="k" style="margin-top:18px">Subagents <span class="faint" style="font-weight:400">· ${famLine}${agents.length > AGENTS_SHORT && !openMore.has(`${k}:agents`) ? ` · the ${AGENTS_SHORT} costliest below` : ""}</span></div>
+      <table class="atab"><tr><th>Agent</th><th>Models</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>${arows}</table>
+      ${more("agents", AGENTS_SHORT, agents.length, "subagents")}` : ""}`;
 }
 function drawSessions() {
   let rows = state.devices.flatMap((d) => (d.sessions || []).map((s) => ({ ...s, d }))).sort((a, b) => new Date(b.last) - new Date(a.last));
@@ -1138,15 +1202,15 @@ function drawSessions() {
   const total = Math.min(rows.length, 25);
   rows = rows.slice(0, longSessions ? 25 : SESSIONS_SHORT);
   const vis = `${$("sessions").parentElement.clientWidth}px`;
-  $("sessions").innerHTML = `<tr><th><span class="dname">Device</span></th><th>Session</th><th>Model now</th><th class="n">Calls</th><th class="n">Context</th><th class="n">Compacts</th><th class="n">Agents</th><th>Last active</th><th class="n">~% of week</th></tr>` +
+  $("sessions").innerHTML = `<tr><th class="cr"></th><th>Session</th><th>Model now</th><th class="n">Calls</th><th class="n">Context</th><th class="n">Compacts</th><th class="n">Agents</th><th>Last active</th><th class="n">~% of week</th></tr>` +
     rows.map((s) => {
       const k = s.d.device + ":" + s.id, open = openSessions.has(k);
-      return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td title="${esc(name(s.d))}"><span class="dot" style="background:${s.d.color}"></span><span class="dname">${esc(name(s.d))}</span></td>
-        <td class="wrap"><button type="button" class="rowbtn" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}</button><div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
+      return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td class="cr" title="${esc(name(s.d))}"><span class="caret" aria-hidden="true">${open ? "▾" : "▸"}</span><span class="dot" style="background:${s.d.color}"></span></td>
+        <td class="wrap"><button type="button" class="rowbtn" aria-expanded="${open}">${esc(s.title || s.project)}</button><div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)} · ${esc(name(s.d))}</div></td>
         <td class="small">${shortModel(s.current_model || (Array.isArray(s.models) ? s.models[s.models.length - 1] : s.models && Object.keys(s.models)[0]))}</td>
         <td class="n">${num(s.calls)}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${num((s.compactions || []).length) || "–"}</td>
         <td class="n">${num((s.agents || []).length) || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(s.week_models ? estModels(s.week_models, "week") : estFlat(s, "week", s.d))}</td></tr>` +
-        (open ? `<tr class="sdrow"><td colspan="9"><div class="sdetail" style="--vis:${vis}">${sessionDetail(s)}</div></td></tr>` : "");
+        (open ? `<tr class="sdrow"><td colspan="9"><div class="sdetail" style="--vis:${vis}">${sessionDetail(s, k)}</div></td></tr>` : "");
     }).join("") + (rows.length ? "" : `<tr><td colspan="9" class="muted">No sessions yet</td></tr>`);
   $("sessionsMore").innerHTML = [
     total > SESSIONS_SHORT ? `<button class="linkbtn" id="toggleLong">${longSessions ? "Show fewer" : `Show all ${total} sessions`}</button>` : "",
@@ -1157,6 +1221,7 @@ function drawSessions() {
 // Chats on claude.ai. The userscript in each person's browser reports the open chat's size and
 // the plan's limits after every message; the older tracker-extension reading on a laptop fills
 // in for anyone not running the userscript yet. Sizes are estimates from the visible text.
+let allChats = false;
 function drawChats() {
   const colorOf = (person) => state.devices.find((d) => d.person === person)?.color || "var(--c4)";
   const rows = [], seen = new Set();
@@ -1168,8 +1233,10 @@ function drawChats() {
   const panel = $("chatsPanel");
   panel.hidden = rows.length === 0;
   if (!rows.length) return;
+  const CHATS_SHORT = 5;
+  $("chatsMore").innerHTML = rows.length > CHATS_SHORT ? `<button class="linkbtn" id="toggleChats">${allChats ? "Show fewer" : `Show all ${Math.min(rows.length, 25)} chats`}</button>` : "";
   let html = `<tr><th>Person</th><th>Chat</th><th>Model</th><th class="n">Context</th><th class="n">Messages</th><th class="n">Session after</th><th>Last message</th></tr>`;
-  for (const c of rows.slice(0, 25))
+  for (const c of rows.slice(0, allChats ? 25 : CHATS_SHORT))
     html += `<tr><td><span class="dot" style="background:${colorOf(c.person)}"></span>${esc(c.person)}</td>
       <td class="muted">${esc(c.id)}${c.in_project ? '<span class="tag">project</span>' : ""}${c.src === "extension" ? '<span class="tag">extension</span>' : ""}</td>
       <td class="muted">${shortModel(c.model)}</td>
@@ -1218,15 +1285,18 @@ function drawContext() {
       <td class="n">${pc(now)}</td><td class="n">${left == null ? "–" : left.toLocaleString()}</td>
       <td class="n">${pc(after)}</td><td class="n">${advice}</td></tr>`;
   }).join("");
-  $("ctxBody").innerHTML = `<p class="section-desc">Sessions used in the last 3 hours on either laptop. "Per message" is what one more typed message costs, tool calls and subagents included (average of the last 5), as a share of the 5-hour session.</p>
+  $("ctxBody").innerHTML = `<p class="section-desc">Sessions used in the last 3 hours on either laptop. "Per message" is what one more typed message costs, tool calls and subagents included (a typical one of the last 9), as a share of the 5-hour session.</p>
     <div class="scroll" style="margin-top:10px"><table><tr><th>Device</th><th>Session</th><th>Model</th><th class="n">Context</th><th class="n">Per message</th>
       <th class="n">Left*</th><th class="n">After /compact</th><th class="n">Compact now?</th></tr>
       ${rows || '<tr><td colspan="8" class="muted">No sessions in the last 3 hours.</td></tr>'}</table></div>
-    <p class="section-desc small" style="margin-top:8px">* Messages left until the session limit, if every message cost the same. "After /compact" is what messages cost right after this laptop's past compactions (same model), or with a small context if it never compacted.</p>`;
+    <p class="section-desc small" style="margin-top:8px">* Messages left until the session limit, if every message cost the same. "After /compact" is what messages cost right after this laptop's past compactions (same model), or with a small context if it never compacted.
+      <button class="linkbtn" data-go="activity" style="font-size:12.5px">Every session, with its subagents →</button></p>`;
 }
 
 // ---- wiring -------------------------------------------------------------------
 $("sessions").addEventListener("click", (e) => {
+  const m = e.target.closest("[data-more]");
+  if (m) { const x = m.dataset.more; openMore.has(x) ? openMore.delete(x) : openMore.add(x); drawSessions(); return; }
   const tr = e.target.closest("tr.srow"); if (!tr) return;
   const k = tr.dataset.k, fromBtn = !!e.target.closest(".rowbtn");
   openSessions.has(k) ? openSessions.delete(k) : openSessions.add(k);
@@ -1249,6 +1319,21 @@ seg("tabs", (b) => range = b.dataset.r);
 seg("ovTab", (b) => ov.tab = b.dataset.v);
 seg("ovRange", (b) => ov.range = b.dataset.v);
 seg("ovDev", (b) => ov.dev = b.dataset.v);
+// The four views. The address keeps the open one (#activity…), so a reload or a link lands there.
+const VIEWS = ["overview", "activity", "history", "accuracy"];
+function setView(v, scroll = true) {
+  if (!VIEWS.includes(v)) v = "overview";
+  [...$("views").children].forEach((b) => { b.classList.toggle("on", b.dataset.v === v); b.setAttribute("aria-pressed", b.dataset.v === v); });
+  document.querySelectorAll(".view").forEach((el) => el.hidden = el.dataset.view !== v);
+  history.replaceState(null, "", v === "overview" ? location.pathname : `#${v}`);
+  if (scroll) window.scrollTo(0, 0);
+  if (state) render();      // charts and the session detail measure their width: draw them visible
+}
+$("views").onclick = (e) => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); };
+// "Past weeks →" and the like: links from one view to the place in another that answers it.
+document.addEventListener("click", (e) => { const g = e.target.closest("[data-go]"); if (g) setView(g.dataset.go); });
+if (!hashKey) setView(location.hash.slice(1), false);
+window.addEventListener("hashchange", () => setView(location.hash.slice(1), false));
 window.onresize = () => state && render();
 // Poll every 30 s only while the tab is visible (the free database counts every read).
 // Every 30 s, ask the hub (one Redis read) whether any laptop has synced since; reload only then.
