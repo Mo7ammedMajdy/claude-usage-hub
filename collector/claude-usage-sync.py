@@ -17,7 +17,7 @@ optional HUB_CLAUDE_DIRS).
                                ~/.cache/claude-usage/pending.jsonl until they're sent, and
                                leaves its state in ~/.cache/claude-usage/sync.json
 """
-import glob, hashlib, json, os, re, signal, socket, sys, time, urllib.error, urllib.request
+import bisect, glob, hashlib, json, os, re, signal, socket, sys, time, urllib.error, urllib.request
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
@@ -553,14 +553,40 @@ def daily(idx):
     return days
 
 
-def sessions(idx):
+def prompt_cost(rs, prompts, now):
+    """What one typed prompt costs: everything the session did (main thread and its subagents)
+    between consecutive typed prompts, averaged per family over the last 5. An API call is
+    not a message: a prompt runs ~3 main-thread calls, and one that spawns agents many more.
+    The trailing interval only counts once the session has been quiet for 5 minutes, so a
+    prompt still running doesn't drag the average down."""
+    if not prompts:
+        return None
+    ends = prompts[1:] + ([now] if now - rs[-1]["t"] > timedelta(minutes=5) else [])
+    spans = list(zip(prompts, ends))[-5:]
+    if not spans:
+        return None
+    ts_ = [r["t"] for r in rs]
+    fams = defaultdict(lambda: [0.0, 0.0])
+    for t0, t1 in spans:
+        for r in rs[bisect.bisect_left(ts_, t0):bisect.bisect_left(ts_, t1)]:
+            a = fams[r["fam"]]; a[0] += r["x"]; a[1] += r["r"]
+    n = len(spans)
+    return {"prompts": n, "x": round(sum(v[0] for v in fams.values()) / n, 5),
+            "r": round(sum(v[1] for v in fams.values()) / n, 5),
+            "fam": {k: {"x": round(v[0] / n, 5), "r": round(v[1] / n, 5)} for k, v in fams.items()}}
+
+
+def sessions(idx, ww=EPOCH, now=None):
     """Per-session detail: models, switches, agents, context size, compactions."""
+    now = now or datetime.now(timezone.utc)
     by = defaultdict(list)
     for r in idx.reqs.values():
         by[r["sid"]].append(r)
-    sw, comp = defaultdict(list), defaultdict(list)
+    sw, comp, pr = defaultdict(list), defaultdict(list), defaultdict(list)
     for t, sid, label in idx.switches:
         sw[sid].append((t, label))
+    for t, sid in idx.prompts:
+        pr[sid].append(t)
     for c in idx.compactions:
         comp[c["sid"]].append(c)
     out = {}
@@ -570,6 +596,12 @@ def sessions(idx):
         models = defaultdict(lambda: [0, 0.0, 0.0, 0])
         for r in rs:
             a = models[r["model"]]; a[0] += 1; a[1] += r["x"]; a[2] += r["r"]; a[3] += r["tokens"]
+        # The dashboard's "% of week" priced the whole session, not its in-week part (a long
+        # session read 3.4x too high): this covers only requests since the week reset.
+        week = defaultdict(lambda: [0.0, 0.0])
+        for r in rs:
+            if r["t"] >= ww:
+                a = week[r["model"]]; a[0] += r["x"]; a[1] += r["r"]
         changes, prev = [], None  # model changes on the main thread, as seen in the requests
         for r in main:
             if r["model"] != prev:
@@ -591,6 +623,7 @@ def sessions(idx):
             "tokens": sum(r["tokens"] for r in rs),
             "current_model": (main or rs)[-1]["model"],
             "models": {m: {"calls": a[0], "x": round(a[1], 5), "r": round(a[2], 5), "tokens": a[3]} for m, a in models.items()},
+            "week_models": {m: {"x": round(a[0], 5), "r": round(a[1], 5)} for m, a in week.items()},
             "changes": changes[-12:],
             "switches": [{"t": t.isoformat(), "to": label} for t, label in sw.get(sid, [])][-12:],
             "agents": [{"id": aid[:10], **{k: v for k, v in (idx.agents.get(aid) or {}).items() if v is not None},
@@ -602,6 +635,7 @@ def sessions(idx):
             "recent": {"calls": len(last10), "x": round(sum(r["x"] for r in last10) / len(last10), 5),
                        "r": round(sum(r["r"] for r in last10) / len(last10), 5),
                        "ctx": round(sum(r["ctx"] for r in last10) / len(last10)), "model": last10[-1]["model"]} if last10 else None,
+            "recent_prompt": prompt_cost(rs, sorted(pr.get(sid, [])), now),
             "compactions": [{"t": c["t"].isoformat(), "trigger": c["trigger"], "pre": c["pre"], "post": c["post"]}
                             for c in comp.get(sid, [])],
         }
@@ -809,11 +843,15 @@ def reprice(idx, todo):
 def snapshot(conf, idx, off, now, samples):
     w5, ww = windows_of(off, now)
     recent = idx.since(min(ww, now - timedelta(days=2)))
-    hourly = defaultdict(lambda: {"x": 0.0, "r": 0.0})
+    # Fable kept apart (xf/rf): an hour of Opus priced with the device's Fable-heavy average
+    # multiplier read ~36% high.
+    hourly = defaultdict(lambda: {"x": 0.0, "r": 0.0, "xf": 0.0, "rf": 0.0})
     for r in recent:
         h = hourly[r["t"].replace(minute=0, second=0, microsecond=0).isoformat()]
         h["x"] += r["x"]; h["r"] += r["r"]
-    sess, by = sessions(idx)
+        if r["fam"] == "fable":
+            h["xf"] += r["x"]; h["rf"] += r["r"]
+    sess, by = sessions(idx, ww, now)
     newest = sorted(sess.values(), key=lambda s: s["last"], reverse=True)
     last = max((r["t"] for r in idx.reqs.values()), default=None)
     return {
@@ -826,7 +864,7 @@ def snapshot(conf, idx, off, now, samples):
         "last_activity": last.isoformat() if last else None,
         "window": summarize([r for r in recent if r["t"] >= w5]),
         "week": summarize([r for r in recent if r["t"] >= ww]),
-        "hourly": {k: {"x": round(v["x"], 5), "r": round(v["r"], 5)} for k, v in sorted(hourly.items())},
+        "hourly": {k: {kk: round(vv, 5) for kk, vv in v.items()} for k, v in sorted(hourly.items())},
         "sessions": newest[:25],
         "context": context_stats(idx, sess, by),
         "chats": chats(),
