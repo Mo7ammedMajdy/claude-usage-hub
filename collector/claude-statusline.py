@@ -3,14 +3,15 @@
 and the plan's limits.
 
 Reads the statusline JSON on stdin and this session's transcript (incrementally: each render
-only parses what was appended since the last one), plus two files claude-usage-sync keeps
-fresh — the official limits and the hub's learned rates. No network calls, so it stays fast.
+only parses what was appended since the last one), plus three files claude-usage-sync keeps
+fresh — the official limits, the hub's learned rates and how its last sync went. No network
+calls, so it stays fast.
 
 Wire it up in ~/.claude/settings.json:
     "statusLine": {"type": "command", "command": "/path/to/claude-statusline.py"}
 and, for the one loud nudge when the context gets deep, as a UserPromptSubmit hook with --hook.
 """
-import hashlib, json, os, sys, time, pathlib
+import bisect, hashlib, json, os, re, sys, time, pathlib
 from datetime import datetime, timedelta
 
 HOME = pathlib.Path.home()
@@ -18,6 +19,10 @@ CACHE_DIR = pathlib.Path(os.environ.get("XDG_CACHE_HOME") or HOME / ".cache") / 
 SCAN_DIR = CACHE_DIR / "statusline"
 WARN, DANGER = 70, 85          # context %: amber, then red + a nudge to /compact
 KEEP_S = 8 * 86400             # per-request records older than a week can't count toward anything
+STATE_VERSION = 2              # per-transcript state format; 2 added "turns"/"busy" (older state is re-read)
+TURNS = 10                     # "msgs left" averages this chat's last 10 finished messages
+SYNC_LAG = 15 * 60             # the collector syncs every 5 min at most: 15 min without one is a fault
+WIDTH = 120                    # columns the whole line should fit in
 
 # API $ per 1M tokens: (input, output, cache read). Same table as claude-usage-sync (see there).
 PRICE_VERSION = 2
@@ -61,15 +66,31 @@ def ts(s):
         return None
 
 
+def typed(r):
+    """A message the person sent: not a tool result, hook text, task notification, compact
+    summary or interrupt marker. Newer Claude Code labels the sender in `origin`."""
+    if r.get("isMeta") or r.get("isSidechain") or r.get("isCompactSummary"):
+        return False
+    if isinstance(r.get("origin"), dict):
+        return r["origin"].get("kind") == "human"
+    c = (r.get("message") or {}).get("content")
+    if isinstance(c, str):
+        return not c.startswith("<")
+    return any(isinstance(b, dict) and b.get("type") == "text" and not (b.get("text") or "").startswith("[Request interrupted")
+               for b in c or [])
+
+
 def scan(path):
     """Everything appended to one transcript since the last render, folded into a small state:
-    {off, reqs: {requestId: [t, family, x, r]}, ctx, ctx_est}. Kept per file under SCAN_DIR."""
+    {off, reqs: {requestId: [t, family, x, r]}, ctx, ctx_est, turns: [t of the last typed
+    messages], busy: the newest turn is still running}. Kept per file under SCAN_DIR."""
     SCAN_DIR.mkdir(parents=True, exist_ok=True)
     cf = SCAN_DIR / (hashlib.sha1(str(path).encode()).hexdigest()[:16] + ".json")
-    fresh = {"off": 0, "reqs": {}, "ctx": 0, "ctx_est": False, "pv": PRICE_VERSION}
+    fresh = {"off": 0, "reqs": {}, "ctx": 0, "ctx_est": False, "turns": [], "busy": False,
+             "pv": PRICE_VERSION, "v": STATE_VERSION}
     try:
         s = json.loads(cf.read_text())
-        if s.get("pv") != PRICE_VERSION:         # priced with an older table: read it again
+        if s.get("pv") != PRICE_VERSION or s.get("v") != STATE_VERSION:  # older table or format: read it again
             s = fresh
     except Exception:
         s = fresh
@@ -96,6 +117,11 @@ def scan(path):
             s["ctx"] = (r.get("compactMetadata") or {}).get("postTokens") or 0
             s["ctx_est"] = True
             continue
+        if r.get("type") == "user":
+            if typed(r):
+                s["turns"] = s["turns"][-TURNS:] + [ts(r.get("timestamp", "")) or time.time()]
+                s["busy"] = True
+            continue
         if r.get("type") != "assistant":
             continue
         msg = r.get("message") or {}
@@ -109,6 +135,9 @@ def scan(path):
         if not r.get("isSidechain"):
             s["ctx"] = u.get("input_tokens", 0) + u.get("cache_read_input_tokens", 0) + u.get("cache_creation_input_tokens", 0)
             s["ctx_est"] = False
+            # A reply that stops for anything but a tool call ends the turn; until then the
+            # newest turn's cost is still growing and would read as a cheap message.
+            s["busy"] = msg.get("stop_reason") in (None, "tool_use", "pause_turn")
     s["off"] += end
     cutoff = time.time() - KEEP_S
     s["reqs"] = {k: v for k, v in s["reqs"].items() if v[0] >= cutoff}
@@ -122,14 +151,15 @@ def scan(path):
 
 
 def session(transcript):
-    """(context tokens, context is provisional, per-request records incl. this chat's subagents)."""
+    """(context tokens, context is provisional, per-request records incl. this chat's subagents,
+    the main transcript's state)."""
     main = scan(transcript)
     reqs = dict(main["reqs"])
     sub = pathlib.Path(transcript).with_suffix("") / "subagents"
     if sub.is_dir():
         for f in sub.glob("*.jsonl"):
             reqs.update(scan(f)["reqs"])
-    return main["ctx"], main["ctx_est"], reqs
+    return main["ctx"], main["ctx_est"], reqs, main
 
 
 def window(inp, ctx):
@@ -170,6 +200,45 @@ def used(reqs, since, rate):
     return sum(m.get(fam, 1) * (a * x + b * r) for t, fam, x, r in reqs.values() if t >= since)
 
 
+def per_message(state, reqs, rate):
+    """% of the session one of this chat's recent messages cost, priced like used().
+
+    Counted per message the person typed, not per API call: one message sets off a whole tool
+    loop (and maybe subagents), and messages are what someone can decide to send or not. A
+    message's cost is everything this chat logged from it until the next one, subagents
+    included, averaged over the last TURNS finished messages. None when there is nothing to go on.
+    """
+    if not rate or rate.get("a") is None or not state.get("turns"):
+        return None
+    a, b, m = rate["a"], rate.get("b", rate["a"]), rate.get("m") or {}
+    starts = state["turns"]
+    cost = [0.0] * len(starts)
+    for t, fam, x, r in reqs.values():
+        if t >= starts[0]:
+            cost[bisect.bisect_right(starts, t) - 1] += m.get(fam, 1) * (a * x + b * r)
+    old = time.time() - KEEP_S     # requests that far back were dropped: those turns would look free
+    done = [c for c, t in zip(cost[:-1] if state.get("busy") else cost, starts) if t >= old][-TURNS:]
+    return sum(done) / len(done) if done else None
+
+
+def sync_warning():
+    """How long the collector hasn't reached the hub, once that is past SYNC_LAG. From the
+    status file it writes after every try; older collectors write none, so say nothing then."""
+    try:
+        d = json.loads((CACHE_DIR / "sync.json").read_text())
+    except Exception:
+        return ""
+    last = ts(d.get("last_ok") or "")
+    if last is None:               # failing and never got through: for how long is unknown
+        return f"{AMBER}⚠ not syncing{RESET}" if d.get("ok") is False else ""
+    lag = time.time() - last
+    if lag < SYNC_LAG:             # also covers a dead daemon: last_ok just stops moving
+        return ""
+    m = int(lag // 60)
+    dur = f"{m}m" if m < 60 else f"{m // 60}h{m % 60:02d}m" if m < 1440 else f"{m // 1440}d"
+    return f"{AMBER}⚠ not syncing {dur}{RESET}"
+
+
 def rates():
     try:
         return json.loads((CACHE_DIR / "rate.json").read_text())
@@ -194,7 +263,7 @@ def hook(inp):
     The statusline already carries the number all the time; this exists so a long session
     gets one loud nudge instead of quietly burning a window on re-read context.
     """
-    ctx, _, _ = session(inp.get("transcript_path") or "")
+    ctx, *_ = session(inp.get("transcript_path") or "")
     pct = round(100 * ctx / window(inp, ctx))
     if pct < DANGER:
         return
@@ -217,11 +286,12 @@ def main():
         return hook(inp)
 
     model = inp.get("model") or {}
-    name = model.get("display_name") or model.get("id") or "claude"
+    # "Opus 5.5 (1M context)" -> "Opus 5.5 (1M)": the whole line has to fit ~WIDTH columns.
+    name = (model.get("display_name") or model.get("id") or "claude").replace(" context)", ")")
     cwd = inp.get("workspace", {}).get("current_dir") or inp.get("cwd") or ""
     short = cwd.replace(str(HOME), "~")
 
-    ctx, provisional, reqs = session(inp.get("transcript_path") or "")
+    ctx, provisional, reqs, state = session(inp.get("transcript_path") or "")
     pct = round(100 * ctx / window(inp, ctx))
     colour = RED if pct >= DANGER else AMBER if pct >= WARN else GREY
     parts = [f"{BLUE}{short}{RESET}", f"{GREY}{name}{RESET}",
@@ -232,17 +302,36 @@ def main():
     five, week, stale, five_start, week_start = plan()
     rt = rates()
     mine5, mineW = used(reqs, five_start, rt.get("five")), used(reqs, week_start, rt.get("week"))
-    share = lambda v: "" if v is None else f" {DIM}(this chat ≈{v:.1f}){RESET}" if v >= 0.1 else f" {DIM}(this chat <0.1){RESET}"
+    # This chat's share of each limit, e.g. "(chat ≈3.2)"; whole points from 10 up (the rate isn't finer).
+    share = lambda v: "" if v is None else f" {DIM}(chat {'<0.1' if v < 0.1 else f'≈{v:.1f}' if v < 10 else f'≈{v:.0f}'}){RESET}"
     if five is not None:
         pc = RED if five >= 85 else AMBER if five >= 70 else GREY
         # Time until the session resets, e.g. "↻1h15m" (from the window's start + 5 h).
         left = None if five_start is None else five_start + 5 * 3600 - time.time()
         reset = "" if left is None or left <= 0 else f" {DIM}↻{int(left // 3600)}h{int(left % 3600 // 60):02d}m{RESET}" if left >= 3600 else f" {DIM}↻{int(left // 60)}m{RESET}"
         parts.append(f"{pc}session {'~' if stale else ''}{five}%{RESET}{reset}{share(mine5)}")
+        # How many more messages like this chat's recent ones fit in what the session has left,
+        # if nothing else used it. Rounded down: one that doesn't fully fit doesn't count.
+        per = per_message(state, reqs, rt.get("five"))
+        n = int((100 - five) / per) if per and five < 100 else None
+        if n is not None and n < 1000:   # past that it says nothing useful and costs width
+            mc = RED if n < 3 else AMBER if n < 10 else GREY
+            parts.append(f"{mc}{'<1 msg' if n < 1 else '~1 msg' if n == 1 else f'~{n} msgs'} left{RESET}")
     if week is not None:
         wc = RED if week >= 90 else AMBER if week >= 75 else GREY
         parts.append(f"{wc}week {week}%{RESET}{share(mineW)}")
+        wk = len(parts) - 1
+    warn = sync_warning()            # last, and only when something is wrong
+    if warn:
+        parts.append(warn)
 
+    # Too wide: give way in order of least use — the full path (it rarely changes), then this
+    # chat's share of the week (the session's share is the one that moves).
+    wide = lambda: len(re.sub(r"\x1b\[[0-9;]*m", "", " · ".join(parts))) > WIDTH
+    if wide():
+        parts[0] = f"{BLUE}{pathlib.PurePath(short).name or short}{RESET}"
+    if wide() and week is not None:
+        parts[wk] = f"{wc}week {week}%{RESET}"
     print(f" {DIM}·{RESET} ".join(parts))
 
 
