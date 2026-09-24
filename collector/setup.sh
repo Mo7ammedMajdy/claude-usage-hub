@@ -8,6 +8,7 @@
 # Options after the three arguments:
 #   --dry-run      only report; change nothing, open nothing
 #   --no-browser   skip the browser part (no tabs opened)
+#   --reassign     the laptop was set up for someone else and is now this person's
 #
 # Pieces:
 #   1. the sync daemon (systemd user service) that sends this laptop's Claude Code usage
@@ -21,7 +22,8 @@ HUB="${HUB_URL:-https://claude-usage-hub.vercel.app}"
 [ $# -ge 3 ] || { echo "usage: setup.sh <KEY> \"<device name>\" <person> [--dry-run] [--no-browser]"; exit 1; }
 KEY=$1 DEVICE=$2 PERSON=$3; shift 3
 DRY=0 BROWSER=1
-for a in "$@"; do case $a in --dry-run) DRY=1 ;; --no-browser) BROWSER=0 ;; esac; done
+REASSIGN=0
+for a in "$@"; do case $a in --dry-run) DRY=1 ;; --no-browser) BROWSER=0 ;; --reassign) REASSIGN=1 ;; esac; done
 
 BIN="$HOME/.local/bin"; CONF="$HOME/.config/claude-usage-sync"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
@@ -44,6 +46,13 @@ except Exception: print("")')
 [ -n "$who" ] || { echo "the hub rejected this key — ask for a fresh setup command"; exit 1; }
 [ "$who" != "*" ] || { echo "that's the hub's master key, not a personal one — ask for a personal setup command"; exit 1; }
 [ "$who" = "$PERSON" ] || todo "this key belongs to \"$who\", not \"$PERSON\" — usage will be filed under $who"
+# Someone else's command pasted on the wrong laptop would file this laptop's usage under them.
+was=$(sed -n 's/^HUB_PERSON=//p' "$CONF/env" 2>/dev/null)
+if [ -n "$was" ] && [ "$was" != "$PERSON" ] && [ $REASSIGN = 0 ]; then
+  echo "This laptop is already set up for $was ($(sed -n 's/^HUB_DEVICE=//p' "$CONF/env")). This command is for $PERSON: run it on $PERSON's laptop."
+  echo "(If this laptop really is $PERSON's now, run it again with --reassign at the end.)"
+  exit 1
+fi
 ok "hub reachable, key accepted ($who)"
 [ -d "$CLAUDE_DIR/projects" ] && ok "Claude Code logs found in ${CLAUDE_DIR/#$HOME/~}" \
   || todo "no Claude Code logs yet in ${CLAUDE_DIR/#$HOME/~} — the daemon will pick them up once Claude Code has run"
