@@ -126,7 +126,8 @@ recent() { [ -n "$(find "$1" -maxdepth 0 -mtime -30 2>/dev/null)" ]; }   # used 
 first()  { for b in "$@"; do command -v "$b" >/dev/null && { echo "$b"; return; }; done; }
 open_in() {  # browser-binary url
   if [ $DRY = 1 ] || [ $BROWSER = 0 ]; then say "would open in ${1:-default browser}: ${2%%#*}"; return; fi
-  if [ $GUI = 0 ]; then todo "open this in your browser: $2"; return; fi
+  # No screen to open it on: say where to go, but never print the key that rides in the link.
+  if [ $GUI = 0 ]; then case $2 in *"#key="*) todo "open ${2%%#*} in your browser and log in with your key" ;; *) todo "open this in your browser: $2" ;; esac; return; fi
   # $1 unquoted on purpose: it can be a multi-word launcher ("flatpak run org.mozilla.firefox").
   if [ -n "$1" ]; then nohup $1 "$2" >/dev/null 2>&1 & else nohup xdg-open "$2" >/dev/null 2>&1 & fi
   sleep 2

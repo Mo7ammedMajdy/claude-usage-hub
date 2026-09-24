@@ -10,3 +10,5 @@ userscript/build.py
 tools
 collector/*.md
 collector/__pycache__
+kit
+dist
