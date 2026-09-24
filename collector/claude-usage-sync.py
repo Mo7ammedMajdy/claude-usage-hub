@@ -12,11 +12,15 @@ optional HUB_CLAUDE_DIRS).
                                laptop is using Claude), within ~60 s of a dashboard
                                Refresh, and read the official % about once a minute
                                while busy (these readings are what the hub calibrates
-                               its estimates on)
+                               its estimates on). If the hub can't be reached it backs off
+                               (1, 2, 4, 8, then every 15 min), keeps the readings in
+                               ~/.cache/claude-usage/pending.jsonl until they're sent, and
+                               leaves its state in ~/.cache/claude-usage/sync.json
 """
 import glob, hashlib, json, os, re, signal, socket, sys, time, urllib.error, urllib.request
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 HOME = Path.home()
@@ -345,18 +349,24 @@ def notify(conf, off):
             pass
 
 
-def hub_windows(conf):
+class HubDown(Exception):
+    """A hub request failed (already logged), or the daemon is backing off and didn't send it."""
+
+
+def hub_windows(fetch):
     """When this laptop can't read the official limits, the hub still knows the current
     windows from the other laptops. Readings taken against those windows carry no % but still
     put this laptop's logged usage on the timeline the fit uses."""
     try:
-        o = post(conf, "/api/summary").get("official") or {}
+        o = fetch("/api/summary").get("official") or {}
         five, week = o.get("five") or {}, o.get("week") or {}
         if not five.get("resets_at") or datetime.fromisoformat(five["resets_at"]) <= datetime.now(timezone.utc):
             return None      # the hub's newest window has already ended: no better than guessing
         blank = lambda w: w.get("resets_at") and {"pct": None, "resets_at": w["resets_at"], "resets_exact": w.get("resets_exact")}
         return {"five_hour": blank(five), "seven_day": blank(week), "from_hub": True,
                 "scoped": [{**blank(x), "name": x.get("name")} for x in o.get("scoped") or [] if x.get("resets_at")]}
+    except HubDown:
+        return None          # already logged; the backoff decides when the hub is asked again
     except Exception as e:
         print(f"hub windows unavailable: {e}", file=sys.stderr, flush=True)
         return None
@@ -638,6 +648,109 @@ def post(conf, path, body=None):
         return json.loads(r.read().decode())
 
 
+# ---------------------------------------------------------------- hub outages
+# When the hub is down, or Vercel's bot protection answers in its place (403 and a "Security
+# Checkpoint" page), trying again every 30 s only adds to what tripped the protection. So a
+# failure backs off — 1, 2, 4, 8, then every 15 min, longer if the hub says so — and meanwhile
+# the readings wait on disk, since they are what the hub calibrates on and can't be retaken.
+BACKOFF_FIRST, BACKOFF_MAX, RETRY_AFTER_MAX = 60, 900, 3600
+PENDING = CACHE.with_name("pending.jsonl")   # readings not on the hub yet (one JSON per line)
+STATUS = CACHE.with_name("sync.json")        # the daemon's sync state, for the statusline
+PENDING_MAX = 3000       # ~50 h of busy readings; past that older ones are thinned to 90% (thin())
+BODY_MAX = 900_000       # one ingest request, snapshot + readings: stays under ~1 MB
+
+
+def backoff(fails, retry_after=0):
+    """Seconds to wait after the `fails`-th failure in a row."""
+    return max(min(BACKOFF_MAX, BACKOFF_FIRST * 2 ** (fails - 1)), min(retry_after, RETRY_AFTER_MAX))
+
+
+def hub_error(e):
+    """(short reason, seconds the hub asked us to wait) for a failed hub request."""
+    if not isinstance(e, urllib.error.HTTPError):
+        if isinstance(e, ValueError):
+            return f"hub sent something that isn't JSON: {str(e)[:80]}", 0
+        reason = getattr(e, "reason", None) or e
+        return f"hub unreachable: {type(reason).__name__}: {str(reason)[:80]}", 0
+    hdrs = e.headers or {}
+    ra = (hdrs.get("Retry-After") or "").strip()      # seconds, or an HTTP date
+    try:
+        wait = int(ra) if ra.isdigit() else (parsedate_to_datetime(ra) - datetime.now(timezone.utc)).total_seconds() if ra else 0
+    except Exception:
+        wait = 0
+    try:
+        body = e.read(8192)
+    except Exception:
+        body = b""
+    if hdrs.get("x-vercel-mitigated") or b"Security Checkpoint" in body:
+        return f"hub blocked by Vercel bot protection (HTTP {e.code} challenge)", max(0, wait)
+    try:
+        said = ": " + str(json.loads(body)["error"])[:80]    # the hub's own reason, e.g. 401 "bad key"
+    except Exception:
+        said = ""
+    return f"hub answered HTTP {e.code}{said}", max(0, wait)
+
+
+def write_atomic(path, text):
+    """Write a whole file and rename it into place, so a reader never sees half of it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text)
+    tmp.replace(path)
+
+
+def load_pending():
+    """Readings an earlier run took but couldn't send (a restart, a self-update, an outage)."""
+    out = []
+    try:
+        for line in PENDING.read_text().splitlines():
+            try:
+                s = json.loads(line)
+            except ValueError:
+                continue                 # a line cut short by a crash
+            if isinstance(s, dict) and s.get("t"):
+                out.append(s)
+    except OSError:
+        pass
+    return out
+
+
+def save_pending(rows):
+    """Rewrite the pending file with exactly `rows` (none left: no file)."""
+    try:
+        if rows:
+            write_atomic(PENDING, "".join(json.dumps(s) + "\n" for s in rows))
+        elif PENDING.exists():
+            PENDING.unlink()
+    except OSError as e:
+        print(f"couldn't save pending readings: {e}", file=sys.stderr, flush=True)
+
+
+def thin(rows, keep):
+    """Bound the pending readings to `keep` without losing what the fit learns from. The newest
+    half stays as is; in the older part every reading where an official % (or a window) changed
+    stays, and just enough of the others go, spread evenly. The hub's compact() does the same to
+    what it stores. Only if the changes alone don't fit do the oldest go."""
+    if len(rows) <= keep:
+        return rows
+    key = lambda s: tuple(s.get(k) for k in ("w5", "p5", "ww", "pwr", "wf", "pf"))
+    cut, need = len(rows) - keep // 2, len(rows) - keep
+    spare = [i for i in range(1, cut) if key(rows[i]) == key(rows[i - 1])]    # not a change
+    drop = set(spare) if need >= len(spare) else {spare[int((k + .5) * len(spare) / need)] for k in range(need)}
+    return [s for i, s in enumerate(rows) if i not in drop][-keep:]
+
+
+def newest(rows, budget):
+    """The newest readings that fit in one request (at least one); the rest wait for later syncs."""
+    n, size = 0, 0
+    for s in reversed(rows):
+        size += len(json.dumps(s)) + 2
+        if n and size > budget:
+            break
+        n += 1
+    return rows[len(rows) - n:]
+
+
 def windows_of(off, now):
     w5 = now - timedelta(hours=5)
     if off and (off.get("five_hour") or {}).get("resets_at"):
@@ -727,34 +840,132 @@ def main():
     for k in ("HUB_URL", "HUB_KEY", "HUB_DEVICE"):
         if not conf.get(k):
             sys.exit(f"missing {k} in {CONF}")
+    daemon = "--daemon" in sys.argv
     idx = LogIndex(claude_dirs(conf))
     idx.update()
-    state = {"pending": [], "last_sync": None, "last_read": None, "seen": idx.last_new, "synced_new": idx.last_new,
-             "checked": time.time() - UPDATE_EVERY + 600}
+    state = {"pending": [], "last_sync": None, "last_read": None, "off": None, "seen": idx.last_new,
+             "synced_new": idx.last_new, "checked": time.time() - UPDATE_EVERY + 600,
+             "fails": 0, "until": 0.0, "error": None, "ok": None, "last_try": None, "last_ok": None}
+    if daemon:
+        # Only the daemon keeps readings across runs: a one-off sync next to a running daemon
+        # must not send (or clear) the daemon's queue.
+        state["pending"] = load_pending()
+        if len(state["pending"]) > PENDING_MAX:
+            state["pending"] = thin(state["pending"], PENDING_MAX * 9 // 10)
+            save_pending(state["pending"])
+        if state["pending"]:
+            print(f"{len(state['pending'])} readings from an earlier run still to send", flush=True)
+        try:
+            state["last_ok"] = datetime.fromisoformat(json.loads(STATUS.read_text())["last_ok"])
+        except Exception:
+            pass
+
+    iso = lambda d: d and d.isoformat(timespec="seconds")
+
+    def status():
+        """Where the statusline finds the sync state. Don't rename fields: it reads exactly these."""
+        if not daemon:
+            return
+        try:
+            write_atomic(STATUS, json.dumps({
+                "ok": bool(state["ok"]), "last_ok": iso(state["last_ok"]), "last_try": iso(state["last_try"]),
+                "error": state["error"], "pending": len(state["pending"]),
+                "backoff_until": iso(datetime.fromtimestamp(state["until"], timezone.utc)) if backing_off() else None}))
+        except OSError:
+            pass
+
+    def backing_off():
+        return time.time() < state["until"]
+
+    def call(path, body=None):
+        """post(), except that nothing is sent while backing off, a failure starts (or extends)
+        the backoff and is logged once rather than on every try, and a success ends it."""
+        if backing_off():
+            raise HubDown(state["error"])
+        state["last_try"] = datetime.now(timezone.utc)
+        try:
+            res = post(conf, path, body)
+        except Exception as e:
+            why, wait = hub_error(e)
+            state["fails"] += 1
+            delay = backoff(state["fails"], wait)
+            state["until"] = time.time() + delay
+            if daemon and why != state["error"]:
+                print(f"{why}; backing off (next try in {delay:.0f} s, then up to every {BACKOFF_MAX / 60:g} min), "
+                      "readings are kept until it's back", file=sys.stderr, flush=True)
+            state.update(ok=False, error=why)
+            status()
+            raise HubDown(why) from None
+        if state["fails"]:
+            print(f"hub reachable again after {state['fails']} failed tr{'y' if state['fails'] == 1 else 'ies'}", flush=True)
+        state.update(ok=True, error=None, fails=0, until=0.0)
+        return res
+
+    def take(now, off):
+        """Queue a calibration reading; the daemon also appends it to the pending file."""
+        if not (off and (off.get("five_hour") or {}).get("resets_at")):
+            return
+        s = sample(idx, off, now)
+        state["pending"].append(s)
+        if not daemon:
+            return
+        if len(state["pending"]) > PENDING_MAX:
+            # Down to 90%, so a long outage rewrites the file every few hundred readings, not each one.
+            state["pending"] = thin(state["pending"], PENDING_MAX * 9 // 10)
+            save_pending(state["pending"])
+        else:
+            try:
+                PENDING.parent.mkdir(parents=True, exist_ok=True)
+                with open(PENDING, "a") as f:
+                    f.write(json.dumps(s) + "\n")
+            except OSError as e:
+                print(f"couldn't save a pending reading: {e}", file=sys.stderr, flush=True)
+        if state["last_try"]:
+            status()                 # keeps the statusline's pending count current during an outage
 
     def read(now):
-        """Official limits, or the hub's current windows (no %) when this laptop can't read them."""
+        """Official limits, or the hub's current windows (no %) when this laptop can't read them;
+        either way a calibration reading goes into the queue."""
         off = official(idx.dirs)
         notify(conf, off)
-        return off or hub_windows(conf)
+        if not off and not backing_off():
+            off = hub_windows(call)
+        state.update(off=off, last_read=now, seen=idx.last_new)
+        take(now, off)
+        return off
 
     def sync(now):
-        off = read(now)
-        if off and (off.get("five_hour") or {}).get("resets_at"):
-            state["pending"].append(sample(idx, off, now))
-        res = post(conf, "/api/ingest", snapshot(conf, idx, off, now, state["pending"][-200:]))
+        # At most one official read per SAMPLE_EVERY, however often a sync is tried: retries
+        # while the hub is down mustn't turn into extra calls to Anthropic.
+        if state["last_read"] is None or (now - state["last_read"]).total_seconds() >= SAMPLE_EVERY:
+            read(now)
+        snap = snapshot(conf, idx, state["off"], now, [])
+        batch = snap["samples"] = newest(state["pending"], BODY_MAX - len(json.dumps(snap)))
+        res = call("/api/ingest", snap)
+        # Landed: those leave the queue; older ones that didn't fit in the request go next sync.
+        state["pending"] = state["pending"][:len(state["pending"]) - len(batch)]
+        state.update(last_sync=now, last_ok=now, synced_new=idx.last_new)
+        if daemon:
+            save_pending(state["pending"])
+            status()
         if isinstance(res, dict) and res.get("rate"):
             cache_rate(res.pop("rate"))
         if isinstance(res, dict) and res.get("reprice"):
             # The hub holds readings priced with an older table: send them again, repriced.
             todo = res.pop("reprice")
-            done = post(conf, "/api/reprice", {"device": conf["HUB_DEVICE"], "pv": PRICE_VERSION, "rows": reprice(idx, todo)})
-            res["repriced"] = done.get("updated") if isinstance(done, dict) else done
-        print(now.isoformat(timespec="seconds"), res, flush=True)
-        state.update(pending=[], last_sync=now, last_read=now, seen=idx.last_new, synced_new=idx.last_new)
+            try:
+                done = call("/api/reprice", {"device": conf["HUB_DEVICE"], "pv": PRICE_VERSION, "rows": reprice(idx, todo)})
+                res["repriced"] = done.get("updated") if isinstance(done, dict) else done
+            except HubDown as e:
+                res["repriced"] = f"failed ({e}), the hub asks again next sync"
+        left = [f"({len(state['pending'])} older readings go next sync)"] if state["pending"] else []
+        print(now.isoformat(timespec="seconds"), res, *left, flush=True)
 
-    if "--daemon" not in sys.argv:
-        sync(datetime.now(timezone.utc))
+    if not daemon:
+        try:
+            sync(datetime.now(timezone.utc))
+        except HubDown as e:
+            sys.exit(f"sync failed: {e}")
         return
 
     def on_term(*_):  # systemctl stop/restart: push the readings taken since the last sync first
@@ -766,31 +977,35 @@ def main():
             idx.update()
             since = None if state["last_sync"] is None else (now - state["last_sync"]).total_seconds()
             busy = idx.last_new > state["synced_new"]      # new Claude calls logged since the last sync
-            due = since is None or since >= SYNC_EVERY or (busy and since >= BUSY_SYNC_EVERY)
-            if not due and time.time() - state.get("polled", 0) >= REFRESH_POLL:
+            # Readings left over from a batch that didn't fit go at the busy pace too.
+            due = since is None or since >= SYNC_EVERY or ((busy or bool(state["pending"])) and since >= BUSY_SYNC_EVERY)
+            if backing_off():
+                pass                 # no syncs and no Refresh polls until it ends; readings go on
+            elif not due and time.time() - state.get("polled", 0) >= REFRESH_POLL:
                 state["polled"] = time.time()
-                asked = post(conf, "/api/refresh").get("requested_at")
+                asked = call("/api/refresh").get("requested_at")
+                status()
                 due = bool(asked) and ts(asked) > state["last_sync"]
-            if due:
+            if due and not backing_off():
                 sync(now)
                 if time.time() - state["checked"] >= UPDATE_EVERY:
                     state["checked"] = time.time()
-                    if self_update(conf):   # nothing pending right after a sync: restart into it
+                    if self_update(conf):   # anything still pending is on disk: restart into it
                         os.execv(sys.executable, [sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
-            elif idx.last_new > state["seen"] and (now - state["last_read"]).total_seconds() >= SAMPLE_EVERY:
-                # This laptop is busy: take an extra official reading for calibration.
-                off = read(now)
-                if off and (off.get("five_hour") or {}).get("resets_at"):
-                    state["pending"].append(sample(idx, off, now))
-                state.update(last_read=now, seen=idx.last_new)
+            elif idx.last_new > state["seen"] and (state["last_read"] is None or
+                                                   (now - state["last_read"]).total_seconds() >= SAMPLE_EVERY):
+                read(now)            # this laptop is busy: an extra official reading for calibration
+        except HubDown:
+            pass                     # logged once by call(); the backoff decides when to try again
         except SystemExit:
-            if state["pending"]:
+            # The readings are on disk either way; send them now unless the hub is backing off.
+            if state["pending"] and not backing_off():
                 try:
                     sync(datetime.now(timezone.utc))
                 except Exception as e:
                     print(f"final sync failed: {e}", file=sys.stderr, flush=True)
             raise
-        except Exception as e:  # network blips: keep the daemon alive
+        except Exception as e:  # anything else: keep the daemon alive
             print(f"sync failed: {e}", file=sys.stderr, flush=True)
         time.sleep(POLL_EVERY)
 
