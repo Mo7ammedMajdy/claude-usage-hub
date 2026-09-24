@@ -1,7 +1,8 @@
 import { viewer, redis, slug, family, plain, num, pct, id, text, when, day, bool, list, obj, map } from "./_lib.js";
 import { fitDevices } from "./_fit.js";
 import { freshestOfficial, split } from "./_split.js";
-import { forecastWeek, weekHours } from "./_forecast.js";
+import { averageForecast, forecastWeek, weekHours } from "./_forecast.js";
+import { unloggedPath } from "./_unlogged.js";
 export { combine } from "./_combine.js";
 
 // Calibration readings are stored per device as compact arrays in this field order.
@@ -14,7 +15,7 @@ const SAMPLES_MAX = 4000;         // per device, hard cap; compact() keeps lists
 const COMPACT_AT = 2500;          // a laptop's list is compacted (at its own refit) past this
 const FIT_EVERY_MS = 15 * 60e3;   // refitting reads every device's readings, so not on every sync
 const LINE_MAX = 4000;            // ~2 days even with busy 2-minute syncs; /api/state sends a thinned 26 h
-const SAMPLES_PER_POST = 500;     // the collector sends at most 200 (its pending list is capped there)
+const SAMPLES_PER_POST = 3000;    // after an outage the collector catches up in batches of up to ~900 KB
 const SKEW_MS = 10 * 60e3;        // how far a laptop's clock may be off the hub's
 const SPAN_MS = 8 * 864e5;        // reset times and readings further than this from now are nonsense
 
@@ -37,10 +38,13 @@ const session = obj({ id: id(16), title: text(200), project: text(100), platform
   agents: list(obj({ id: id(16), type: text(60), desc: text(200), parent: id(40), depth: n0, calls: n0, x: usd, r: usd,
     tokens: n0, models: list(id(60), 10), first: when, last: when }), 25),
   ctx_max: n0, ctx_last: n0, ctx_avg: n0, recent: stat,
+  // collector v4.1: this week's part of the session per model, and what one typed prompt costs
+  week_models: map(id(60), obj({ x: usd, r: usd }), 20),
+  recent_prompt: obj({ prompts: n0, x: usd, r: usd, fam: map(id(20), obj({ x: usd, r: usd }), 10) }),
   compactions: list(obj({ t: when, trigger: id(20), pre: n0, post: n0 }), 50) });
 export const cleanSnapshot = obj({ person: text(40), host: text(60), sent_at: when, version: num(0, 1e3), pv: num(1, 99),
   official_error: text(300), windows_from_hub: bool, account: id(16), window_start: when, week_start: when,
-  last_activity: when, window: totals, week: totals, hourly: map(when, obj({ x: usd, r: usd }), 400), sessions: list(session, 40) });
+  last_activity: when, window: totals, week: totals, hourly: map(when, obj({ x: usd, r: usd, xf: usd, rf: usd }), 400), sessions: list(session, 40) });
 export const cleanDetail = obj({
   daily: map(day, obj({ models: map(id(60), list(n0, 5, true), 40), hours: list(n0, 24, true), msgs: n0, sessions: n0 }), 3000),
   context: obj({ buckets: list(obj({ lo: n0, hi: n0, calls: n0, x: usd, r: usd, by_fam: map(id(20), list(n0, 3, true), 10) }), 20),
@@ -105,13 +109,19 @@ export function compact(list, now = Date.now()) {
 export async function refit(names, own = null) {
   const q = redis.pipeline();
   for (const n of names) q.lrange(`ds:${n}`, 0, -1);
-  q.hgetall("devices").get("week:current").get("forecast:ignore");
+  q.hgetall("devices").get("week:current").get("forecast:ignore").get("fit");
   const got = await q.exec();
-  const lists = got.slice(0, names.length), [all, current, ignore] = got.slice(names.length);
+  const lists = got.slice(0, names.length), [all, current, ignoreRaw, prevFitRaw] = got.slice(names.length);
+  const ignore = parse(ignoreRaw) || [], prevFit = parse(prevFitRaw);
   const perDevice = Object.fromEntries(names.map((n, i) => [n, readings(lists[i])]));
-  const fit = fitDevices(perDevice);
-  fit.week_hours = weekHours(perDevice, Date.now(), parse(ignore) || []);   // recent official pace, for the forecast
-  fit.fable_hours = weekHours(perDevice, Date.now(), parse(ignore) || [], "pf", "wf");
+  // φ carries over from fit to fit: once the Fable-heavy windows are gone, the last learned value
+  // is the prior (not a hard-coded 3), and an unlearned one isn't passed off as learned.
+  const pf = prevFit?.five, phiPrior = pf?.phi_learned ? pf.phi : pf?.phi_prior;
+  const fit = fitDevices(perDevice, phiPrior ? { phiPrior } : {});
+  fit.week_hours = weekHours(perDevice, Date.now(), ignore);   // recent official pace, for the forecast
+  fit.fable_hours = weekHours(perDevice, Date.now(), ignore, "pf", "wf");
+  // Live: how much of the running session no synced laptop logged (claude.ai, another computer).
+  try { fit.unlogged = unloggedPath(perDevice, fit); } catch (e) { console.error("unlogged path failed:", e); }
   const w = redis.pipeline().set("fit", fit);
   if (own && perDevice[own]?.length > COMPACT_AT) {
     const kept = compact(perDevice[own]);
@@ -126,16 +136,20 @@ export async function refit(names, own = null) {
     const { people, elsewhere } = split(devices, fit, off);
     const prev = parse(current);
     const rolled = prev?.id && Math.abs(Date.parse(prev.id) - Date.parse(id)) > 36e5;
-    if (rolled) w.rpush("weeks", JSON.stringify(prev)).ltrim("weeks", -60, -1);
+    // Two refits racing at the reset would both see the rollover: archive each week once.
+    if (rolled && await redis.set(`week:archived:${prev.id}`, 1, { nx: true, ex: 60 * 86400 }))
+      w.rpush("weeks", JSON.stringify(prev)).ltrim("weeks", -60, -1);
     // Forecast track record: what the forecast said, every 6 h, kept with the week so it can be
     // scored against the week's end. `avg` is what the old average-pace method would have said.
     const forecasts = rolled || !prev ? [] : prev.forecasts || [];
     const fc = forecastWeek(off.seven_day, fit.week_hours);
     const last = forecasts[forecasts.length - 1];
     if (fc && !fc.early && fc.expected != null && (!last || Date.now() - Date.parse(last.at) >= 6 * 36e5)) {
-      const elapsed = Math.max(1, 168 - fc.left_h);
+      // the old method with the same one-off handling, so the comparison is like for like
+      const same = Object.values(perDevice).flat().filter((s) => s.pwr != null && s.ww && Math.abs(Date.parse(s.ww) - Date.parse(id)) < 10 * 60e3)
+        .sort((a, b) => a.t.localeCompare(b.t));
       forecasts.push({ at: new Date().toISOString(), pct: fc.pct, expected: +fc.expected.toFixed(1), lo: +fc.lo.toFixed(1), hi: +fc.hi.toFixed(1),
-        p: fc.p_limit, avg: +Math.min(200, fc.pct + (fc.pct / elapsed) * fc.left_h).toFixed(1) });
+        p: fc.p_limit, avg: +averageForecast(same, fc.pct, Date.now(), Date.parse(id), ignore).toFixed(1) });
     }
     w.set("week:current", JSON.stringify({ id, at: new Date().toISOString(), week: off.seven_day.pct, forecasts,
       fable: (off.scoped || []).find((x) => /fable/i.test(x.name))?.pct ?? null,
@@ -214,8 +228,11 @@ export default async function handler(req, res) {
 
   // Refit on a schedule (or right away if there's no fit yet). The sync above is already stored,
   // so a fit that throws is logged and retried at the next sync instead of failing this one.
-  if (!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) {
+  // One refit at a time: two laptops syncing together would otherwise both refit (double the
+  // CPU, and both could archive the week at a reset).
+  if ((!fit?.at || Date.now() - new Date(fit.at) > FIT_EVERY_MS) && await redis.set("fit:lock", device, { nx: true, ex: 60 })) {
     try { await refit(names, device); } catch (e) { console.error("refit failed:", e); }
+    finally { await redis.del("fit:lock"); }
   }
   // This laptop now prices usage with a newer table than its stored readings were: ask it to
   // reprice them from its logs (it answers at /api/reprice), so old and new readings agree.

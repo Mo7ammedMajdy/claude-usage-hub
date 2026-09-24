@@ -36,5 +36,7 @@ export default async function handler(req, res) {
     model: { five: fit?.five || empty, week: fit?.week || empty, fable: fit?.fable || empty, devices: fit?.devices || {} },
     // Past 5-hour windows: final official % and each laptop's estimated share (from the fit).
     windows5: fit?.windows5 || [],
+    // Live: the running session's usage that no synced laptop logged (api/_unlogged.js).
+    unlogged: fit?.unlogged || null,
   });
 }

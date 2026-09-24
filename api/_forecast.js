@@ -123,3 +123,20 @@ export function forecastWeek(lim, profile, now = Date.now(), pace = pace30) {
     runs_out_at: runOut != null && runOut < reset && pct < 100 ? new Date(runOut).toISOString() : null, days: days.length,
     skipped: profile?.skipped || [], thin };
 }
+
+/** The old average-pace forecast, for the track record's like-for-like comparison: the week's %
+ *  over the hours elapsed, with the ignored stretches' rise and hours taken out the same way the
+ *  new pace leaves them out (tools/forecast-lib.mjs has the same function for the replays).
+ *  `same`: readings of this week, each {t, pwr}, oldest first. */
+export function averageForecast(same, pct, t, reset, ignore = []) {
+  const start = reset - 168 * H, left = Math.max(0, (reset - t) / H);
+  const at = (x) => { let p = null; for (const s of same) if (Date.parse(s.t) <= x) p = s.pwr; return p ?? 0; };
+  let rise = 0, hours = 0;
+  for (const g of ignore || []) {
+    const a = Math.max(start, Date.parse(g.from)), b = Math.min(t, Date.parse(g.to));
+    if (b <= a) continue;
+    rise += at(b) - (a <= start ? 0 : at(a)); hours += (b - a) / H;
+  }
+  const elapsed = Math.max(1, (t - start) / H - hours);
+  return Math.min(200, pct + (Math.max(0, pct - rise) / elapsed) * left);
+}

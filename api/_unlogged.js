@@ -3,14 +3,14 @@
 // the path itself is returned so the dashboard can say "+6 points in the last 60 min that
 // no synced laptop logged" (claude.ai, Claude Code on another machine).
 // Same rules as cost(): O starts wherever the first reading puts it, only moves when a
-// reading's band forces it, and the lag allowance (LAG readings either side) keeps a call
+// reading's band forces it, and the lag allowance (±5 min, lagIndex() in _fit.js) keeps a call
 // that is logged a little before or after Anthropic counts it from showing up as a bump.
 // Caveat: O also rises when a laptop's logs arrive late (it was offline, or its collector
 // stalled) and Anthropic already counted the use. `synced` says whether every laptop has
 // reported within `staleMs`; when it is false, treat a rise as "unknown" not "someone else".
 import { canonical, combine } from "./_combine.js";
+import { lagIndex } from "./_fit.js";
 
-const LAG = 2;                        // same as _fit.js
 const STALE_MS = 10 * 60e3;           // a laptop silent longer than this may have unsent logs
 const KEYS = ["x5", "r5", "x5f", "r5f", "x5l", "r5l"];
 
@@ -35,11 +35,12 @@ export function unloggedPath(readings, fit, { window = null, now = Date.now(), s
   if (!all.length) return null;
   const pv = all[all.length - 1].pv || 1, R = all.filter((s) => (s.pv || 1) === pv);
   const n = R.length, uLo = R.map((s) => U(s.lo, f)), uHi = R.map((s) => U(s.hi, f));
+  const { fwd, back } = lagIndex(R.map((s) => Date.parse(s.t)));     // the same lag as the fit
   const points = [];
   let O = null;
   for (let t = 0; t < n; t++) {
-    const L = R[t].p5 - f.a * uHi[Math.min(n - 1, t + LAG)];
-    const H = R[t].p5 + 1 - f.a * uLo[Math.max(0, t - LAG)];
+    const L = R[t].p5 - f.a * uHi[fwd[t]];
+    const H = R[t].p5 + 1 - f.a * uLo[back[t]];
     if (O === null) O = Math.max(0, L);
     else if (O < L) O = L; else if (O > H) O = Math.max(0, H);   // never below 0: it is usage
     points.push({ t: R[t].t, O: +O.toFixed(2), p: R[t].p5, logged: +(f.a * uLo[t]).toFixed(2) });

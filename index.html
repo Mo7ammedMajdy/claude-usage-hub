@@ -630,7 +630,7 @@ function drawHeadline(src) {
     sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}.${chance} Recent pace: ${num(f.per_day_recent).toFixed(1)}% a day (last 3 days, the newest counting most); ` +
       (f.left_h < 24 ? `${Math.round(100 - w.pct)}% is left for the last ${Math.max(1, Math.round(f.left_h))} h.`
         : `you can use up to ${num(f.budget_per_day).toFixed(0)}% a day and still reach the reset.`) +
-      (f.skipped?.length ? ` Left out as one-offs: ${f.skipped.join(", ")}.` : "");
+      (f.skipped?.length ? ` Left out of the recent pace as one-offs (still counted as possible busy days): ${f.skipped.map(esc).join(", ")}.` : "");
   } else if (p.early) H.textContent = `A new week started ${p.elapsedH < 1 ? "less than an hour" : `${Math.round(p.elapsedH)} h`} ago: ${Math.round(w.pct)}% used so far. It resets ${resetAt}.`;
   else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${reset_s} reset.`;
   else H.textContent = `You're on track. At this pace you'll have used about ${Math.min(99, Math.round(p.projected))}% of the week when it resets ${resetAt}.`;
@@ -694,7 +694,12 @@ function drawLimits(src) {
   // Same wording as the headline: "Resets tomorrow 4:00 AM · in 9 h 12 min".
   const resetLine = (lim) => !lim?.resets_at ? "" :
     `Resets ${dayWord(resetOf(lim))} ${fmt.clock(resetOf(lim))} <span class="faint">· in ${fmt.until(resetOf(lim))}</span>`;
-  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour) +
+  // Live: the running session's usage no synced laptop logged, over the last hour (api/_unlogged.js).
+  const u = state.unlogged, cur = o.five_hour && u && Math.abs(Date.parse(u.window) - Date.parse(o.five_hour.resets_at)) < 10 * 60e3;
+  const unl = !cur ? "" : `<div class="lrow child"><div class="lbl">Not synced, last hour<span class="est">est.</span><div class="sub">${
+    u.synced ? "claude.ai, or Claude Code on another computer" : `unsure: ${esc(u.stale.map((dv) => name(state.devices.find((x) => x.device === dv) || { label: dv })).join(", "))} hasn't synced in 10 min`}</div></div>
+    ${bar(Math.max(0, num(u.last60)))}<div class="pct num">${u.last60 >= 0.5 ? `+${Math.max(0, num(u.last60)).toFixed(1)} pts` : "none"}</div></div>`;
+  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour) + unl +
     limitRow("This week", resetLine(o.seven_day), o.seven_day) +
     (o.scoped || []).map((s) => limitRow(`${s.name} this week`, resetLine(s), s) + scopedSplit(s)).join("") ||
     '<p class="muted">No official limits yet.</p>';
@@ -764,6 +769,7 @@ function drawPeople(src) {
   const fitRow = (label, f, withWeights, unit = "Opus") => `<tr><td>${label}</td>` + (!f || f.a == null
     ? `<td class="calib">calibrating</td><td>needs the official % to rise ${need(f)} while a laptop is in use</td>`
     : `<td>±${num(f.err)}%</td><td>${f.err_measured ? `± is the typical miss in ${num(f.check?.clean)} past windows, checked against the official % (${num(f.check?.unlogged)} more had use no laptop logged) · ` : ""}` +
+      (f.from_sessions ? `a week ≈ ${num(f.sessions_per_week).toFixed(1)} sessions${rng(f.sessions_per_week_range)}, measured from ${num(f.sessions_per_week_from?.windows)} session windows against the week's own rise · ` : "") +
       `1 API-$ of ${unit} ≈ ${rate(f.a)}% of the limit${f.a_range ? ` (${rate(f.a_range[0])}–${rate(f.a_range[1])})` : ""}` +
       ` · ${num(f.n)} reading${f.n === 1 ? "" : "s"}${f.windows ? ` over ${num(f.windows)} window${f.windows === 1 ? "" : "s"}` : ""}` +
       (!withWeights || f.rho == null ? "" : ` · cached reads count ${num(f.rho)}×${rng(f.rho_range)} their API price`) +
@@ -1029,7 +1035,16 @@ function drawBars() {
   svg.setAttribute("aria-label", `Estimated hourly usage per laptop over the last ${N} hours, as % of the weekly limit`);
   const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() - N + 1);
   const hours = [...Array(N)].map((_, i) => new Date(+start + i * 36e5));
-  const val = (d, h) => { const k = Object.keys(d.hourly || {}).find((k) => +new Date(k) === +h); return k ? estFlat(d.hourly[k], "week", d) || 0 : 0; };
+  // Newer collectors split each hour's Fable out; price it at Fable's weight, the rest at Opus's.
+  const val = (d, h) => {
+    const k = Object.keys(d.hourly || {}).find((k) => +new Date(k) === +h), u = k && d.hourly[k];
+    if (!u) return 0;
+    if (u.xf == null) return estFlat(u, "week", d) || 0;
+    const f = fitOf("week");
+    if (f?.a == null) return 0;
+    const part = (m, x, r) => (f.m?.[m] ?? 1) * (f.a * x + (f.b ?? f.a) * r);
+    return part("opus", Math.max(0, (u.x || 0) - u.xf), Math.max(0, (u.r || 0) - (u.rf || 0))) + part("fable", u.xf || 0, u.rf || 0);
+  };
   const stacks = hours.map((h) => devs.map((d) => val(d, h)));
   const max = Math.max(0.2, ...stacks.map((s) => s.reduce((a, b) => a + b, 0)));
   const bw = (W - P - 8) / N;
@@ -1106,7 +1121,7 @@ function drawSessions() {
         <td class="wrap"><button type="button" class="rowbtn" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}</button><div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
         <td class="small">${shortModel(s.current_model || (Array.isArray(s.models) ? s.models[s.models.length - 1] : s.models && Object.keys(s.models)[0]))}</td>
         <td class="n">${num(s.calls)}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${num((s.compactions || []).length) || "–"}</td>
-        <td class="n">${num((s.agents || []).length) || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(estFlat(s, "week", s.d))}</td></tr>` +
+        <td class="n">${num((s.agents || []).length) || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(s.week_models ? estModels(s.week_models, "week") : estFlat(s, "week", s.d))}</td></tr>` +
         (open ? `<tr class="sdrow"><td colspan="9"><div class="sdetail" style="--vis:${vis}">${sessionDetail(s)}</div></td></tr>` : "");
     }).join("") + (rows.length ? "" : `<tr><td colspan="9" class="muted">No sessions yet</td></tr>`);
   $("sessionsMore").innerHTML = [
@@ -1162,7 +1177,11 @@ function drawContext() {
   const rows = open.map((s) => {
     if (!s.recent) return `<tr><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}</td><td class="wrap">${esc(s.title || s.project)}</td>
       <td colspan="6" class="muted small">needs the updated sync on this laptop</td></tr>`;
-    const now = cost(s.recent, s.recent.model), ac = afterCompact(s.d, s.recent.model), after = cost(ac, s.recent.model);
+    // What one typed message costs, subagents included (newer collectors: last 5 messages);
+    // older ones only know an average API call, which understates a message ~3×.
+    const rp = s.recent_prompt, perPrompt = rp && f5?.a != null
+      ? Object.entries(rp.fam || {}).reduce((t, [fam, u]) => t + (f5.m?.[fam] ?? 1) * (f5.a * (u.x || 0) + (f5.b ?? f5.a) * (u.r || 0)), 0) : null;
+    const now = perPrompt || cost(s.recent, s.recent.model), ac = afterCompact(s.d, s.recent.model), after = cost(ac, s.recent.model);
     const left = now && left5 != null ? Math.floor(left5 / now) : null;
     const gain = now && after ? now / after : null;
     const advice = gain == null ? "–" : gain >= 2 ? `<b>${gain.toFixed(1)}× cheaper</b>` : gain >= 1.3 ? `${gain.toFixed(1)}× cheaper` : '<span class="muted">not worth it</span>';
@@ -1172,7 +1191,7 @@ function drawContext() {
       <td class="n">${pc(now)}</td><td class="n">${left == null ? "–" : left.toLocaleString()}</td>
       <td class="n">${pc(after)}</td><td class="n">${advice}</td></tr>`;
   }).join("");
-  $("ctxBody").innerHTML = `<p class="section-desc">Sessions used in the last 3 hours on either laptop. "Per message" is what one more message costs at the current context size (average of the last 10), as a share of the 5-hour session.</p>
+  $("ctxBody").innerHTML = `<p class="section-desc">Sessions used in the last 3 hours on either laptop. "Per message" is what one more typed message costs, tool calls and subagents included (average of the last 5), as a share of the 5-hour session.</p>
     <div class="scroll" style="margin-top:10px"><table><tr><th>Device</th><th>Session</th><th>Model</th><th class="n">Context</th><th class="n">Per message</th>
       <th class="n">Left*</th><th class="n">After /compact</th><th class="n">Compact now?</th></tr>
       ${rows || '<tr><td colspan="8" class="muted">No sessions in the last 3 hours.</td></tr>'}</table></div>
