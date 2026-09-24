@@ -196,7 +196,9 @@
   tr.sdrow > td { padding: 0; }
   /* The detail sits in a cell as wide as the whole table; it is pinned to the visible
      width instead, so it never scrolls sideways with the table. */
-  .sdetail { position: sticky; left: 0; width: var(--vis, 100%); padding: 6px 0 16px 22px; }
+  .sdetail { position: sticky; left: 0; width: var(--vis, 100%); padding: 6px 0 16px 22px; white-space: normal; }
+  /* Lists of events wrap between items, never inside one. */
+  .sdetail .it { white-space: nowrap; }
   .sdetail table { margin-top: 4px; }
   .sdetail th, .sdetail td { white-space: normal; }
   .sdetail td { overflow-wrap: anywhere; }
@@ -222,6 +224,8 @@
     #wins .win-end { display: none; }     /* every session is 5 h: the start time is enough */
     #wins .tag { display: none; }         /* the newest row is on top anyway; the tag made it scroll */
     #ovDev .full { display: none; } #ovDev .short { display: inline; }
+    /* The laptop is just its colour dot, so the ~% column fits without scrolling. */
+    #sessions .dname { display: none; } #sessions > tbody > tr > :first-child { padding-right: 0; }
     th, td { padding-left: 6px; padding-right: 6px; }
   }
 </style>
@@ -1115,9 +1119,9 @@ function sessionDetail(s) {
   const agents = (s.agents || []).map((a) => `<tr><td>${esc(a.type || "agent")}${a.desc ? `<div class="sub">${esc(a.desc)}</div>` : ""}</td>
       <td class="small">${(a.models || []).map(shortModel).join(", ")}${a.depth > 1 ? ` <span class="muted">· depth ${num(a.depth)}</span>` : ""}</td>
       <td class="n">${num(a.calls)}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(est({ ...a, model: (a.models || [])[0] }))}</td></tr>`).join("");
-  const changes = (s.changes || []).map((c) => `${fmt.time(c.t)} → ${shortModel(c.model)}`).join(" · ");
-  const sw = (s.switches || []).map((c) => `${fmt.time(c.t)}: /model → ${esc(c.to)}`).join(" · ");
-  const comps = (s.compactions || []).map((c) => `${fmt.time(c.t)} (${esc(c.trigger || "?")}): ${ktok(c.pre)} → ${ktok(c.post)}`).join(" · ");
+  const changes = (s.changes || []).map((c) => `<span class="it">${fmt.time(c.t)} → ${shortModel(c.model)}</span>`).join(" · ");
+  const sw = (s.switches || []).map((c) => `<span class="it">${fmt.time(c.t)}: /model → ${esc(c.to)}</span>`).join(" · ");
+  const comps = (s.compactions || []).map((c) => `<span class="it">${fmt.time(c.t)} (${esc(c.trigger || "?")}): ${ktok(c.pre)} → ${ktok(c.post)}</span>`).join(" · ");
   return `<div class="sgrid">
       <div><div class="k">Models used</div><table>${mrows}</table></div>
       <div><div class="k">Context window</div><div class="small">max ${ktok(s.ctx_max)} · average ${ktok(s.ctx_avg)} · now ${ktok(s.ctx_last)}</div>
@@ -1134,10 +1138,10 @@ function drawSessions() {
   const total = Math.min(rows.length, 25);
   rows = rows.slice(0, longSessions ? 25 : SESSIONS_SHORT);
   const vis = `${$("sessions").parentElement.clientWidth}px`;
-  $("sessions").innerHTML = `<tr><th>Device</th><th>Session</th><th>Model now</th><th class="n">Calls</th><th class="n">Context</th><th class="n">Compacts</th><th class="n">Agents</th><th>Last active</th><th class="n">~% of week</th></tr>` +
+  $("sessions").innerHTML = `<tr><th><span class="dname">Device</span></th><th>Session</th><th>Model now</th><th class="n">Calls</th><th class="n">Context</th><th class="n">Compacts</th><th class="n">Agents</th><th>Last active</th><th class="n">~% of week</th></tr>` +
     rows.map((s) => {
       const k = s.d.device + ":" + s.id, open = openSessions.has(k);
-      return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}</td>
+      return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td title="${esc(name(s.d))}"><span class="dot" style="background:${s.d.color}"></span><span class="dname">${esc(name(s.d))}</span></td>
         <td class="wrap"><button type="button" class="rowbtn" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}</button><div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
         <td class="small">${shortModel(s.current_model || (Array.isArray(s.models) ? s.models[s.models.length - 1] : s.models && Object.keys(s.models)[0]))}</td>
         <td class="n">${num(s.calls)}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${num((s.compactions || []).length) || "–"}</td>
