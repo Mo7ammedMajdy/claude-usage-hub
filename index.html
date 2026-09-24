@@ -68,12 +68,20 @@
   .btn svg { width: 15px; height: 15px; }
   .spin svg { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .seg { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 1px; font-family: var(--sans); }
+  /* Refresh sits beside "Last updated" as a quiet icon; it spins while the laptops answer. */
+  .head-right { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .iconbtn { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; padding: 0; }
+  .iconbtn:hover { background: var(--hover); color: var(--text); }
+  .iconbtn[disabled] { cursor: default; color: var(--text); }
+  .iconbtn svg { width: 15px; height: 15px; }
+  :is(.iconbtn, .seg button, .rowbtn, .linkbtn):focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+  /* max-width + scroll: three long laptop names otherwise push a 375 px phone page sideways. */
+  .seg { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 1px; font-family: var(--sans); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .seg button { background: none; border: 0; border-radius: 6px; color: var(--muted); padding: 4px 11px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; }
   .seg button:hover { color: var(--text); }
   .seg button.on { background: var(--active); color: #fff; }
   .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .toolbar .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .toolbar .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 
   /* Limit / product rows --------------------------------------------------- */
   .lrow { display: grid; grid-template-columns: minmax(0, 290px) 1fr 84px; gap: 8px 24px; align-items: center; padding: 14px 0; }
@@ -96,6 +104,8 @@
   .tag.live { color: #7fc39a; background: #1f3327; }
   .tag.stale { color: #d29a85; background: #362620; }
   .est { color: var(--faint); font-family: var(--sans); font-size: 11.5px; margin-left: 5px; }
+  /* "Not synced" carries its explanation as a tooltip; the dotted underline says there is one. */
+  .ns { text-decoration: underline dotted var(--faint); text-underline-offset: 3px; cursor: help; }
   .calib { color: var(--muted); }
 
   /* Tables ----------------------------------------------------------------- */
@@ -127,7 +137,8 @@
   /* Stats, heatmap, charts ------------------------------------------------- */
   .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
   .stat { background: var(--raised); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-  .stat div:first-child { color: var(--faint); font-family: var(--sans); font-size: 12.5px; }
+  /* Lighter than --faint: small text on the raised tile needs 4.5:1 (this is ~5.4:1). */
+  .stat div:first-child { color: #9a9993; font-family: var(--sans); font-size: 12.5px; }
   .stat div:last-child { font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* The Overview/Models card keeps the Claude app's own card width, so the heatmap is
      always 26 weeks × 7 days of 16 px cells with 3 px gaps, filling the card exactly. */
@@ -154,8 +165,9 @@
   .cols table td:first-child { max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
 
   /* Login ------------------------------------------------------------------ */
-  #login { max-width: 380px; margin: 14vh auto 0; padding: 24px; }
-  #login h1 { font-size: 17px; font-weight: 500; margin: 0 0 4px; }
+  #login, #down { max-width: 380px; margin: 14vh auto 0; padding: 24px; }
+  :is(#login, #down) h1 { font-size: 17px; font-weight: 500; margin: 0 0 4px; }
+  #down { max-width: 440px; }
   input { width: 100%; background: var(--raised); border: 1px solid var(--line); color: var(--text); padding: 10px 12px; border-radius: 9px; font: inherit; margin: 14px 0; }
   input:focus { outline: 0; border-color: var(--blue); }
 
@@ -175,6 +187,8 @@
   /* Recent sessions: expandable rows */
   tr.srow { cursor: pointer; }
   tr.srow:hover td { background: rgba(255,255,255,.02); }
+  /* The title is a button so a row also opens from the keyboard. */
+  .rowbtn { background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 4px; }
   .caret { display: inline-block; width: 14px; color: var(--faint); }
   tr.sdrow > td { padding: 0; }
   /* The detail sits in a cell as wide as the whole table; it is pinned to the visible
@@ -194,13 +208,16 @@
      behind a sideways scroll. Rows with colspan cells are unaffected where it matters. */
   @media (max-width: 600px) {
     #people :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
-    #models :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4), :nth-child(7)),
+    #models :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4), :nth-child(7), :nth-child(8)),
+    #wins :is(th, td):nth-last-child(1),
     [id^="t_by_"] :is(th, td):is(:nth-child(3), :nth-child(4)),
     #sessions > tbody > tr:not(.sdrow) > :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)),
     #chats :is(th, td):is(:nth-child(2), :nth-child(5), :nth-child(6)),
     #weeks :is(th, td):is(:nth-last-child(2), :nth-last-child(3)),
     #ctxBody :is(th, td):is(:nth-child(1), :nth-child(3), :nth-child(6), :nth-child(7)) { display: none; }
     #people td:first-child { min-width: 0; }
+    #wins .win-end { display: none; }     /* every session is 5 h: the start time is enough */
+    th, td { padding-left: 6px; padding-right: 6px; }
   }
 </style>
 </head>
@@ -210,13 +227,24 @@
   <p class="muted" style="margin:0">Enter the hub key to see the shared usage.</p>
   <form id="lf"><input id="key" type="password" autocomplete="current-password" placeholder="Hub key"><button class="btn primary" type="submit">Continue</button></form>
 </div>
+<!-- Only when the very first load fails: without it the page would stay blank. -->
+<div id="down" class="panel" role="alert" hidden>
+  <h1>Can't reach the hub</h1>
+  <p class="muted" style="margin:0" id="downWhy"></p>
+  <p class="faint small" style="margin:12px 0 0">Trying again every 30 seconds; the page fills in as soon as it answers.</p>
+</div>
 
 <main id="app" hidden>
   <!-- Usage panel: reads like the Claude app's Usage modal -->
   <section class="panel">
     <div class="panel-head">
       <h1>Usage</h1>
-      <span class="muted small num" id="updated" title="">Last updated: –</span>
+      <div class="head-right">
+        <span class="muted small num" id="updated" title="">Last updated: –</span>
+        <button class="iconbtn" id="refresh" type="button" title="Ask every laptop to sync now" aria-label="Refresh: ask every laptop to sync now">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
+      </div>
     </div>
     <div class="panel-body">
       <div class="section">
@@ -224,12 +252,8 @@
         <p class="headline" id="headline">Waiting for the first sync…</p>
         <p class="headline-sub" id="headlineSub"></p>
         <div class="actions">
-          <button class="btn primary" id="refresh" title="Ask every laptop to sync now">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-            <span>Refresh</span>
-          </button>
           <a class="btn secondary" href="https://claude.ai/settings/usage" target="_blank" rel="noopener">Open Claude usage</a>
-          <span class="refresh-note" id="refreshNote"></span>
+          <span class="refresh-note" id="refreshNote" aria-live="polite"></span>
         </div>
       </div>
 
@@ -281,10 +305,10 @@
   <section class="panel ov">
     <div class="panel-body" style="padding-top:16px">
       <div class="toolbar">
-        <div class="seg" id="ovTab"><button data-v="overview" class="on">Overview</button><button data-v="models">Models</button></div>
+        <div class="seg" id="ovTab"><button data-v="overview" class="on" aria-pressed="true">Overview</button><button data-v="models" aria-pressed="false">Models</button></div>
         <div class="right">
           <div class="seg" id="ovDev"></div>
-          <div class="seg" id="ovRange"><button data-v="all" class="on">All</button><button data-v="30">30d</button><button data-v="7">7d</button></div>
+          <div class="seg" id="ovRange"><button data-v="all" class="on" aria-pressed="true">All</button><button data-v="30" aria-pressed="false">30d</button><button data-v="7" aria-pressed="false">7d</button></div>
         </div>
       </div>
       <div id="ovBody"></div>
@@ -295,7 +319,7 @@
     <div class="panel-body">
       <h2 class="section-title">Session limit, last 24 hours</h2>
       <p class="section-desc small">Official 5-hour %, as reported by Anthropic.</p>
-      <div class="chart-fill"><svg id="line"></svg></div>
+      <div class="chart-fill"><svg id="line" role="img" aria-label="Official session limit %, last 24 hours"></svg></div>
     </div>
   </section>
   </div>
@@ -312,8 +336,8 @@
   <section class="panel">
     <div class="panel-body">
       <div class="section">
-        <h2 class="section-title">Hourly usage by device, last 48 hours</h2><p class="section-desc">Estimated % of the weekly limit, from each laptop's logs.</p>
-        <div class="scroll" style="margin-top:12px"><svg id="bars" width="100%" height="190"></svg></div>
+        <h2 class="section-title" id="barsTitle">Hourly usage by device, last 48 hours</h2><p class="section-desc">Estimated % of the weekly limit, from each laptop's logs.</p>
+        <div style="margin-top:12px"><svg id="bars" width="100%" height="190" role="img" aria-label="Estimated hourly usage per laptop, % of the weekly limit"></svg></div>
         <div class="legend" id="legend"></div>
       </div>
     </div>
@@ -340,7 +364,7 @@
       <div class="section">
         <div class="toolbar">
           <div><h2 class="section-title">Breakdown</h2><p class="section-desc">By platform, model and project. “~%” is the estimated share of the <span id="rangeWord">session</span> limit.</p></div>
-          <div class="seg" id="tabs"><button data-r="window" class="on">This session</button><button data-r="week">This week</button></div>
+          <div class="seg" id="tabs"><button data-r="window" class="on" aria-pressed="true">This session</button><button data-r="week" aria-pressed="false">This week</button></div>
         </div>
         <div class="cols" style="margin-top:12px">
           <div class="stack"><div class="scroll"><table id="t_by_platform"></table></div><div class="scroll"><table id="t_by_model"></table></div></div>
@@ -382,9 +406,12 @@ if (hashKey) {
   history.replaceState(null, "", location.pathname);
 }
 
+// Every number from the API goes through num() before it reaches innerHTML, every string
+// through esc(): a laptop's snapshot is only as trustworthy as that laptop.
+const num = (v) => Number.isFinite(+v) ? +v : 0;
 const fmt = {
-  pct: (v) => v == null ? "–" : `${Math.round(v)}%`,
-  tok: (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "k" : String(Math.round(v || 0)),
+  pct: (v) => v == null ? "–" : `${Math.round(num(v))}%`,
+  tok: (v) => (v = num(v)) >= 1e9 ? (v / 1e9).toFixed(1) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "k" : String(Math.round(v)),
   ago: (iso) => {
     if (!iso) return "never";
     const s = (Date.now() - new Date(iso)) / 1000;
@@ -395,12 +422,14 @@ const fmt = {
     return m < 60 ? `${Math.round(m)} min` : m < 2880 ? `${Math.floor(m / 60)} h ${Math.round(m % 60)} min` : `${Math.round(m / 1440)} days`;
   },
   clock: (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-  dayClock: (iso) => new Date(iso).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }),
   time: (iso) => new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }),
 };
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const name = (d) => d.label || d.device;
-const epct = (v) => v == null ? '<span class="calib">calibrating</span>' : v <= 0 ? "0%" : v < 0.1 ? "<0.1%" : v < 10 ? `${v.toFixed(1)}%` : `${Math.round(v)}%`;
+const epct = (v) => v == null ? '<span class="calib">calibrating</span>' : (v = num(v)) <= 0 ? "0%" : v < 0.1 ? "<0.1%" : v < 10 ? `${v.toFixed(1)}%` : `${Math.round(v)}%`;
+// One name for usage that no synced laptop logged, wherever it appears.
+const NS_TIP = "Usage no synced laptop logged: claude.ai chats, phones, other computers, cloud sessions";
+const notSynced = `<span class="ns" title="${NS_TIP}">Not synced</span>`;
 const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
 // "Friday" / "today" / "tomorrow" — for the reset day.
 const dayWord = (t) => {
@@ -451,25 +480,42 @@ const inWindow = (d, scope) => {
 const estDev = (d, scope) => inWindow(d, scope) ? estModels(d[scope]?.by_model, scope) : 0;
 
 // ---- data ---------------------------------------------------------------------
+// Throws a readable reason when the answer isn't the hub's JSON: Vercel's bot check answers
+// 403 with an HTML challenge page, which r.json() would only report as a parse error.
 async function api(path, opts = {}) {
-  const r = await fetch(path, { ...opts, headers: { Authorization: `Bearer ${key}`, ...(opts.headers || {}) }, cache: "no-store" });
+  let r;
+  try { r = await fetch(path, { ...opts, headers: { Authorization: `Bearer ${key}`, ...(opts.headers || {}) }, cache: "no-store" }); }
+  catch { throw new Error("No connection: this device is offline or the hub is down."); }
   if (r.status === 401) { try { localStorage.removeItem("hubKey"); } catch {} key = null; showLogin(); throw new Error("bad key"); }
+  if (r.status === 403) throw new Error("Vercel is blocking this network for a while (bot check).");
+  if (r.status === 429) throw new Error("Vercel is rate-limiting this network for a while.");
+  if (!r.ok) throw new Error(`The hub answered with an error (HTTP ${r.status}).`);
+  if (!/json/i.test(r.headers.get("content-type") || "")) throw new Error("The hub answered with a web page instead of data (a login or bot-check page?).");
   return r.json();
 }
 // All-time history (daily stats, context & compaction analysis) is heavier, so it's
 // fetched on open, every 10 minutes, and after a Refresh — not on every 30 s poll.
 let detail = {}, detailAt = 0, web = {}, lastStamp = null;
 // Set when the hub didn't answer; the header says so instead of quietly showing old numbers.
-let hubDown = false;
+// With nothing loaded yet, the "Can't reach the hub" panel stands in for the whole page.
+let hubDown = false, hubWhy = "";
+function hubFailed(e) {
+  if (!key) return;                         // a bad key: the login form is showing instead
+  hubDown = true; hubWhy = e?.message || "No answer.";
+  showHubState();
+}
 function showHubState() {
-  const s = state && freshest();
+  const s = state && freshest(), cold = hubDown && !state;
+  $("down").hidden = !cold;
+  if (cold) { $("downWhy").textContent = hubWhy; return; }
   $("updated").textContent = hubDown ? `Can't reach the hub · showing data from ${s ? fmt.ago(s.sent_at) : "earlier"}`
     : s ? `Last updated: ${fmt.ago(s.sent_at)}` : "Last updated: never";
   $("updated").style.color = hubDown ? "var(--amber)" : "";
+  $("updated").title = hubDown ? hubWhy : s ? `${new Date(s.sent_at).toLocaleString()}, from ${name(s)}` : "";
 }
 async function load(forceDetail = false) {
-  try { await loadInner(forceDetail); hubDown = false; }
-  catch (e) { if (key) { hubDown = true; showHubState(); } throw e; }
+  try { await loadInner(forceDetail); }
+  catch (e) { hubFailed(e); throw e; }
 }
 async function loadInner(forceDetail = false) {
   const wantDetail = forceDetail || Date.now() - detailAt > 10 * 60e3;
@@ -478,7 +524,7 @@ async function loadInner(forceDetail = false) {
     wantDetail ? api("/api/summary").catch(() => null) : null]);
   if (det) { detail = det; detailAt = Date.now(); }
   if (sum) web = sum.web || {};
-  state = st;
+  state = st; hubDown = false;
   state.devices.sort((a, b) => name(a).localeCompare(name(b)));
   state.devices.forEach((d, i) => {
     d.color = DEV_COLORS[i % DEV_COLORS.length]; d.track = DEV_TRACKS[i % DEV_TRACKS.length];
@@ -494,38 +540,41 @@ const freshest = () => state.devices.filter((d) => d.official?.five_hour)
   .sort((a, b) => (!!b.official.breakdown - !!a.official.breakdown) || new Date(b.received_at || b.sent_at) - new Date(a.received_at || a.sent_at))[0];
 
 // Ask every online laptop to sync now. The daemons poll for the request every 60 s and
-// then read their logs and the official %, so an answer takes up to ~70 s; after 100 s
-// the wait ends and the note says which laptop stayed quiet.
+// then read their logs and the official %, so an answer takes up to ~70 s. The hub is
+// asked less and less often (8 looks over 100 s, not one every 3 s: Vercel's bot check
+// blocks a network that polls in bursts); then the note says which laptop stayed quiet.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const REFRESH_WAITS = [5, 5, 10, 10, 15, 15, 20, 20];     // seconds between looks, 100 s in all
 async function refresh() {
-  if (refreshing) return;
+  if (refreshing || !state) return;
   refreshing = true;
-  const btn = $("refresh"), label = btn.querySelector("span"), note = $("refreshNote");
-  btn.disabled = true; btn.classList.add("spin"); label.textContent = "Refreshing…"; note.textContent = "";
-  let missed = [];
+  const btn = $("refresh"), note = $("refreshNote");
+  btn.disabled = true; btn.classList.add("spin"); btn.setAttribute("aria-busy", "true"); note.textContent = "Asking the laptops to sync…";
+  let missed = [], failed = null;
   try {
     const { requested_at } = await api("/api/refresh", { method: "POST" });
     const since = new Date(requested_at) - 2000;
     const waitFor = state.devices.filter(online);
     // The hub stamps every sync on arrival (received_at), so laptop clocks don't matter.
     const answered = (w) => { const d = state.devices.find((x) => x.device === w.device); return d && new Date(d.received_at || d.sent_at) >= since; };
-    const deadline = Date.now() + 100000;
     let pending = waitFor;
-    while (pending.length && Date.now() < deadline) {
-      await sleep(3000);
+    for (const s of REFRESH_WAITS) {
+      if (!pending.length) break;
+      await sleep(s * 1000);
       // Reload only when some laptop has synced since the last look (one Redis read otherwise).
       const { stamp } = await api("/api/refresh");
       if (stamp === lastStamp) continue;
-      lastStamp = stamp;
       await load();
+      lastStamp = stamp;
       pending = waitFor.filter((w) => !answered(w));
-      if (pending.length) label.textContent = `Waiting for ${pending.length === waitFor.length && pending.length > 1 ? "the laptops" : pending.map(name).join(" and ")}…`;
+      if (pending.length) note.textContent = `Waiting for ${pending.length === waitFor.length && pending.length > 1 ? "the laptops" : pending.map(name).join(" and ")}…`;
     }
     missed = pending;
     await load(true);
-  } catch {} finally {
-    refreshing = false; btn.disabled = false; btn.classList.remove("spin"); label.textContent = "Refresh";
-    note.textContent = missed.length ? `${missed.map(name).join(" and ")} didn't answer; showing ${missed.length > 1 ? "their" : "its"} last sync.` : "";
+  } catch (e) { failed = e; } finally {
+    refreshing = false; btn.disabled = false; btn.classList.remove("spin"); btn.removeAttribute("aria-busy");
+    note.textContent = failed ? `Couldn't finish the refresh: ${failed.message}`
+      : missed.length ? `${missed.map(name).join(" and ")} didn't answer; showing ${missed.length > 1 ? "their" : "its"} last sync.` : "";
     if (state) render();
   }
 }
@@ -537,7 +586,6 @@ function render() {
   const plan = src?.official?.plan;
   $("plan").textContent = plan ? plan.replace("default_claude_", "").replace(/max_(\d+)x/, "Max ($1x)").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "plan unknown";
   showHubState();
-  $("updated").title = src ? `${new Date(src.sent_at).toLocaleString()}, from ${name(src)}` : "";
   // The tab reads like the statusline: session % · week %.
   const o = src?.official;
   document.title = o?.five_hour ? `${fmt.pct(o.five_hour.pct)} session · ${fmt.pct(o.seven_day?.pct)} week — Claude Usage` : "Claude Usage";
@@ -576,10 +624,13 @@ function drawHeadline(src) {
     if (f.runs_out_at) H.textContent = `Heads up. At the recent pace you'll hit the limit ${whenWord(Date.parse(f.runs_out_at))}, before ${reset_s} reset.`;
     else if (f.p_limit >= 0.15) H.textContent = `Probably fine, but a busy day could do it: about a ${r(f.p_limit * 100)}% chance of hitting the limit before ${reset_s} reset.`;
     else H.textContent = `You're on track. You'll likely end the week around ${r(f.expected)}% when it resets ${resetAt}.`;
-    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}. Recent pace: ${f.per_day_recent.toFixed(1)}% a day (last 3 days, the newest counting most); ` +
+    // The replays can't resolve small chances, so under 5% never reads as a flat "0%".
+    const chance = f.runs_out_at || f.p_limit == null || f.p_limit >= 0.15 ? ""
+      : ` Chance of hitting the limit before the reset: ${f.p_limit < 0.05 ? "under 5%" : `about ${r(f.p_limit * 100)}%`}.`;
+    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}.${chance} Recent pace: ${num(f.per_day_recent).toFixed(1)}% a day (last 3 days, the newest counting most); ` +
       (f.left_h < 24 ? `${Math.round(100 - w.pct)}% is left for the last ${Math.max(1, Math.round(f.left_h))} h.`
-        : `you can use up to ${f.budget_per_day.toFixed(0)}% a day and still reach the reset.`) +
-      (f.skipped?.length ? ` Left out as one-offs: ${f.skipped.map(esc).join(", ")}.` : "");
+        : `you can use up to ${num(f.budget_per_day).toFixed(0)}% a day and still reach the reset.`) +
+      (f.skipped?.length ? ` Left out as one-offs: ${f.skipped.join(", ")}.` : "");
   } else if (p.early) H.textContent = `A new week started ${p.elapsedH < 1 ? "less than an hour" : `${Math.round(p.elapsedH)} h`} ago: ${Math.round(w.pct)}% used so far. It resets ${resetAt}.`;
   else if (p.runOut < p.reset) H.textContent = `Heads up. At this pace you'll run out ${whenWord(p.runOut)}, before ${reset_s} reset.`;
   else H.textContent = `You're on track. At this pace you'll have used about ${Math.min(99, Math.round(p.projected))}% of the week when it resets ${resetAt}.`;
@@ -591,11 +642,11 @@ function drawHeadline(src) {
   for (const s of o?.scoped || []) {
     const g = /fable/i.test(s.name) ? state.forecast_fable : null;
     if (g && !g.early) {       // the pattern forecast for Fable's own limit
-      if (g.runs_out_at && (!f?.runs_out_at || g.runs_out_at < f.runs_out_at)) sub += ` ${esc(s.name)}'s separate limit runs out sooner, ${whenWord(Date.parse(g.runs_out_at))}.`;
+      if (g.runs_out_at && (!f?.runs_out_at || g.runs_out_at < f.runs_out_at)) sub += ` ${s.name}'s separate limit runs out sooner, ${whenWord(Date.parse(g.runs_out_at))}.`;
       continue;
     }
     const q = pace(s, 168);
-    if (q && s.pct < 100 && q.runOut < q.reset && (p.runOut >= p.reset || q.runOut < p.runOut)) sub += ` ${esc(s.name)}'s separate limit runs out sooner, ${whenWord(q.runOut)}.`;
+    if (q && s.pct < 100 && q.runOut < q.reset && (p.runOut >= p.reset || q.runOut < p.runOut)) sub += ` ${s.name}'s separate limit runs out sooner, ${whenWord(q.runOut)}.`;
   }
   S.textContent = sub;
 }
@@ -604,7 +655,7 @@ function drawHeadline(src) {
 // limit goes amber past BAR_WARN and red past BAR_CRIT. A bar is grey only when it has
 // nothing to show (0 %, or a value that is still calibrating).
 function bar(v, { limit = false, color, track, severity } = {}) {
-  const pct = v == null ? 0 : Math.max(0, Math.min(100, v));
+  const pct = v == null ? 0 : Math.max(0, Math.min(100, num(v)));
   // Official limits use Anthropic's own severity (what turns the app's bars amber/red);
   // the thresholds are only a fallback for data from older syncs.
   const sev = !limit || !severity ? null : severity === "normal" ? "" : /crit|exceed|limit|block|high|severe/i.test(severity) ? "crit" : "warn";
@@ -614,6 +665,7 @@ function bar(v, { limit = false, color, track, severity } = {}) {
   return `<div class="track${st ? " " + st : ""}"${trackStyle}>${fill}</div>`;
 }
 // A row under a product or limit: a device (its own colour) or the remainder (blue).
+// `label` and `sub` are HTML: callers escape what came from the API.
 const childRow = (label, sub, v, d) => `<div class="lrow child"><div class="lbl">${d ? `<span class="dot" style="background:${d.color}"></span>` : ""}${label}<span class="est">est.</span>${sub ? `<div class="sub">${sub}</div>` : ""}</div>
     ${bar(v, d ? { color: d.color, track: d.track } : {})}<div class="pct num">${epct(v)}</div></div>`;
 const calibRow = () => `<div class="lrow child"><div class="lbl">Per-laptop split<span class="est">est.</span></div>${bar(null)}<div class="pct calib">calibrating</div></div>`;
@@ -635,15 +687,16 @@ function scopedSplit(s) {
     known += e;
     html += childRow(esc(name(d)), "", e, d);
   }
-  return html + childRow(`${esc(s.name)} not in these logs`, "chats, web, cloud, other PCs", Math.max(0, (s.pct || 0) - known));
+  return html + childRow(notSynced, "", Math.max(0, num(s.pct) - known));
 }
 function drawLimits(src) {
   const o = src?.official || {};
-  const resetLine = (lim, short) => !lim?.resets_at ? "" :
-    (short ? `Resets at ${fmt.clock(resetOf(lim))}` : `Resets ${fmt.dayClock(resetOf(lim))}`) + ` <span class="faint">· in ${fmt.until(resetOf(lim))}</span>`;
-  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour, true), o.five_hour) +
+  // Same wording as the headline: "Resets tomorrow 4:00 AM · in 9 h 12 min".
+  const resetLine = (lim) => !lim?.resets_at ? "" :
+    `Resets ${dayWord(resetOf(lim))} ${fmt.clock(resetOf(lim))} <span class="faint">· in ${fmt.until(resetOf(lim))}</span>`;
+  $("limits").innerHTML = limitRow("Current session", resetLine(o.five_hour), o.five_hour) +
     limitRow("This week", resetLine(o.seven_day), o.seven_day) +
-    (o.scoped || []).map((s) => limitRow(`${s.name} this week`, `${esc(s.name)} only · ${resetLine(s)}`, s) + scopedSplit(s)).join("") ||
+    (o.scoped || []).map((s) => limitRow(`${s.name} this week`, resetLine(s), s) + scopedSplit(s)).join("") ||
     '<p class="muted">No official limits yet.</p>';
 }
 
@@ -663,7 +716,7 @@ function drawProducts(src) {
       known += e || 0;
       html += childRow(esc(name(d)), "", e, d);
     }
-    html += childRow("Claude Code not in these logs", "web or cloud sessions, other PCs, logs deleted before they synced", Math.max(0, v - known));
+    html += childRow(notSynced, "Claude Code in the cloud, on other computers, or in logs deleted before they synced", Math.max(0, v - known));
   }
   $("products").innerHTML = html;
 }
@@ -680,7 +733,7 @@ function drawPeople(src) {
       const old = (d.version || 0) < 4 ? `<span class="tag stale" title="This laptop runs an old sync script. Re-run the setup command on it once; later versions update themselves.">old sync · run setup</span>` : "";
       html += `<tr><td><span class="dot" style="background:${d.color}"></span>${esc(name(d))}${active ? '<span class="tag live">active now</span>' : ""}${old}</td>
         <td class="muted">${esc(d.person)}</td><td class="n">${epct(estDev(d, "window"))}</td><td class="n">${epct(estDev(d, "week"))}</td>
-        <td class="n">${d.window?.calls || 0}</td><td class="n">${fmt.tok(d.window?.tokens || 0)}</td><td class="muted">${fmt.ago(d.last_activity)}</td>
+        <td class="n">${num(d.window?.calls)}</td><td class="n">${fmt.tok(d.window?.tokens)}</td><td class="muted">${fmt.ago(d.last_activity)}</td>
         <td>${online(d) ? `<span class="muted">${fmt.ago(d.sent_at)}</span>` : `<span class="tag stale" style="margin:0">offline · ${fmt.ago(d.sent_at)}</span>`}${d.official_error ? `<div class="faint" style="font-size:12px;margin-top:2px" title="${esc(d.official_error)}">can't read the official % (${esc(d.official_error.replace(/ \(.*$/, ""))})</div>` : ""}</td></tr>`;
     }
     if (mine.length > 1) html += `<tr class="sub"><td>${esc(p)} total</td><td></td>
@@ -695,26 +748,26 @@ function drawPeople(src) {
   const nonCC = offW == null ? null : bd.filter((r) => r.key !== "claude_code").reduce((a, r) => a + (offW * r.percent) / 100, 0);
   const ccW = offW == null ? null : (offW * (bd.find((r) => r.key === "claude_code")?.percent ?? 100)) / 100;
   const ccElse = ccW == null || fitOf("week")?.a == null ? null : Math.max(0, ccW - kW);
-  html += `<tr class="other"><td>Not on a synced laptop</td><td></td>
+  html += `<tr class="other"><td>${notSynced}</td><td></td>
     <td class="n">${epct(o5)}</td><td class="n">${nonCC == null ? "–" : ccElse == null ? `≥ ${epct(nonCC)}` : epct(nonCC + ccElse)}</td><td colspan="4"></td></tr>`;
   for (const r of bd.filter((r) => r.key !== "claude_code"))
     html += `<tr class="other"><td class="indent">${esc(r.name)}${r.key === "chat" ? " (claude.ai, apps, phone)" : ""}</td><td>exact</td>
       <td class="n">–</td><td class="n">${epct((offW * r.percent) / 100)}</td><td colspan="4"></td></tr>`;
-  html += `<tr class="other"><td class="indent">Claude Code not in these logs <span class="est">web, cloud, other PCs, deleted logs</span></td><td>estimated</td>
+  html += `<tr class="other"><td class="indent">Claude Code <span class="est">cloud, other computers, deleted logs</span></td><td>estimated</td>
     <td class="n">${epct(o5)}</td><td class="n">${epct(ccElse)}</td><td colspan="4"></td></tr>`;
   $("people").innerHTML = html;
 
   // Calibration: one line per fit in the side panel, the explanation under this table.
   const need = (f) => { const n = Math.max(0.1, Math.ceil((f?.need ?? 3) * 10) / 10); return `${n} more point${n === 1 ? "" : "s"}`; };
-  const rng = (r, unit = "") => r && r[0] !== r[1] ? ` (${r[0]}–${r[1]}${unit})` : "";
-  const rate = (v) => v == null ? "–" : v >= 0.1 ? v.toFixed(2) : v.toFixed(3);
+  const rng = (r, unit = "") => r && r[0] !== r[1] ? ` (${num(r[0])}–${num(r[1])}${unit})` : "";
+  const rate = (v) => v == null ? "–" : (v = num(v)) >= 0.1 ? v.toFixed(2) : v.toFixed(3);
   const fitRow = (label, f, withWeights, unit = "Opus") => `<tr><td>${label}</td>` + (!f || f.a == null
     ? `<td class="calib">calibrating</td><td>needs the official % to rise ${need(f)} while a laptop is in use</td>`
-    : `<td>±${f.err}%</td><td>${f.err_measured ? `± is the typical miss in ${f.check.clean} past windows, checked against the official % (${f.check.unlogged} more had use no laptop logged) · ` : ""}` +
+    : `<td>±${num(f.err)}%</td><td>${f.err_measured ? `± is the typical miss in ${num(f.check?.clean)} past windows, checked against the official % (${num(f.check?.unlogged)} more had use no laptop logged) · ` : ""}` +
       `1 API-$ of ${unit} ≈ ${rate(f.a)}% of the limit${f.a_range ? ` (${rate(f.a_range[0])}–${rate(f.a_range[1])})` : ""}` +
-      ` · ${f.n} reading${f.n === 1 ? "" : "s"}${f.windows ? ` over ${f.windows} window${f.windows === 1 ? "" : "s"}` : ""}` +
-      (!withWeights || f.rho == null ? "" : ` · cached reads count ${f.rho}×${rng(f.rho_range)} their API price`) +
-      (!withWeights || f.phi == null ? "" : f.phi_learned ? ` · Fable counts ${f.phi}× its price vs. other models${rng(f.phi_range, "×")}` : ` · Fable's weight isn't pinned down yet${rng(f.phi_range, "×")}`) +
+      ` · ${num(f.n)} reading${f.n === 1 ? "" : "s"}${f.windows ? ` over ${num(f.windows)} window${f.windows === 1 ? "" : "s"}` : ""}` +
+      (!withWeights || f.rho == null ? "" : ` · cached reads count ${num(f.rho)}×${rng(f.rho_range)} their API price`) +
+      (!withWeights || f.phi == null ? "" : f.phi_learned ? ` · Fable counts ${num(f.phi)}× its price vs. other models${rng(f.phi_range, "×")}` : ` · Fable's weight isn't pinned down yet${rng(f.phi_range, "×")}`) +
       `</td>`) + `</tr>`;
   const left = Object.entries(state.model?.devices || {}).filter(([, k]) => !k).map(([d]) => name(state.devices.find((x) => x.device === d) || { label: d }));
   // Every laptop sends a short hash of the account it is logged into: they should all match.
@@ -738,20 +791,30 @@ function drawWeeks() {
   const people = [...new Set(weeks.flatMap((w) => (w.people || []).map((p) => p.person)))].sort();
   const colour = (p) => state.devices.find((d) => d.person === p)?.color || "var(--faint)";
   // Forecast track record: each week's saved forecasts (every 6 h) against where it ended.
+  // Only live forecasts count. Replayed ones were rebuilt afterwards from stored readings, so
+  // they get a faint note, never the score. The old average-pace method is scored on the
+  // same forecasts (those that carry it), so the two misses compare like with like.
+  const med = (a) => { const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
+  const tally = (fs, end) => ({ n: fs.length, inside: fs.filter((f) => num(f.lo) - 1 <= end && end <= num(f.hi) + 1).length,
+    miss: fs.length ? med(fs.map((f) => Math.abs(num(f.expected) - end))) : null });
   const score = (w) => {
     const fs = w.forecasts || [];
     if (w.running || !fs.length) return null;
-    const med = (a) => { const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
-    return { n: fs.length, inside: fs.filter((f) => f.lo - 1 <= w.week && w.week <= f.hi + 1).length,
-      miss: med(fs.map((f) => Math.abs(f.expected - w.week))), old: med(fs.map((f) => Math.abs(f.avg - w.week))) };
+    const end = num(w.week), live = fs.filter((f) => !f.replayed), both = live.filter((f) => f.avg != null);
+    return { ...tally(live, end), replayed: tally(fs.filter((f) => f.replayed), end),
+      pair: both.length ? { n: both.length, miss: tally(both, end).miss, old: med(both.map((f) => Math.abs(num(f.avg) - end))) } : null };
   };
   const fcCell = (w) => {
-    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(f.expected)}% <span class="faint">(${Math.round(f.lo)}–${Math.round(f.hi)})</span>` : "–"; }
+    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(num(f.expected))}% <span class="faint">(${Math.round(num(f.lo))}–${Math.round(num(f.hi))})</span>` : "–"; }
     const sc = score(w);
-    return sc ? `<span title="The week's end fell inside the forecast range in ${sc.inside} of ${sc.n} forecasts (every 6 h). Typical miss ${sc.miss.toFixed(0)} points; the old average-pace method: ${sc.old.toFixed(0)}.">in range ${sc.inside}/${sc.n} · ±${sc.miss.toFixed(0)}</span>` : "–";
+    if (!sc) return "–";
+    const rp = sc.replayed.n ? `<div class="faint small" title="Rebuilt afterwards from the stored readings, so not counted in the score.">replayed: ${sc.replayed.inside}/${sc.replayed.n} in range</div>` : "";
+    if (!sc.n) return `<span class="faint">scored from next week</span>${rp}`;
+    const cmp = sc.pair ? ` Old average-pace method on the same ${sc.pair.n}: typical miss ${sc.pair.old.toFixed(0)} (this method: ${sc.pair.miss.toFixed(0)}).` : "";
+    return `<span title="The week's end fell inside the forecast range in ${sc.inside} of ${sc.n} live forecasts (saved every 6 h). Typical miss ${sc.miss.toFixed(0)} points.${cmp}">in range ${sc.inside}/${sc.n} · ±${sc.miss.toFixed(0)}</span>${rp}`;
   };
   $("weeks").innerHTML = `<tr><th>Week</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}` +
-    `<th class="n">Not on a laptop</th><th class="n">Fable limit</th><th class="n">Forecast</th></tr>` +
+    `<th class="n">${notSynced}</th><th class="n">Fable limit</th><th class="n">Forecast</th></tr>` +
     weeks.map((w) => {
       const end = new Date(w.id), start = new Date(+end - 7 * 864e5);
       const label = w.running ? "This week, so far" : `${start.toLocaleDateString([], { month: "short", day: "numeric" })} – ${end.toLocaleDateString([], { month: "short", day: "numeric" })}`;
@@ -759,15 +822,18 @@ function drawWeeks() {
       return `<tr><td>${label}</td><td class="n">${fmt.pct(w.week)}</td>${people.map((p) => `<td class="n">${epct(of(p))}</td>`).join("")}` +
         `<td class="n">${w.elsewhere ? epct(w.elsewhere.week) : "–"}</td><td class="n">${fmt.pct(w.fable)}</td><td class="n">${fcCell(w)}</td></tr>`;
     }).join("");
-  // Overall, across the finished weeks
-  const scored = weeks.map(score).filter(Boolean);
+  // Overall, across the finished weeks that have live forecasts
+  const scored = weeks.map(score).filter((x) => x?.n);
   const n = scored.reduce((a, x) => a + x.n, 0), inside = scored.reduce((a, x) => a + x.inside, 0);
-  $("weeksNote").textContent = !scored.length
-    ? "Forecast column: the running week's latest forecast. Once a week ends, it shows how its forecasts (saved every 6 h) did against where it really ended."
-    : `Forecast track record: across ${scored.length} finished week${scored.length > 1 ? "s" : ""}, the end fell inside the forecast's range in ${inside} of ${n} forecasts ` +
-      `(${Math.round(100 * inside / n)}%; the range is meant to hold it about 80% of the time). Typical miss ${scored.map((x) => x.miss).sort((a, b) => a - b)[Math.floor(scored.length / 2)].toFixed(0)} points, ` +
-      `where the old average-pace forecast missed by ${scored.map((x) => x.old).sort((a, b) => a - b)[Math.floor(scored.length / 2)].toFixed(0)}.` +
-      (weeks.some((w) => (w.forecasts || []).some((f) => f.replayed)) ? " Forecasts marked replayed were rebuilt afterwards from the stored readings." : "");
+  const pairs = scored.filter((x) => x.pair), pn = pairs.reduce((a, x) => a + x.pair.n, 0);
+  const replayedNote = weeks.some((w) => !w.running && (w.forecasts || []).some((f) => f.replayed))
+    ? " Replayed forecasts (rebuilt afterwards from the stored readings) are shown faintly and not counted." : "";
+  $("weeksNote").textContent = (!scored.length
+    ? "Forecast column: the running week's latest forecast. Once a week ends, it shows how its live forecasts (saved every 6 h) did against where it really ended."
+    : `Forecast track record: across ${scored.length} finished week${scored.length > 1 ? "s" : ""}, the end fell inside the forecast's range in ${inside} of ${n} live forecasts ` +
+      `(${Math.round(100 * inside / n)}%; the range is meant to hold it about 80% of the time). Typical miss ${med(scored.map((x) => x.miss)).toFixed(0)} points.` +
+      (pn ? ` On the same ${pn} forecast${pn > 1 ? "s" : ""}, the old average-pace method's typical miss was ${med(pairs.map((x) => x.pair.old)).toFixed(0)} (this method: ${med(pairs.map((x) => x.pair.miss)).toFixed(0)}).` : "")) +
+    replayedNote;
 }
 
 let allWins = false;
@@ -780,18 +846,18 @@ function drawWindows() {
   const colour = (p) => state.devices.find((d) => d.person === p)?.color || "var(--faint)";
   const label = (id) => {
     const end = new Date(id), start = new Date(+end - 5 * 36e5), day = dayWord(start);
-    return `${day === "today" || day === "tomorrow" ? day[0].toUpperCase() + day.slice(1) : day.slice(0, 3)} ${fmt.clock(start)}–${fmt.clock(end)}`;
+    return `${day === "today" || day === "tomorrow" ? day[0].toUpperCase() + day.slice(1) : day.slice(0, 3)} ${fmt.clock(start)}<span class="win-end">–${fmt.clock(end)}</span>`;
   };
   const shown = allWins ? wins : wins.slice(0, 8);
-  $("wins").innerHTML = `<tr><th>Session</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}<th class="n">Not on a laptop</th></tr>` +
+  $("wins").innerHTML = `<tr><th>Session</th><th class="n">Used</th>${people.map((p) => `<th class="n"><span class="dot" style="background:${colour(p)}"></span>${esc(p)}</th>`).join("")}<th class="n">${notSynced}</th></tr>` +
     shown.map((w) => {
       const by = {};
-      for (const [dev, v] of Object.entries(w.devices || {})) by[personOf(dev)] = (by[personOf(dev)] || 0) + v;
+      for (const [dev, v] of Object.entries(w.devices || {})) by[personOf(dev)] = (by[personOf(dev)] || 0) + num(v);
       const known = Object.values(by).reduce((a, b) => a + b, 0);
       const running = Date.parse(w.id) > Date.now();
       return `<tr><td>${label(w.id)}${running ? '<span class="tag live">now</span>' : ""}</td><td class="n">${fmt.pct(w.pct)}</td>` +
         people.map((p) => `<td class="n">${by[p] == null ? "–" : epct(by[p])}</td>`).join("") +
-        `<td class="n">${epct(Math.max(0, w.pct - known))}</td></tr>`;
+        `<td class="n">${epct(Math.max(0, num(w.pct) - known))}</td></tr>`;
     }).join("");
   $("winsMore").innerHTML = wins.length > 8 ? `<button class="linkbtn" id="toggleWins">${allWins ? "Show fewer" : `Show all ${wins.length}`}</button>` : "";
 }
@@ -801,14 +867,14 @@ function drawModels() {
   const agg = {};
   for (const d of state.devices) for (const [m, v] of Object.entries(d.week?.by_model || {})) {
     const a = agg[m] ||= { calls: 0, tokens: 0, x: 0, r: 0 };
-    a.calls += v.calls; a.tokens += v.tokens; a.x += v.x || 0; a.r += v.r || 0;
+    a.calls += num(v.calls); a.tokens += num(v.tokens); a.x += num(v.x); a.r += num(v.r);
   }
   const inout = {};
   const ws = freshest()?.week_start;
   const wkStart = ws ? new Date(ws).toLocaleDateString("en-CA") : "";
   for (const d of state.devices) for (const [day, v] of Object.entries(d.daily || {})) {
     if (day < wkStart) continue;
-    for (const [m, a] of Object.entries(v.models)) { const t = inout[m] ||= [0, 0]; t[0] += a[0]; t[1] += a[1]; }
+    for (const [m, a] of Object.entries(v.models)) { const t = inout[m] ||= [0, 0]; t[0] += num(a[0]); t[1] += num(a[1]); }
   }
   const f5 = fitOf("window"), fW = fitOf("week");
   const rows = Object.entries(agg).map(([m, a]) => ({ m, ...a, w: estModels({ [m]: a }, "week") }))
@@ -818,11 +884,11 @@ function drawModels() {
   $("models").innerHTML = `<tr><th>Model</th><th class="n">Calls</th><th class="n">Input</th><th class="n">Output</th><th class="n">All tokens</th>
       <th class="n">~% of week</th><th class="n">1M output ≈</th><th class="n">Weight</th></tr>` +
     rows.map((r) => {
-      const io = inout[r.m] || [0, 0], w1 = per1M(fW, r.m), s1 = per1M(f5, r.m), mult = fW?.m?.[family(r.m)];
-      return `<tr><td>${esc(r.m.replace("claude-", ""))}</td><td class="n">${r.calls}</td><td class="n">${fmt.tok(io[0])}</td><td class="n">${fmt.tok(io[1])}</td>
+      const io = inout[r.m] || [0, 0], w1 = per1M(fW, r.m), s1 = per1M(f5, r.m), mult = num(fW?.m?.[family(r.m)] ?? 1);
+      return `<tr><td title="${esc(r.m)}">${shortModel(r.m)}</td><td class="n">${num(r.calls)}</td><td class="n">${fmt.tok(io[0])}</td><td class="n">${fmt.tok(io[1])}</td>
         <td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.w)}</td>
-        <td class="n">${w1 == null ? epct(null) : `${w1.toFixed(1)}% of week${s1 == null ? "" : ` · ${s1.toFixed(0)}% of session`}`}</td>
-        <td class="n">${fW?.a == null ? '<span class="calib">calibrating</span>' : family(r.m) !== "fable" ? '<span class="muted">1× (price)</span>' : fW.phi_learned ? `${mult.toFixed(2)}×` : `<span class="muted">${fW.phi_range ? `${fW.phi_range[0]}–${fW.phi_range[1]}×` : `~${mult.toFixed(1)}×`}</span>`}</td></tr>`;
+        <td class="n">${w1 == null ? epct(null) : `${num(w1).toFixed(1)}% of week${s1 == null ? "" : ` · ${num(s1).toFixed(0)}% of session`}`}</td>
+        <td class="n">${fW?.a == null ? '<span class="calib">calibrating</span>' : family(r.m) !== "fable" ? '<span class="muted">1× (price)</span>' : fW.phi_learned ? `${mult.toFixed(2)}×` : `<span class="muted">${fW.phi_range ? `${num(fW.phi_range[0])}–${num(fW.phi_range[1])}×` : `~${mult.toFixed(1)}×`}</span>`}</td></tr>`;
     }).join("") + (rows.length ? "" : `<tr><td colspan="8" class="muted">No usage logged this week</td></tr>`);
   $("modelNote").innerHTML = `“All tokens” includes cache reads and writes. “1M output ≈” counts output only; cache reads and writes add more (they're included in “~% of week”). ` +
     `“Weight” is how much a model counts against the limit relative to its API price: other models stay at their price ratio, Fable's is learned from stretches where it ran next to them` +
@@ -836,11 +902,11 @@ function dailyRows(rangeOverride) {
     if (ov.dev && d.device !== ov.dev) continue;
     for (const [day, v] of Object.entries(d.daily || {})) {
       const t = days[day] ||= { models: {}, hours: Array(24).fill(0), msgs: 0, sessions: 0 };
-      t.msgs += v.msgs; t.sessions += v.sessions;
-      v.hours.forEach((h, i) => t.hours[i] += h);
-      for (const [m, a] of Object.entries(v.models)) {
+      t.msgs += num(v.msgs); t.sessions += num(v.sessions);
+      (v.hours || []).forEach((h, i) => { if (i < 24) t.hours[i] += num(h); });
+      for (const [m, a] of Object.entries(v.models || {})) {
         const x = t.models[m] ||= [0, 0, 0, 0, 0];
-        a.forEach((val, i) => x[i] += val);
+        a.forEach((val, i) => x[i] += num(val));
       }
     }
   }
@@ -854,8 +920,8 @@ const dayTokens = (v) => Object.values(v.models).reduce((a, m) => a + m[0] + m[1
 const heatColor = (f) => { const a = [0x1c, 0x4f, 0x8f], b = [0x86, 0xb6, 0xef]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(",")})`; };
 function drawOverview() {
   const devSeg = $("ovDev");
-  devSeg.innerHTML = `<button data-v="" class="${ov.dev ? "" : "on"}">All laptops</button>` +
-    state.devices.map((d) => `<button data-v="${esc(d.device)}" class="${ov.dev === d.device ? "on" : ""}">${esc(name(d))}</button>`).join("");
+  const segBtn = (v, label) => `<button data-v="${esc(v)}" class="${ov.dev === v ? "on" : ""}" aria-pressed="${ov.dev === v}">${esc(label)}</button>`;
+  devSeg.innerHTML = segBtn("", "All laptops") + state.devices.map((d) => segBtn(d.device, name(d))).join("");
   const rows = dailyRows();
   if (ov.tab === "overview") {
     const tokens = rows.reduce((s, [, v]) => s + dayTokens(v), 0);
@@ -886,7 +952,7 @@ function drawOverview() {
         ${stat("Total tokens", fmt.tok(tokens))}
         ${stat("Active days", rows.filter(([, v]) => Object.keys(v.models).length).length)}
         ${stat("Peak hour", tokens ? new Date(2000, 0, 1, peak).toLocaleTimeString([], { hour: "numeric" }) : "–")}
-        ${stat("Favorite model", fav ? esc(fav.replace("claude-", "")) : "–")}
+        ${stat("Favorite model", fav ? shortModel(fav) : "–")}
       </div><div class="heat">${cells}</div>
       <p class="note">${fun} Total tokens = input + output (cache excluded), counted once per API response; the Claude app counts every logged content block, so for Claude Code it shows about 2.5× more.</p>`;
   } else {
@@ -903,13 +969,13 @@ function drawOverview() {
       for (const m of order) {
         const a = v.models[m]; if (!a) continue;
         const h = ((a[0] + a[1]) / max) * (H - 34);
-        g += `<rect x="${P + i * bw + 1}" y="${base - h}" width="${Math.max(1, bw - 2)}" height="${Math.max(0, h - 1)}" fill="${color[m]}"><title>${day} · ${esc(m)}: ${fmt.tok(a[0])} in, ${fmt.tok(a[1])} out</title></rect>`;
+        g += `<rect x="${P + i * bw + 1}" y="${base - h}" width="${Math.max(1, bw - 2)}" height="${Math.max(0, h - 1)}" fill="${color[m]}"><title>${esc(day)} · ${shortModel(m)}: ${fmt.tok(a[0])} in, ${fmt.tok(a[1])} out</title></rect>`;
         base -= h;
       }
       if (i % Math.ceil(rows.length / 8) === 0) g += `<text x="${P + i * bw}" y="${H - 4}">${new Date(day + "T12:00").toLocaleDateString([], { month: "short", day: "numeric" })}</text>`;
     });
     $("ovBody").innerHTML = `<div class="scroll" style="margin-top:16px"><svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">${g}</svg></div>
-      <table class="mlegend">${order.map((m) => `<tr><td><span class="sw" style="background:${color[m]}"></span>${esc(m.replace("claude-", ""))}</td>
+      <table class="mlegend">${order.map((m) => `<tr><td><span class="sw" style="background:${color[m]}"></span>${shortModel(m)}</td>
         <td class="n muted">${fmt.tok(models[m][0])} in · ${fmt.tok(models[m][1])} out</td><td class="n">${((models[m][0] + models[m][1]) / total * 100).toFixed(1)}%</td></tr>`).join("") ||
         `<tr><td class="muted">No usage in this range</td></tr>`}</table>`;
   }
@@ -919,7 +985,8 @@ function drawLine() {
   // The chart fills its panel, whose height follows the Overview card beside it.
   const svg = $("line"), W = svg.clientWidth || 800, H = Math.max(170, svg.clientHeight || 0), P = 34, since = Date.now() - 24 * 36e5;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  const pts = (state.line || []).filter((h) => h.five != null && new Date(h.t) >= since).sort((a, b) => new Date(a.t) - new Date(b.t));
+  const pts = (state.line || []).filter((h) => h.five != null && new Date(h.t) >= since).sort((a, b) => new Date(a.t) - new Date(b.t))
+    .map((h) => ({ ...h, five: num(h.five), week: h.week == null ? null : num(h.week) }));
   const R = 16, x = (t) => P + ((new Date(t) - since) / (24 * 36e5)) * (W - P - R), y = (v) => H - 22 - (v / 100) * (H - 36);
   let g = [0, 50, 100].map((v) => `<line class="grid" x1="${P}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="0" y="${y(v) + 4}">${v}%</text>`).join("");
   // The amber and red thresholds, as faint guides.
@@ -950,10 +1017,16 @@ function drawLine() {
     g += pts.map((p) => `<circle cx="${x(p.t)}" cy="${y(p.five)}" r="6" fill="transparent"><title>${fmt.time(p.t)}: ${p.five}% of the session${p.week == null ? "" : ` · ${p.week}% of the week`}</title></circle>`).join("");
   } else g += `<text class="empty" x="${(W + P) / 2}" y="${H / 2}">No snapshots in the last 24 hours yet</text>`;
   svg.innerHTML = g;
+  svg.setAttribute("aria-label", `Official session limit %, last 24 hours${pts.length ? `; now ${pts[pts.length - 1].five}%` : ": no readings yet"}`);
 }
 
 function drawBars() {
-  const devs = state.devices, svg = $("bars"), W = Math.max(svg.clientWidth || 800, 480), H = 190, P = 44, N = 48;
+  // Drawn at the SVG's real width (viewBox), so nothing falls off a phone screen; a narrow
+  // screen shows the last 24 hours instead of 48 so the bars stay wide enough to read.
+  const devs = state.devices, svg = $("bars"), W = svg.clientWidth || 800, H = 190, P = 44, N = W < 560 ? 24 : 48;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  $("barsTitle").textContent = `Hourly usage by device, last ${N} hours`;
+  svg.setAttribute("aria-label", `Estimated hourly usage per laptop over the last ${N} hours, as % of the weekly limit`);
   const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() - N + 1);
   const hours = [...Array(N)].map((_, i) => new Date(+start + i * 36e5));
   const val = (d, h) => { const k = Object.keys(d.hourly || {}).find((k) => +new Date(k) === +h); return k ? estFlat(d.hourly[k], "week", d) || 0 : 0; };
@@ -987,13 +1060,13 @@ function drawTables() {
       .sort((a, b) => (b.e ?? b.x + b.r) - (a.e ?? a.x + a.r)).slice(0, 12);
     $("t_" + k).innerHTML = `<tr><th>${label}</th><th>Device</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n" title="Estimated share of the ${range === "window" ? "session" : "weekly"} limit">~%</th></tr>` +
       rows.map((r) => `<tr><td title="${esc(r.key)}">${k === "by_model" ? shortModel(r.key) : esc(r.key)}</td><td><span class="dot" style="background:${r.d.color}"></span>${esc(name(r.d))}</td>
-        <td class="n">${r.calls}</td><td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.e)}</td></tr>`).join("") +
+        <td class="n">${num(r.calls)}</td><td class="n">${fmt.tok(r.tokens)}</td><td class="n">${epct(r.e)}</td></tr>`).join("") +
       (rows.length ? "" : `<tr><td colspan="5" class="muted">Nothing yet</td></tr>`);
   }
 }
 
 const shortModel = (m) => esc(String(m || "?").replace("claude-", "").replace(/-\d{8}$/, ""));
-const ktok = (n) => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.round(n / 1e3) + "k";
+const ktok = (n) => n == null ? "–" : (n = num(n)) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.round(n / 1e3) + "k";
 let showAllSessions = false, longSessions = false;
 const SESSIONS_SHORT = 10;
 const openSessions = new Set();
@@ -1003,10 +1076,10 @@ function sessionDetail(s) {
   const f = fitOf("week"), est = (u) => f?.a == null ? null : (f.m?.[family(u.model || "")] ?? 1) * (f.a * (u.x || 0) + (f.b ?? f.a) * (u.r || 0));
   const models = Object.entries(s.models || {}).sort((a, b) => (b[1].x + b[1].r) - (a[1].x + a[1].r));
   const mrows = `<tr><th>Model</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>` +
-    models.map(([m, v]) => `<tr><td>${shortModel(m)}</td><td class="n">${v.calls}</td><td class="n">${fmt.tok(v.tokens)}</td><td class="n">${epct(est({ ...v, model: m }))}</td></tr>`).join("");
+    models.map(([m, v]) => `<tr><td>${shortModel(m)}</td><td class="n">${num(v.calls)}</td><td class="n">${fmt.tok(v.tokens)}</td><td class="n">${epct(est({ ...v, model: m }))}</td></tr>`).join("");
   const agents = (s.agents || []).map((a) => `<tr><td>${esc(a.type || "agent")}${a.desc ? `<div class="sub">${esc(a.desc)}</div>` : ""}</td>
-      <td class="small">${a.models.map(shortModel).join(", ")}${a.depth > 1 ? ` <span class="muted">· depth ${a.depth}</span>` : ""}</td>
-      <td class="n">${a.calls}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(est({ ...a, model: a.models[0] }))}</td></tr>`).join("");
+      <td class="small">${(a.models || []).map(shortModel).join(", ")}${a.depth > 1 ? ` <span class="muted">· depth ${num(a.depth)}</span>` : ""}</td>
+      <td class="n">${num(a.calls)}</td><td class="n">${fmt.tok(a.tokens)}</td><td class="n">${epct(est({ ...a, model: (a.models || [])[0] }))}</td></tr>`).join("");
   const changes = (s.changes || []).map((c) => `${fmt.time(c.t)} → ${shortModel(c.model)}`).join(" · ");
   const sw = (s.switches || []).map((c) => `${fmt.time(c.t)}: /model → ${esc(c.to)}`).join(" · ");
   const comps = (s.compactions || []).map((c) => `${fmt.time(c.t)} (${esc(c.trigger || "?")}): ${ktok(c.pre)} → ${ktok(c.post)}`).join(" · ");
@@ -1017,7 +1090,7 @@ function sessionDetail(s) {
         <div class="k" style="margin-top:10px">Model on the main thread</div><div class="small">${changes || "–"}</div>
         ${sw ? `<div class="k" style="margin-top:10px">/model switches</div><div class="small">${sw}</div>` : ""}</div>
     </div>
-    ${agents ? `<div class="k" style="margin-top:14px">Subagents (${s.agents.length})</div><table><tr><th>Agent</th><th>Models</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>${agents}</table>` : ""}`;
+    ${agents ? `<div class="k" style="margin-top:14px">Subagents (${num(s.agents.length)})</div><table><tr><th>Agent</th><th>Models</th><th class="n">Calls</th><th class="n">Tokens</th><th class="n">~% of week</th></tr>${agents}</table>` : ""}`;
 }
 function drawSessions() {
   let rows = state.devices.flatMap((d) => (d.sessions || []).map((s) => ({ ...s, d }))).sort((a, b) => new Date(b.last) - new Date(a.last));
@@ -1030,10 +1103,10 @@ function drawSessions() {
     rows.map((s) => {
       const k = s.d.device + ":" + s.id, open = openSessions.has(k);
       return `<tr class="srow${open ? " open" : ""}" data-k="${esc(k)}"><td><span class="dot" style="background:${s.d.color}"></span>${esc(name(s.d))}</td>
-        <td class="wrap"><span class="caret">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}<div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
+        <td class="wrap"><button type="button" class="rowbtn" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open ? "▾" : "▸"}</span>${esc(s.title || s.project)}</button><div class="sub">${s.title ? `${esc(s.project)} · ` : ""}${esc(s.platform)}</div></td>
         <td class="small">${shortModel(s.current_model || (Array.isArray(s.models) ? s.models[s.models.length - 1] : s.models && Object.keys(s.models)[0]))}</td>
-        <td class="n">${s.calls}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${(s.compactions || []).length || "–"}</td>
-        <td class="n">${(s.agents || []).length || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(estFlat(s, "week", s.d))}</td></tr>` +
+        <td class="n">${num(s.calls)}</td><td class="n">${ktok(s.ctx_max)}</td><td class="n">${num((s.compactions || []).length) || "–"}</td>
+        <td class="n">${num((s.agents || []).length) || "–"}</td><td class="muted">${fmt.ago(s.last)}</td><td class="n">${epct(estFlat(s, "week", s.d))}</td></tr>` +
         (open ? `<tr class="sdrow"><td colspan="9"><div class="sdetail" style="--vis:${vis}">${sessionDetail(s)}</div></td></tr>` : "");
     }).join("") + (rows.length ? "" : `<tr><td colspan="9" class="muted">No sessions yet</td></tr>`);
   $("sessionsMore").innerHTML = [
@@ -1048,8 +1121,8 @@ function drawSessions() {
 function drawChats() {
   const colorOf = (person) => state.devices.find((d) => d.person === person)?.color || "var(--c4)";
   const rows = [], seen = new Set();
-  for (const [person, chats] of Object.entries(web))
-    for (const c of chats) { seen.add(c.conv); rows.push({ person, id: c.conv, model: c.model, tokens: c.tokens, messages: c.messages, p5: c.p5, t: c.last, in_project: c.in_project, src: "browser" }); }
+  for (const [person, chats] of Object.entries(web || {}))
+    for (const c of Array.isArray(chats) ? chats : []) { seen.add(c.conv); rows.push({ person, id: c.conv, model: c.model, tokens: c.tokens, messages: c.messages, p5: c.p5, t: c.last, in_project: c.in_project, src: "browser" }); }
   for (const d of state.devices)
     for (const c of d.chats || []) if (!seen.has(c.id)) rows.push({ person: d.person, id: c.id, model: c.model, tokens: c.len, t: c.t, in_project: c.in_project, src: "extension" });
   rows.sort((a, b) => new Date(b.t || 0) - new Date(a.t || 0));
@@ -1060,10 +1133,10 @@ function drawChats() {
   for (const c of rows.slice(0, 25))
     html += `<tr><td><span class="dot" style="background:${colorOf(c.person)}"></span>${esc(c.person)}</td>
       <td class="muted">${esc(c.id)}${c.in_project ? '<span class="tag">project</span>' : ""}${c.src === "extension" ? '<span class="tag">extension</span>' : ""}</td>
-      <td class="muted">${esc((c.model || "?").replace(/^claude-/, ""))}</td>
+      <td class="muted">${shortModel(c.model)}</td>
       <td class="n">${c.tokens == null ? "–" : "≈" + fmt.tok(c.tokens)}</td>
-      <td class="n">${c.messages ?? "–"}</td>
-      <td class="n">${c.p5 == null ? "–" : c.p5 + "%"}</td>
+      <td class="n">${c.messages == null ? "–" : num(c.messages)}</td>
+      <td class="n">${c.p5 == null ? "–" : fmt.pct(c.p5)}</td>
       <td class="muted">${fmt.ago(c.t)}</td></tr>`;
   $("chats").innerHTML = html;
 }
@@ -1109,19 +1182,22 @@ function drawContext() {
 // ---- wiring -------------------------------------------------------------------
 $("sessions").addEventListener("click", (e) => {
   const tr = e.target.closest("tr.srow"); if (!tr) return;
-  const k = tr.dataset.k; openSessions.has(k) ? openSessions.delete(k) : openSessions.add(k);
+  const k = tr.dataset.k, fromBtn = !!e.target.closest(".rowbtn");
+  openSessions.has(k) ? openSessions.delete(k) : openSessions.add(k);
   drawSessions();
+  // The rows were redrawn: keyboard focus goes back to the same row's button.
+  if (fromBtn) [...$("sessions").querySelectorAll("tr.srow")].find((r) => r.dataset.k === k)?.querySelector(".rowbtn")?.focus();
 });
 $("sessionsMore").addEventListener("click", (e) => {
   if (e.target.id === "toggleSdk") { showAllSessions = !showAllSessions; drawSessions(); }
   if (e.target.id === "toggleLong") { longSessions = !longSessions; drawSessions(); }
 });
-function showLogin() { $("app").hidden = true; $("login").hidden = false; $("key").focus(); }
+function showLogin() { $("app").hidden = true; $("down").hidden = true; $("login").hidden = false; $("key").focus(); }
 $("lf").onsubmit = (e) => { e.preventDefault(); key = $("key").value.trim(); try { localStorage.setItem("hubKey", key); } catch {} load().then(syncIfStale).catch(() => {}); };
 $("refresh").onclick = refresh;
 const seg = (id, fn) => $(id).onclick = (e) => {
   const b = e.target.closest("button"); if (!b) return;
-  [...$(id).children].forEach((x) => x.classList.toggle("on", x === b)); fn(b); if (state) render();
+  [...$(id).children].forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); }); fn(b); if (state) render();
 };
 seg("tabs", (b) => range = b.dataset.r);
 seg("ovTab", (b) => ov.tab = b.dataset.v);
@@ -1130,21 +1206,25 @@ seg("ovDev", (b) => ov.dev = b.dataset.v);
 window.onresize = () => state && render();
 // Poll every 30 s only while the tab is visible (the free database counts every read).
 // Every 30 s, ask the hub (one Redis read) whether any laptop has synced since; reload only then.
+// This is also what retries after a failed first load: with nothing loaded, it always loads.
 async function poll() {
   if (!key || refreshing || document.visibilityState !== "visible") return;
   let stamp;
-  try { ({ stamp } = await api("/api/refresh")); hubDown = false; }
-  catch (e) { if (key) { hubDown = true; showHubState(); } throw e; }
-  if (stamp && stamp === lastStamp) { showHubState(); return; }
-  lastStamp = stamp;
+  try { ({ stamp } = await api("/api/refresh")); }
+  catch (e) { hubFailed(e); throw e; }
+  if (state && stamp && stamp === lastStamp) { hubDown = false; showHubState(); return; }
   await load();
+  lastStamp = stamp;      // only once the load worked, so a failed one is retried next time
 }
 setInterval(() => poll().catch(() => {}), 30000);
-// Opening the page (or coming back to the tab) asks every laptop to sync, unless the
-// data is already under a minute old.
+// Opening the page (or coming back to the tab) asks every laptop to sync, but only when the
+// newest sync is over 5 min old and nobody has asked in the last 5 min: the laptops sync
+// every 2-5 min on their own, and every refresh is a burst of requests to the hub.
 const syncIfStale = () => {
-  const s = state && freshest();
-  if (!s || Date.now() - new Date(s.sent_at) > 60e3) refresh().catch(() => {});
+  if (!state) return;
+  const newest = Math.max(0, ...state.devices.map((d) => Date.parse(d.received_at || d.sent_at) || 0));
+  const asked = Date.parse(state.refresh_requested_at) || 0;
+  if (Date.now() - newest > 5 * 60e3 && Date.now() - asked > 5 * 60e3) refresh().catch(() => {});
 };
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && key) load().then(syncIfStale).catch(() => {});
