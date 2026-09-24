@@ -61,7 +61,9 @@ export function combine(perDevice, weight = {}) {
     }
     // The Fable-only limit is checked against logged Fable use (whole week).
     for (const v of [lo, hi]) { v.xf = s.wf ? v.xwf : null; v.rf = s.wf ? v.rwf : null; }
-    out.push({ t: s.t, d, pv: s.pv || 1, w5: s.w5, p5: s.p5, ww: s.ww, wf: s.wf, pf: s.pf,
+    // pw: the Claude Code share of the week % (what the week fit is fitted on); pwr: the raw
+    // week %, for sessionsPerWeek() in _fit.js.
+    out.push({ t: s.t, d, pv: s.pv || 1, w5: s.w5, p5: s.p5, ww: s.ww, wf: s.wf, pf: s.pf, pwr: s.pwr ?? null,
       pw: s.pwr == null ? null : +(s.pwr * (s.cc ?? 100) / 100).toFixed(3), lo, hi });
   }
   return out.sort((a, b) => a.t.localeCompare(b.t));
