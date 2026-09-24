@@ -555,25 +555,29 @@ def daily(idx):
 
 def prompt_cost(rs, prompts, now):
     """What one typed prompt costs: everything the session did (main thread and its subagents)
-    between consecutive typed prompts, averaged per family over the last 5. An API call is
+    between consecutive typed prompts: the median of the last 9, per family. An API call is
     not a message: a prompt runs ~3 main-thread calls, and one that spawns agents many more.
     The trailing interval only counts once the session has been quiet for 5 minutes, so a
     prompt still running doesn't drag the average down."""
     if not prompts:
         return None
     ends = prompts[1:] + ([now] if now - rs[-1]["t"] > timedelta(minutes=5) else [])
-    spans = list(zip(prompts, ends))[-5:]
+    spans = list(zip(prompts, ends))[-9:]
     if not spans:
         return None
     ts_ = [r["t"] for r in rs]
-    fams = defaultdict(lambda: [0.0, 0.0])
+    per = []                               # one {family: [x, r]} per prompt
     for t0, t1 in spans:
+        fams = defaultdict(lambda: [0.0, 0.0])
         for r in rs[bisect.bisect_left(ts_, t0):bisect.bisect_left(ts_, t1)]:
             a = fams[r["fam"]]; a[0] += r["x"]; a[1] += r["r"]
-    n = len(spans)
-    return {"prompts": n, "x": round(sum(v[0] for v in fams.values()) / n, 5),
-            "r": round(sum(v[1] for v in fams.values()) / n, 5),
-            "fam": {k: {"x": round(v[0] / n, 5), "r": round(v[1] / n, 5)} for k, v in fams.items()}}
+        per.append(fams)
+    # The median prompt (by price, cache reads at half), not the mean: one prompt that launched
+    # agents costs 10-50× a normal one and would make every prompt look that expensive.
+    size = lambda f: sum(v[0] + 0.5 * v[1] + (2.5 * v[0] if k == "fable" else 0) for k, v in f.items())
+    mid = sorted(per, key=size)[len(per) // 2]
+    return {"prompts": len(per), "x": round(sum(v[0] for v in mid.values()), 5), "r": round(sum(v[1] for v in mid.values()), 5),
+            "fam": {k: {"x": round(v[0], 5), "r": round(v[1], 5)} for k, v in mid.items()}}
 
 
 def sessions(idx, ww=EPOCH, now=None):

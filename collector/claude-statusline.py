@@ -20,7 +20,7 @@ SCAN_DIR = CACHE_DIR / "statusline"
 WARN, DANGER = 70, 85          # context %: amber, then red + a nudge to /compact
 KEEP_S = 8 * 86400             # per-request records older than a week can't count toward anything
 STATE_VERSION = 3              # per-transcript state format; 2 added "turns"/"busy", 3 final-line pricing (older state is re-read)
-TURNS = 10                     # "msgs left" averages this chat's last 10 finished messages
+TURNS = 10                     # "msgs left" uses the median of this chat's last 10 finished messages
 SYNC_LAG = 15 * 60             # the collector syncs every 5 min at most: 15 min without one is a fault
 WIDTH = 120                    # columns the whole line should fit in
 
@@ -215,7 +215,7 @@ def per_message(state, reqs, rate):
     Counted per message the person typed, not per API call: one message sets off a whole tool
     loop (and maybe subagents), and messages are what someone can decide to send or not. A
     message's cost is everything this chat logged from it until the next one, subagents
-    included, averaged over the last TURNS finished messages. None when there is nothing to go on.
+    included; the median of the last TURNS finished messages. None when there is nothing to go on.
     """
     if not rate or rate.get("a") is None or not state.get("turns"):
         return None
@@ -226,8 +226,10 @@ def per_message(state, reqs, rate):
         if t >= starts[0]:
             cost[bisect.bisect_right(starts, t) - 1] += m.get(fam, 1) * (a * x + b * r)
     old = time.time() - KEEP_S     # requests that far back were dropped: those turns would look free
-    done = [c for c, t in zip(cost[:-1] if state.get("busy") else cost, starts) if t >= old][-TURNS:]
-    return sum(done) / len(done) if done else None
+    done = sorted(c for c, t in list(zip(cost[:-1] if state.get("busy") else cost, starts))[-TURNS:] if t >= old)
+    # The median, not the mean: one message that launched agents (or had background agents
+    # billed to it) costs 10-50× a normal one and would make every message look that expensive.
+    return done[len(done) // 2] if done else None
 
 
 def sync_warning():
