@@ -12,7 +12,12 @@ export function current(d, off, scope) {
   const lim = scope === "window" ? off?.five_hour : off?.seven_day, hours = scope === "window" ? 5 : 168;
   const at = lim?.resets_exact || lim?.resets_at, sent = d.received_at || d.sent_at;
   if (!at || !sent) return true;                       // nothing to compare against: keep it
-  return Date.parse(sent) >= Date.parse(at) - hours * 36e5;
+  const start = Date.parse(at) - hours * 36e5;
+  // A laptop that couldn't learn the window counts from its own guess (the last 7 days, the
+  // last 5 hours), which reaches back into the previous window: those totals don't fit this one.
+  const from = Date.parse(scope === "window" ? d.window_start : d.week_start);
+  if (from < start - 10 * 60e3) return false;
+  return Date.parse(sent) >= start;
 }
 
 export function split(devices, fit, off) {

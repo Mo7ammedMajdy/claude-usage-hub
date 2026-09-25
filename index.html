@@ -531,7 +531,11 @@ const estFlat = (u, scope, d) => {
 const inWindow = (d, scope) => {
   const o = freshest()?.official, lim = scope === "window" ? o?.five_hour : o?.seven_day, hours = scope === "window" ? 5 : 168;
   const at = lim && (lim.resets_exact || lim.resets_at), sent = d.received_at || d.sent_at;
-  return !at || !sent || Date.parse(sent) >= Date.parse(at) - hours * 36e5;
+  if (!at || !sent) return true;
+  const start = Date.parse(at) - hours * 36e5;
+  // Totals counted from a guessed window (the laptop couldn't read one) reach into the last one.
+  if (Date.parse(scope === "window" ? d.window_start : d.week_start) < start - 10 * 60e3) return false;
+  return Date.parse(sent) >= start;
 };
 const estDev = (d, scope) => inWindow(d, scope) ? estModels(d[scope]?.by_model, scope) : 0;
 
