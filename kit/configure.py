@@ -8,7 +8,9 @@ setup.sh (its default hub), and the userscript (its HUB constant and its @connec
 Run this again with a new address whenever the address changes."""
 import pathlib, re, subprocess, sys, urllib.parse
 
-ROOT = pathlib.Path(__file__).resolve().parent
+# At the top of the shareable zip, or in kit/ of the git repo: the hub's files sit beside it or one up.
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE if (HERE / "collector/setup.sh").exists() else HERE.parent
 if len(sys.argv) != 2:
     sys.exit(__doc__)
 url = sys.argv[1].strip().rstrip("/")

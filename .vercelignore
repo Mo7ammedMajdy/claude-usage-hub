@@ -12,3 +12,4 @@ collector/*.md
 collector/__pycache__
 kit
 dist
+README.md

@@ -90,7 +90,7 @@ python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps({k
 
 ## 7. Point the code at the address, deploy again
 ```bash
-python3 configure.py "$HUB"
+python3 configure.py "$HUB"          # in the git repo it is kit/configure.py
 npx -y vercel@59.23.2 deploy --prod --yes 2>&1 | tail -5
 ```
 Environment variables only take effect on a new deploy, so this second deploy is needed.
