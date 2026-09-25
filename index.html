@@ -683,7 +683,9 @@ function drawHeadline(src) {
     // The replays can't resolve small chances, so under 5% never reads as a flat "0%".
     const chance = f.runs_out_at || f.p_limit == null || f.p_limit >= 0.15 ? ""
       : ` Chance of hitting the limit before the reset: ${f.p_limit < 0.05 ? "under 5%" : `about ${r(f.p_limit * 100)}%`}.`;
-    sub = `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}.${chance} Recent pace: ${num(f.per_day_recent).toFixed(1)}% a day (last 3 days, the newest counting most); ` +
+    // Near the reset the range closes to one number, which the headline already gives.
+    const range = r(f.lo) === r(f.hi) ? "" : `Likely ${r(f.lo)}–${r(f.hi)}% by the reset${f.thin ? " (rough: under 4 days of history to go on)" : ""}.`;
+    sub = `${range}${chance} Recent pace: ${num(f.per_day_recent).toFixed(1)}% a day (last 3 days, the newest counting most); ` +
       (f.left_h < 24 ? `${Math.round(100 - w.pct)}% is left for the last ${Math.max(1, Math.round(f.left_h))} h.`
         : `you can use up to ${num(f.budget_per_day).toFixed(0)}% a day and still reach the reset.`) +
       (f.skipped?.length ? ` Left out of the recent pace as one-offs (still counted as possible busy days): ${f.skipped.map(esc).join(", ")}.` : "");
@@ -704,7 +706,7 @@ function drawHeadline(src) {
     const q = pace(s, 168);
     if (q && s.pct < 100 && q.runOut < q.reset && (p.runOut >= p.reset || q.runOut < p.runOut)) sub += ` ${s.name}'s separate limit runs out sooner, ${whenWord(q.runOut)}.`;
   }
-  S.textContent = sub;
+  S.textContent = sub.trim();
 }
 
 // One bar, styled like the app's: a bright fill on a dark track of the same hue. An official
@@ -864,7 +866,9 @@ function drawWeeks() {
       pair: both.length ? { n: both.length, miss: tally(both, end).miss, old: med(both.map((f) => Math.abs(num(f.avg) - end))) } : null };
   };
   const fcCell = (w) => {
-    if (w.running) { const f = state.forecast; return f && !f.early ? `→ ${Math.round(num(f.expected))}%<span class="faint rng"> (${Math.round(num(f.lo))}–${Math.round(num(f.hi))})</span>` : "–"; }
+    if (w.running) { const f = state.forecast; if (!f || f.early) return "–";
+      const lo = Math.round(num(f.lo)), hi = Math.round(num(f.hi));
+      return `→ ${Math.round(num(f.expected))}%${lo === hi ? "" : `<span class="faint rng"> (${lo}–${hi})</span>`}`; }
     const sc = score(w);
     if (!sc) return "–";
     const rp = sc.replayed.n ? `<div class="faint small" title="Rebuilt afterwards from the stored readings, so not counted in the score.">replayed: ${sc.replayed.inside}/${sc.replayed.n} in range</div>` : "";
