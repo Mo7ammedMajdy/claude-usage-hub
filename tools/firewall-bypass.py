@@ -4,7 +4,7 @@
 A burst of scripted requests once got this machine challenged for ~10 min (403
 x-vercel-mitigated: challenge), and the collectors can't solve a challenge. This adds (or
 replaces) one custom firewall rule: requests whose Authorization header is one of the personal
-hub keys (~/.config/claude-usage-hub/keys.json) are bypassed, system mitigations included
+hub keys ($HUB_KEYS_FILE, default ~/.config/claude-usage-hub/keys.json) are bypassed, system mitigations included
 (bypassSystem). Everyone else is unaffected. Re-run after rotating a key. Prints no secrets.
   python3 tools/firewall-bypass.py          apply
   python3 tools/firewall-bypass.py --show   list the project's rules (names only)
@@ -36,7 +36,9 @@ print("current config:", status, "| rules:", [r.get("name") for r in rules])
 if "--show" in sys.argv:
     sys.exit(0)
 
-keys = list(json.load(open(os.path.expanduser("~/.config/claude-usage-hub/keys.json"))).keys())
+kf = json.load(open(os.path.expanduser(os.environ.get("HUB_KEYS_FILE", "~/.config/claude-usage-hub/keys.json"))))
+# the kit writes {"people": {name: key}}; a plain {key: name} map works too
+keys = list(kf["people"].values()) if isinstance(kf.get("people"), dict) else list(kf.keys())
 rule = {
     "name": NAME,
     "description": "Collectors, statusline and the userscript send a personal hub key; don't challenge them.",

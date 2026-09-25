@@ -4,7 +4,7 @@ dist/claude-usage-hub-kit.zip, from the last commit (never the working tree, nev
 
     python3 tools/package.py
 
-Leaves out this hub's notes, tools and data, puts kit/ (README, SETUP, HOW-IT-WORKS, CLAUDE.md,
+Leaves out the tools and data, puts kit/ (README, SETUP, HOW-IT-WORKS, CLAUDE.md,
 configure.py) at the top, swaps this hub's address for a placeholder that configure.py
 replaces, and fails if anything personal is left in it."""
 import pathlib, re, shutil, subprocess, sys, tempfile, zipfile
@@ -13,16 +13,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "dist" / "claude-usage-hub-kit.zip"
 OUR_URL = "https://claude-usage-hub.vercel.app"
 PLACEHOLDER = "https://YOUR-HUB.vercel.app"
-DROP = ("HANDOFF.md", "tools/", "kit/", "skills-lock.json", "userscript/test/",
-        "collector/FIND-CLAUDE-LOGS.md", "collector/RECOVER-CLAUDE-LOGS.md")
-# Comments that name the people on this hub, made generic.
-GENERIC = [
-    ("api/_fit.js", "(one laptop pv 1, the other pv 2)", "(one laptop pv 1, the other pv 2)"),
-    ("index.html", '("All", "Ahmed")', '("All", "Omar")'),
-    ("userscript/main.js", "Chosen over waiting for the next message.",
-     "The hub's owner chose this over waiting for the next message."),
-]
-PERSONAL = re.compile(r"(?i:/home/|claude-usage-hub\.vercel\.app)")
+DROP = ("tools/", "kit/", "userscript/test/")
+# Anything that must not ship: home paths and this hub's address, plus the words (names, hosts)
+# listed one per line in tools/data/private-words.txt, which is local and never committed.
+WORDS = ROOT / "tools/data/private-words.txt"
+extra = [re.escape(w.strip()) for w in (WORDS.read_text().splitlines() if WORDS.exists() else []) if w.strip()]
+PERSONAL = re.compile(r"(?i:/home/|claude-usage-hub\.vercel\.app" + "".join("|" + w for w in extra) + ")")
 
 if subprocess.run(["git", "diff", "--quiet", "HEAD", "--", "kit", "tools/package.py"], cwd=ROOT).returncode:
     sys.exit("kit/ or this script has uncommitted changes: commit them first (the zip is built from HEAD)")
@@ -37,12 +33,6 @@ with tempfile.TemporaryDirectory() as tmp:
         shutil.rmtree(p) if p.is_dir() else p.unlink(missing_ok=True)
     for f in (ROOT / "kit").iterdir():
         shutil.copy2(f, stage / f.name)
-    for rel, old, new in GENERIC:
-        f = stage / rel
-        t = f.read_text()
-        if old not in t:
-            sys.exit(f"{rel}: expected text not found: {old!r} (update GENERIC)")
-        f.write_text(t.replace(old, new))
     # This hub's address → a placeholder that configure.py replaces with theirs.
     for rel in ("collector/setup.sh", "userscript/build.py", "userscript/main.js"):
         f = stage / rel
