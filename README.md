@@ -155,3 +155,7 @@ npx -y vercel@59.23.2 deploy --prod --yes
 | `userscript/` | `core.js` + `main.js`, built by `build.py` into `claude-usage.user.js` |
 | `kit/` | Setup guide, architecture notes, `configure.py` |
 | `tools/` | Tests and maintenance scripts (not deployed) |
+
+## License
+
+MIT. See `LICENSE`.
